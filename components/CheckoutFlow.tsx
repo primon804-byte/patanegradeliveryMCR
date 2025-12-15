@@ -310,7 +310,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
              {/* Delivery GIF */}
              <div className="relative w-full max-w-[220px] rounded-2xl overflow-hidden mb-6 border border-zinc-800 bg-zinc-900">
                 <img 
-                   src="https://s2.ezgif.com/tmp/ezgif-213982168bc10f9c.gif" 
+                   src="https://i.imgur.com/oAYG2Yl.gif" 
                    alt="Delivery em andamento"
                    className="w-full h-full object-cover"
                 />

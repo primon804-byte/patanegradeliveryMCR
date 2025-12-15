@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Product } from '../types';
-import { Plus, Trophy, Flame } from 'lucide-react';
+import { Plus, Flame } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -18,8 +18,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClic
     >
       {/* BADGES */}
       {product.isChampion ? (
-        <div className="absolute top-3 left-3 z-10 bg-zinc-100 border-2 border-amber-500 text-amber-700 text-[10px] font-extrabold px-2 py-1 rounded-md shadow-lg shadow-black/50 flex items-center gap-1">
-          <Trophy size={10} strokeWidth={3} className="text-amber-500" />
+        <div className="absolute top-3 left-3 z-10 bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded-md shadow-lg flex items-center gap-1">
+          <div className="flex -space-x-1">
+            <Flame size={10} strokeWidth={3} />
+            <Flame size={10} strokeWidth={3} />
+          </div>
           CAMPEÃO DE VENDAS
         </div>
       ) : product.isPopular ? (

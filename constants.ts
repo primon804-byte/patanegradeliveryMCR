@@ -48,7 +48,7 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.GROWLER,
     type: BeerType.LAGER,
     volumeLiters: 1,
-    isChampion: true, // Campeão de Vendas
+    isPopular: true, // Volta a ser Mais Pedido
     abv: 5.0,
     ibu: 0,
     pairing: 'Carnes assadas, Queijos, Massas, Sobremesas',
@@ -134,7 +134,7 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.KEG30,
     type: BeerType.LAGER,
     volumeLiters: 30,
-    isChampion: true, // Campeão de Vendas
+    isPopular: true, // Volta a ser Mais Pedido
     abv: 4.5,
     ibu: 12,
     pairing: 'Hambúrguer, Massas, Pizza, Frutos do mar',
