@@ -16,7 +16,7 @@ type LocationType = 'Marechal Cândido Rondon' | 'Foz do Iguaçu';
 type PaymentMethod = 'PIX' | 'Cartão' | 'Dinheiro';
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total }) => {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [location, setLocation] = useState<LocationType | null>(null);
   
   // Form State
@@ -68,8 +68,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     
     // Open WhatsApp
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-    onClose();
+    
+    // Move to Success Step instead of closing
+    setStep(3);
   };
+
+  const getTitle = () => {
+    if (step === 1) return 'Onde você está?';
+    if (step === 2) return 'Finalizar Pedido';
+    return 'Pedido Realizado!';
+  }
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -88,7 +96,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-2">
           <h2 className="text-xl font-serif text-white">
-            {step === 1 ? 'Onde você está?' : 'Finalizar Pedido'}
+            {getTitle()}
           </h2>
           <button 
             onClick={onClose}
@@ -98,11 +106,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
           </button>
         </div>
 
-        {/* Progress Bar */}
-        <div className="px-6 flex gap-2 mb-6">
-          <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 1 ? 'bg-amber-500' : 'bg-zinc-800'}`} />
-          <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 2 ? 'bg-amber-500' : 'bg-zinc-800'}`} />
-        </div>
+        {/* Progress Bar (Only show for steps 1 and 2) */}
+        {step < 3 && (
+          <div className="px-6 flex gap-2 mb-6">
+            <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 1 ? 'bg-amber-500' : 'bg-zinc-800'}`} />
+            <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 2 ? 'bg-amber-500' : 'bg-zinc-800'}`} />
+          </div>
+        )}
 
         {/* STEP 1: Location Selection */}
         {step === 1 && (
@@ -252,6 +262,36 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
               Enviar Pedido
             </Button>
           </form>
+        )}
+
+        {/* STEP 3: Success Screen */}
+        {step === 3 && (
+          <div className="p-6 pt-0 flex flex-col items-center justify-center text-center h-full animate-fade-in pb-8">
+             <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4 ring-1 ring-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
+                <CheckCircle2 size={32} />
+             </div>
+             <p className="text-white font-bold text-lg mb-2">Muito obrigado!</p>
+             <p className="text-zinc-400 text-sm mb-6 leading-relaxed px-4">
+                Iremos retornar confirmando seu pedido no WhatsApp.
+             </p>
+
+             <p className="text-amber-500 font-bold text-sm uppercase tracking-wide mb-2 animate-pulse">
+                Seu pedido está a caminho
+             </p>
+
+             {/* Delivery GIF */}
+             <div className="relative w-full max-w-[220px] rounded-2xl overflow-hidden mb-6 border border-zinc-800 bg-zinc-900">
+                <img 
+                   src="https://s2.ezgif.com/tmp/ezgif-213982168bc10f9c.gif" 
+                   alt="Delivery em andamento"
+                   className="w-full h-full object-cover"
+                />
+             </div>
+
+             <Button fullWidth onClick={onClose} variant="secondary">
+                Fechar
+             </Button>
+          </div>
         )}
       </div>
     </div>
