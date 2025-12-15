@@ -48,22 +48,6 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
 
         <div className="space-y-3 relative z-10">
           <button
-            onClick={() => handleContact(WHATSAPP_NUMBERS.MARECHAL)}
-            className="w-full group bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-500/50 p-4 rounded-xl flex items-center justify-between transition-all duration-300"
-          >
-            <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center border border-green-500/20">
-                    <MessageCircle size={20} />
-                </div>
-                <div className="text-left">
-                <span className="block text-white font-bold group-hover:text-amber-500 transition-colors">Marechal Cândido Rondon</span>
-                <span className="text-xs text-zinc-500">Matriz e Região</span>
-                </div>
-            </div>
-            <ChevronRight className="text-zinc-600 group-hover:text-amber-500 transition-colors" size={20} />
-          </button>
-
-          <button
             onClick={() => handleContact(WHATSAPP_NUMBERS.FOZ)}
             className="w-full group bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-500/50 p-4 rounded-xl flex items-center justify-between transition-all duration-300"
           >
@@ -73,6 +57,22 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                 </div>
                 <div className="text-left">
                 <span className="block text-white font-bold group-hover:text-amber-500 transition-colors">Foz do Iguaçu</span>
+                <span className="text-xs text-zinc-500">Matriz e Região</span>
+                </div>
+            </div>
+            <ChevronRight className="text-zinc-600 group-hover:text-amber-500 transition-colors" size={20} />
+          </button>
+
+          <button
+            onClick={() => handleContact(WHATSAPP_NUMBERS.MARECHAL)}
+            className="w-full group bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-500/50 p-4 rounded-xl flex items-center justify-between transition-all duration-300"
+          >
+            <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center border border-green-500/20">
+                    <MessageCircle size={20} />
+                </div>
+                <div className="text-left">
+                <span className="block text-white font-bold group-hover:text-amber-500 transition-colors">Marechal Cândido Rondon</span>
                 <span className="text-xs text-zinc-500">Filial e Região</span>
                 </div>
             </div>
