@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MapPin, X, ChevronRight, User, Calendar, Map, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, RefreshCw } from 'lucide-react';
+import { MapPin, X, User, Calendar, Map, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote } from 'lucide-react';
 import { Button } from './Button';
 import { CartItem } from '../types';
 import { WHATSAPP_NUMBERS } from '../constants';
@@ -14,12 +14,12 @@ interface CheckoutFlowProps {
   onReturnToHome?: () => void;
 }
 
-type LocationType = 'Marechal Cândido Rondon' | 'Foz do Iguaçu';
 type PaymentMethod = 'PIX' | 'Cartão' | 'Dinheiro';
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total, onClearCart, onReturnToHome }) => {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [location, setLocation] = useState<LocationType | null>(null);
+  // Step 1: Form, Step 2: Success
+  const [step, setStep] = useState<1 | 2>(1);
+  const location = 'Marechal Cândido Rondon';
   
   // Form State
   const [name, setName] = useState('');
@@ -29,19 +29,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
   if (!isOpen) return null;
 
-  const handleLocationSelect = (loc: LocationType) => {
-    setLocation(loc);
-    setStep(2);
-  };
-
   const handleFinalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!location || !name || !dob || !address || !paymentMethod) return;
+    if (!name || !dob || !address || !paymentMethod) return;
 
-    // Determine WhatsApp Number based on Location
-    const phoneNumber = location === 'Marechal Cândido Rondon' 
-      ? WHATSAPP_NUMBERS.MARECHAL 
-      : WHATSAPP_NUMBERS.FOZ;
+    // Use Marechal Number
+    const phoneNumber = WHATSAPP_NUMBERS.MARECHAL;
 
     // Construct Message
     const header = `*Novo Pedido - Patanegra App*\n------------------\n`;
@@ -69,8 +62,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     const message = encodeURIComponent(header + items + totalMsg + clientInfo + footer);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
     
-    // Open WhatsApp - Enhanced for Desktop Compatibility
-    // Creating a temporary link element bypasses some popup blockers that capture window.open
+    // Open WhatsApp
     const link = document.createElement('a');
     link.href = whatsappUrl;
     link.target = '_blank';
@@ -80,15 +72,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     document.body.removeChild(link);
     
     // Move to Success Step
-    setStep(3);
+    setStep(2);
   };
 
   const handleClose = () => {
-    if (step === 3) {
+    if (step === 2) {
       onClearCart();
-      setStep(1); // Reset step for the next order
-      setPaymentMethod(null); // Clear payment method for fresh start
-      // Note: We keep Name, DOB, and Address for user convenience on repeat orders
+      setStep(1); // Reset step
+      setPaymentMethod(null);
       
       if (onReturnToHome) {
         onReturnToHome();
@@ -96,12 +87,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     }
     onClose();
   };
-
-  const getTitle = () => {
-    if (step === 1) return 'Onde você está?';
-    if (step === 2) return 'Finalizar Pedido';
-    return ''; // Empty title for success step as it's moved to body
-  }
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -120,7 +105,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-2 min-h-[60px]">
           <h2 className="text-xl font-serif text-white">
-            {getTitle()}
+            {step === 1 ? 'Finalizar Pedido' : ''}
           </h2>
           <button 
             onClick={handleClose}
@@ -130,76 +115,19 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
           </button>
         </div>
 
-        {/* Progress Bar (Only show for steps 1 and 2) */}
-        {step < 3 && (
-          <div className="px-6 flex gap-2 mb-6">
-            <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 1 ? 'bg-amber-500' : 'bg-zinc-800'}`} />
-            <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 2 ? 'bg-amber-500' : 'bg-zinc-800'}`} />
-          </div>
-        )}
-
-        {/* STEP 1: Location Selection */}
+        {/* STEP 1: User Data Form */}
         {step === 1 && (
-          <div className="p-6 pt-0 space-y-4 overflow-y-auto">
-             <p className="text-zinc-400 text-sm mb-4">Selecione a unidade mais próxima para agilizar sua entrega.</p>
-             
-             <button
-              onClick={() => handleLocationSelect('Marechal Cândido Rondon')}
-              className={`w-full group border p-4 rounded-xl flex items-center justify-between transition-all duration-300 ${location === 'Marechal Cândido Rondon' ? 'bg-amber-500/10 border-amber-500' : 'bg-zinc-900 border-zinc-800 hover:border-amber-500/50'}`}
-            >
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${location === 'Marechal Cândido Rondon' ? 'bg-amber-500 text-black border-amber-500' : 'bg-zinc-950 text-amber-500 border-zinc-800'}`}>
-                  <MapPin size={20} />
-                </div>
-                <div className="text-left">
-                  <span className={`block font-bold text-sm transition-colors ${location === 'Marechal Cândido Rondon' ? 'text-amber-500' : 'text-white'}`}>Marechal Cândido Rondon</span>
-                  <span className="text-xs text-zinc-500">Matriz e Região</span>
-                </div>
-              </div>
-              <ChevronRight className={`transition-colors ${location === 'Marechal Cândido Rondon' ? 'text-amber-500' : 'text-zinc-600 group-hover:text-amber-500'}`} size={20} />
-            </button>
-
-            <button
-              onClick={() => handleLocationSelect('Foz do Iguaçu')}
-              className={`w-full group border p-4 rounded-xl flex items-center justify-between transition-all duration-300 ${location === 'Foz do Iguaçu' ? 'bg-amber-500/10 border-amber-500' : 'bg-zinc-900 border-zinc-800 hover:border-amber-500/50'}`}
-            >
-              <div className="flex items-center gap-4">
-                 <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${location === 'Foz do Iguaçu' ? 'bg-amber-500 text-black border-amber-500' : 'bg-zinc-950 text-amber-500 border-zinc-800'}`}>
-                  <MapPin size={20} />
-                </div>
-                <div className="text-left">
-                  <span className={`block font-bold text-sm transition-colors ${location === 'Foz do Iguaçu' ? 'text-amber-500' : 'text-white'}`}>Foz do Iguaçu</span>
-                  <span className="text-xs text-zinc-500">Filial e Região</span>
-                </div>
-              </div>
-              <ChevronRight className={`transition-colors ${location === 'Foz do Iguaçu' ? 'text-amber-500' : 'text-zinc-600 group-hover:text-amber-500'}`} size={20} />
-            </button>
-          </div>
-        )}
-
-        {/* STEP 2: User Data Form */}
-        {step === 2 && (
           <form onSubmit={handleFinalSubmit} className="p-6 pt-0 flex flex-col gap-4 overflow-y-auto">
             
-            {/* Interactive Location Display */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                        <MapPin size={16} />
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-zinc-500 uppercase font-bold">Unidade</p>
-                        <p className="text-sm font-medium text-white leading-tight">{location}</p>
-                    </div>
+            {/* Fixed Location Display */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                    <MapPin size={16} />
                 </div>
-                <button 
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
-                >
-                    <RefreshCw size={12} />
-                    Trocar
-                </button>
+                <div>
+                    <p className="text-[10px] text-zinc-500 uppercase font-bold">Unidade de Entrega</p>
+                    <p className="text-sm font-medium text-white leading-tight">{location}</p>
+                </div>
             </div>
 
             <div className="space-y-1">
@@ -288,14 +216,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
           </form>
         )}
 
-        {/* STEP 3: Success Screen */}
-        {step === 3 && (
+        {/* STEP 2: Success Screen */}
+        {step === 2 && (
           <div className="p-6 pt-0 flex flex-col items-center justify-center text-center h-full animate-fade-in pb-8">
              <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4 ring-1 ring-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
                 <CheckCircle2 size={32} />
              </div>
              
-             {/* New Position for Title */}
              <h2 className="text-2xl font-serif text-white mb-1">Pedido Realizado!</h2>
              <p className="text-zinc-400 font-medium mb-6">Muito obrigado!</p>
              

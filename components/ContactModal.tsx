@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, MapPin, MessageCircle, ChevronRight, CalendarDays } from 'lucide-react';
+import { X, MessageCircle, ChevronRight, CalendarDays } from 'lucide-react';
 import { WHATSAPP_NUMBERS } from '../constants';
 
 interface ContactModalProps {
@@ -43,7 +43,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
             <CalendarDays size={24} />
           </div>
           <h2 className="text-2xl font-serif text-white mb-2">Orçamento para Eventos</h2>
-          <p className="text-zinc-400 text-sm">Selecione sua região para falar com um especialista.</p>
+          <p className="text-zinc-400 text-sm">Fale com nosso especialista.</p>
         </div>
 
         <div className="space-y-3 relative z-10">
@@ -57,7 +57,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                 </div>
                 <div className="text-left">
                 <span className="block text-white font-bold group-hover:text-amber-500 transition-colors">Marechal Cândido Rondon</span>
-                <span className="text-xs text-zinc-500">(45) 98817-5171</span>
+                <span className="text-xs text-zinc-500">Matriz e Região</span>
                 </div>
             </div>
             <ChevronRight className="text-zinc-600 group-hover:text-amber-500 transition-colors" size={20} />
@@ -67,13 +67,13 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
             onClick={() => handleContact(WHATSAPP_NUMBERS.FOZ)}
             className="w-full group bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-500/50 p-4 rounded-xl flex items-center justify-between transition-all duration-300"
           >
-             <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center border border-green-500/20">
                     <MessageCircle size={20} />
                 </div>
                 <div className="text-left">
                 <span className="block text-white font-bold group-hover:text-amber-500 transition-colors">Foz do Iguaçu</span>
-                <span className="text-xs text-zinc-500">(45) 99990-1000</span>
+                <span className="text-xs text-zinc-500">Filial e Região</span>
                 </div>
             </div>
             <ChevronRight className="text-zinc-600 group-hover:text-amber-500 transition-colors" size={20} />
