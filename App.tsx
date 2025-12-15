@@ -401,6 +401,10 @@ const App: React.FC = () => {
     }));
   };
 
+  const clearCart = () => {
+    setCart([]);
+  };
+
   const handleOrderClick = () => {
     setView('menu');
   };
@@ -500,6 +504,7 @@ const App: React.FC = () => {
           onClose={() => setIsCheckoutOpen(false)}
           cart={cart}
           total={cartTotal}
+          onClearCart={clearCart}
         />
 
         <ContactModal 

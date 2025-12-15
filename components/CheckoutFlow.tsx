@@ -10,12 +10,13 @@ interface CheckoutFlowProps {
   onClose: () => void;
   cart: CartItem[];
   total: number;
+  onClearCart: () => void;
 }
 
 type LocationType = 'Marechal Cândido Rondon' | 'Foz do Iguaçu';
 type PaymentMethod = 'PIX' | 'Cartão' | 'Dinheiro';
 
-export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total }) => {
+export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total, onClearCart }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [location, setLocation] = useState<LocationType | null>(null);
   
@@ -65,18 +66,36 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     const footer = `\n\n------------------\nGostaria de confirmar o pedido.`;
 
     const message = encodeURIComponent(header + items + totalMsg + clientInfo + footer);
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
     
-    // Open WhatsApp
-    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+    // Open WhatsApp - Enhanced for Desktop Compatibility
+    // Creating a temporary link element bypasses some popup blockers that capture window.open
+    const link = document.createElement('a');
+    link.href = whatsappUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     
-    // Move to Success Step instead of closing
+    // Move to Success Step
     setStep(3);
+  };
+
+  const handleClose = () => {
+    if (step === 3) {
+      onClearCart();
+      setStep(1); // Reset step for the next order
+      setPaymentMethod(null); // Clear payment method for fresh start
+      // Note: We keep Name, DOB, and Address for user convenience on repeat orders
+    }
+    onClose();
   };
 
   const getTitle = () => {
     if (step === 1) return 'Onde você está?';
     if (step === 2) return 'Finalizar Pedido';
-    return 'Pedido Realizado!';
+    return ''; // Empty title for success step as it's moved to body
   }
 
   return (
@@ -84,7 +103,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/90 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Content Container */}
@@ -94,12 +113,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50" />
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-2">
+        <div className="flex items-center justify-between p-6 pb-2 min-h-[60px]">
           <h2 className="text-xl font-serif text-white">
             {getTitle()}
           </h2>
           <button 
-            onClick={onClose}
+            onClick={handleClose}
             className="text-zinc-500 hover:text-white transition-colors"
           >
             <X size={20} />
@@ -270,7 +289,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
              <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4 ring-1 ring-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
                 <CheckCircle2 size={32} />
              </div>
-             <p className="text-white font-bold text-lg mb-2">Muito obrigado!</p>
+             
+             {/* New Position for Title */}
+             <h2 className="text-2xl font-serif text-white mb-1">Pedido Realizado!</h2>
+             <p className="text-zinc-400 font-medium mb-6">Muito obrigado!</p>
+             
              <p className="text-zinc-400 text-sm mb-6 leading-relaxed px-4">
                 Iremos retornar confirmando seu pedido no WhatsApp.
              </p>
@@ -288,7 +311,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 />
              </div>
 
-             <Button fullWidth onClick={onClose} variant="secondary">
+             <Button fullWidth onClick={handleClose} variant="secondary">
                 Fechar
              </Button>
           </div>
