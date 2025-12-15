@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calculator } from 'lucide-react';
+import { Calculator, ArrowRight } from 'lucide-react';
 import { Button } from './Button';
 
 interface HeroSliderProps {
@@ -41,15 +41,24 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
           </div>
           
           <div className="flex flex-col gap-3 w-full">
-            <Button fullWidth onClick={onOrderClick}>
-              Pedir Agora
+            <Button 
+              fullWidth 
+              onClick={onOrderClick}
+              className="relative overflow-hidden group shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] hover:-translate-y-1 transition-all duration-300"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2 font-bold tracking-wide">
+                PEDIR AGORA
+                <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+              </span>
+              {/* Shimmer Effect Overlay */}
+              <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent z-0 pointer-events-none" />
             </Button>
             
             <Button 
               fullWidth 
               variant="outline" 
               onClick={onCalcClick}
-              className="bg-zinc-950/40 backdrop-blur-md border-zinc-700 hover:bg-zinc-900 hover:border-amber-500"
+              className="bg-zinc-950/40 backdrop-blur-md border-zinc-700 hover:bg-zinc-900 hover:border-amber-500 transition-all active:scale-95"
               icon={<Calculator size={18} />}
             >
                Calculadora de Chopp
