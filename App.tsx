@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award, MapPin, ChevronDown } from 'lucide-react';
 import { PRODUCTS, HERO_IMAGES } from './constants';
 import { Product, CartItem, ViewState, ProductCategory } from './types';
@@ -150,6 +150,19 @@ const MenuView: React.FC<{
 }> = ({ products, addToCart, setSelectedProduct, recommendedVolume, activeCategory, setActiveCategory, userLocation, onOpenLocationModal }) => {
   // State lifted to App component
   const filteredProducts = products.filter(p => p.category === activeCategory);
+  
+  // Reference for scrolling container
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to top when category changes
+  useEffect(() => {
+    // Force immediate scroll reset without smooth behavior to avoid glitches during content swap
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+    // Also reset window scroll just in case
+    window.scrollTo(0, 0);
+  }, [activeCategory]);
 
   return (
     <div className="animate-fade-in pb-24 max-w-md mx-auto h-screen flex flex-col">
@@ -197,7 +210,10 @@ const MenuView: React.FC<{
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto p-4"
+      >
         {/* Padding bottom ensures content isn't hidden behind floating elements */}
         <div className="grid grid-cols-2 gap-4 pb-32">
           {filteredProducts.length > 0 ? (
