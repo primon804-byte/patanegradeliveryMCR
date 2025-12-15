@@ -23,8 +23,11 @@ export const HERO_IMAGES = [
 
 export const PRODUCTS: Product[] = [
   // ============================================================================
-  // GROWLERS (Prioridade: Pilsen Cristal, Vinho Branco, Session IPA, Vinho Tinto)
+  // GROWLERS 
+  // ORDEM: Campeão -> Mais Pedidos -> Menor Preço -> Maior Preço
   // ============================================================================
+  
+  // 1. CAMPEÃO DE VENDAS
   {
     id: 'growler-pilsen-cristal-1l',
     name: 'Pilsen Cristal 1L',
@@ -34,11 +37,13 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.GROWLER,
     type: BeerType.PILSEN,
     volumeLiters: 1,
-    isChampion: true, // Campeão de Vendas
+    isChampion: true, 
     abv: 4.5,
     ibu: 7,
     pairing: 'Hambúrguer, Massas, Aperitivos, Queijos',
   },
+
+  // 2. MAIS PEDIDOS
   {
     id: 'growler-vinho-branco-1l',
     name: 'Chopp de Vinho Branco 1L',
@@ -48,24 +53,10 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.GROWLER,
     type: BeerType.LAGER,
     volumeLiters: 1,
-    isPopular: true, // Volta a ser Mais Pedido
+    isPopular: true,
     abv: 5.0,
     ibu: 0,
     pairing: 'Carnes assadas, Queijos, Massas, Sobremesas',
-  },
-  {
-    id: 'growler-session-ipa-1l',
-    name: 'Session IPA 1L',
-    description: 'Cerveja leve, dourada, extremamente refrescante, com amargor moderado e aroma cítrico intenso.',
-    price: 22,
-    image: 'https://www.starkdistribuidora.com.br/storage/products/L8ciZMapSqAfmEja.jpg',
-    category: ProductCategory.GROWLER,
-    type: BeerType.IPA,
-    volumeLiters: 1,
-    isPopular: true,
-    abv: 5.0,
-    ibu: 30,
-    pairing: 'Hambúrguer, Comida mexicana, Carne assada, Massas',
   },
   {
     id: 'growler-vinho-tinto-1l',
@@ -82,6 +73,24 @@ export const PRODUCTS: Product[] = [
     pairing: 'Carnes, Queijos, Massas, Sobremesas',
   },
   {
+    id: 'growler-session-ipa-1l',
+    name: 'Session IPA 1L',
+    description: 'Cerveja leve, dourada, extremamente refrescante, com amargor moderado e aroma cítrico intenso.',
+    price: 22,
+    image: 'https://www.starkdistribuidora.com.br/storage/products/L8ciZMapSqAfmEja.jpg',
+    category: ProductCategory.GROWLER,
+    type: BeerType.IPA,
+    volumeLiters: 1,
+    isPopular: true,
+    abv: 5.0,
+    ibu: 30,
+    pairing: 'Hambúrguer, Comida mexicana, Carne assada, Massas',
+  },
+
+  // 3. ORDENADOS POR PREÇO (Crescente)
+  
+  // R$ 17,00
+  {
     id: 'growler-premium-lager-1l',
     name: 'Premium Lager 1L',
     description: 'Cerveja dourada com notas maltadas, corpo médio, amargor moderado e espuma cremosa.',
@@ -94,46 +103,8 @@ export const PRODUCTS: Product[] = [
     ibu: 12,
     pairing: 'Hambúrguer, Massas, Pizza, Frutos do mar',
   },
-  {
-    id: 'growler-american-ipa-1l',
-    name: 'American IPA 1L',
-    description: 'IPA de coloração acobreada, com amargor moderado e aromas cítricos intensos, remetendo ao maracujá.',
-    price: 26,
-    image: 'https://www.starkdistribuidora.com.br/storage/products/8OSjWs8QLdlDOtLo.jpg',
-    category: ProductCategory.GROWLER,
-    type: BeerType.IPA,
-    volumeLiters: 1,
-    abv: 6.1,
-    ibu: 47,
-    pairing: 'Hambúrguer, Carne assada, Comida mexicana, Massas',
-  },
-  // NOVOS GROWLERS ADICIONADOS
-  {
-    id: 'growler-sour-amarelas-1l',
-    name: 'Sour Frutas Amarelas 1L',
-    description: 'Combinando a refrescância do estilo com a singularidade do aroma e do sabor de maracujá, apresenta coloração amarela, espuma de boa formação e média persistência.',
-    price: 28,
-    image: 'https://www.starkdistribuidora.com.br/storage/products/UkTZ1J7RDeHAa0hf.jpg',
-    category: ProductCategory.GROWLER,
-    type: BeerType.SOUR,
-    volumeLiters: 1,
-    abv: 5.0,
-    ibu: 9,
-    pairing: 'Queijos, sobremesas e comida agridoce',
-  },
-  {
-    id: 'growler-sour-vermelhas-1l',
-    name: 'Sour Frutas Vermelhas 1L',
-    description: 'Uma cerveja que chama atenção só de olhar! De coloração rosa, recebe generosas doses de morango, framboesa e amora. Corpo leve, seco e acidez balanceada.',
-    price: 28,
-    image: 'https://www.starkdistribuidora.com.br/storage/products/4q9srCWSapkmrDOh.jpg',
-    category: ProductCategory.GROWLER,
-    type: BeerType.SOUR,
-    volumeLiters: 1,
-    abv: 5.0,
-    ibu: 10,
-    pairing: 'Queijos, sobremesas e comida agridoce',
-  },
+
+  // R$ 22,00 (Vários Estilos)
   {
     id: 'growler-amber-lager-1l',
     name: 'Amber Lager 1L',
@@ -198,6 +169,49 @@ export const PRODUCTS: Product[] = [
     abv: 5.2,
     ibu: 21,
     pairing: 'Carne assada, comida alemã, comida mexicana, sopas e caldos',
+  },
+
+  // R$ 26,00
+  {
+    id: 'growler-american-ipa-1l',
+    name: 'American IPA 1L',
+    description: 'IPA de coloração acobreada, com amargor moderado e aromas cítricos intensos, remetendo ao maracujá.',
+    price: 26,
+    image: 'https://www.starkdistribuidora.com.br/storage/products/8OSjWs8QLdlDOtLo.jpg',
+    category: ProductCategory.GROWLER,
+    type: BeerType.IPA,
+    volumeLiters: 1,
+    abv: 6.1,
+    ibu: 47,
+    pairing: 'Hambúrguer, Carne assada, Comida mexicana, Massas',
+  },
+
+  // R$ 28,00 (Sours)
+  {
+    id: 'growler-sour-amarelas-1l',
+    name: 'Sour Frutas Amarelas 1L',
+    description: 'Combinando a refrescância do estilo com a singularidade do aroma e do sabor de maracujá, apresenta coloração amarela, espuma de boa formação e média persistência.',
+    price: 28,
+    image: 'https://www.starkdistribuidora.com.br/storage/products/UkTZ1J7RDeHAa0hf.jpg',
+    category: ProductCategory.GROWLER,
+    type: BeerType.SOUR,
+    volumeLiters: 1,
+    abv: 5.0,
+    ibu: 9,
+    pairing: 'Queijos, sobremesas e comida agridoce',
+  },
+  {
+    id: 'growler-sour-vermelhas-1l',
+    name: 'Sour Frutas Vermelhas 1L',
+    description: 'Uma cerveja que chama atenção só de olhar! De coloração rosa, recebe generosas doses de morango, framboesa e amora. Corpo leve, seco e acidez balanceada.',
+    price: 28,
+    image: 'https://www.starkdistribuidora.com.br/storage/products/4q9srCWSapkmrDOh.jpg',
+    category: ProductCategory.GROWLER,
+    type: BeerType.SOUR,
+    volumeLiters: 1,
+    abv: 5.0,
+    ibu: 10,
+    pairing: 'Queijos, sobremesas e comida agridoce',
   },
 
   // ============================================================================
