@@ -16,6 +16,7 @@ import { ContactModal } from './components/ContactModal';
 import { InfoModal } from './components/InfoModal';
 import { LocationModal } from './components/LocationModal';
 import { CartConflictModal } from './components/CartConflictModal';
+import { CheckoutConflictModal } from './components/CheckoutConflictModal';
 
 // --- Loading Component ---
 const LoadingScreen = () => (
@@ -330,7 +331,7 @@ const App: React.FC = () => {
   // Cart Context State
   const [cartLocation, setCartLocation] = useState<string | null>(null);
   const [pendingProduct, setPendingProduct] = useState<{product: Product, options?: Partial<CartItem>} | null>(null);
-
+  const [showCheckoutConflict, setShowCheckoutConflict] = useState(false);
 
   // Dynamic Pricing Logic
   const adjustedProducts = useMemo(() => {
@@ -512,8 +513,29 @@ const App: React.FC = () => {
   };
 
   const handleCheckoutClick = () => {
+    // CHECKOUT CONFLICT CHECK
+    // If cart has items AND cart location is set AND user location doesn't match
+    if (cart.length > 0 && cartLocation && userLocation && cartLocation !== userLocation) {
+        setShowCheckoutConflict(true);
+        return;
+    }
+
     setIsCartOpen(false); 
     setIsCheckoutOpen(true);
+  };
+
+  const handleResolveCheckoutConflict = (action: 'switch' | 'clear') => {
+      if (action === 'switch' && cartLocation) {
+          // Switch user location to match cart and proceed to checkout
+          setUserLocation(cartLocation);
+          setShowCheckoutConflict(false);
+          setIsCartOpen(false);
+          setIsCheckoutOpen(true);
+      } else if (action === 'clear') {
+          // Clear cart and stay in current location
+          clearCart();
+          setShowCheckoutConflict(false);
+      }
   };
 
   const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -642,12 +664,23 @@ const App: React.FC = () => {
           onSelect={handleLocationSelect}
         />
 
+        {/* Modal for adding new item with conflict */}
         <CartConflictModal 
             isOpen={!!pendingProduct}
             onClose={handleCancelConflict}
             onConfirm={handleResolveConflict}
             currentLocation={cartLocation || ''}
             newLocation={userLocation || ''}
+        />
+
+        {/* Modal for checkout conflict */}
+        <CheckoutConflictModal
+            isOpen={showCheckoutConflict}
+            onClose={() => setShowCheckoutConflict(false)}
+            onSwitch={() => handleResolveCheckoutConflict('switch')}
+            onClear={() => handleResolveCheckoutConflict('clear')}
+            cartLocation={cartLocation || ''}
+            userLocation={userLocation || ''}
         />
 
         {cart.length > 0 && view !== 'cart' && !isCartOpen && (
