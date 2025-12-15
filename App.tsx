@@ -313,6 +313,33 @@ const CartView: React.FC<{
     </div>
 );
 
+// --- Pricing Configuration for Foz ---
+const FOZ_PRICES: Record<string, number> = {
+  // GROWLERS
+  'growler-pilsen-cristal-1l': 18,
+  'growler-premium-lager-1l': 19,
+  'growler-session-ipa-1l': 26,
+  'growler-american-ipa-1l': 28,
+  'growler-vinho-branco-1l': 21,
+  'growler-vinho-tinto-1l': 21,
+  'growler-sour-amarelas-1l': 32,
+  'growler-sour-vermelhas-1l': 32,
+  'growler-amber-lager-1l': 26,
+  'growler-munich-dunkel-1l': 26,
+  'growler-apa-1l': 26,
+  'growler-red-ale-1l': 26,
+  'growler-vienna-lager-1l': 26,
+  
+  // BARRIS
+  'keg-pilsen-50': 700,
+  'keg-pilsen-30': 450,
+  'keg-lager-50': 750,
+  'keg-lager-30': 480,
+  'keg-session-ipa-30': 520,
+  'keg-vinho-branco-30': 500,
+  'keg-vinho-tinto-30': 500,
+};
+
 // --- Main App Component ---
 
 const App: React.FC = () => {
@@ -337,8 +364,13 @@ const App: React.FC = () => {
   const adjustedProducts = useMemo(() => {
     if (userLocation === 'Foz do Iguaçu') {
       return PRODUCTS.map(product => {
+        // Check if there is a specific override for Foz
+        if (FOZ_PRICES[product.id] !== undefined) {
+           return { ...product, price: FOZ_PRICES[product.id] };
+        }
+        
+        // Fallback logic if specific ID not found (though all should be covered)
         let newPrice = product.price;
-        // Logic for Foz do Iguaçu (Test: +2 for Growlers, +100 for Kegs)
         if (product.category === ProductCategory.GROWLER) {
           newPrice += 2;
         } else if (product.category === ProductCategory.KEG30 || product.category === ProductCategory.KEG50) {
@@ -543,8 +575,13 @@ const App: React.FC = () => {
               let newPrice = original.price;
 
               if (userLocation === 'Foz do Iguaçu') {
-                  if (item.category === ProductCategory.GROWLER) newPrice += 2;
-                  else if (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) newPrice += 100;
+                  if (FOZ_PRICES[item.id] !== undefined) {
+                      newPrice = FOZ_PRICES[item.id];
+                  } else {
+                      // Fallback logic
+                      if (item.category === ProductCategory.GROWLER) newPrice += 2;
+                      else if (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) newPrice += 100;
+                  }
               }
               // If location is Marechal (default), it stays base price.
               
