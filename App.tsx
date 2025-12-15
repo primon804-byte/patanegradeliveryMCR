@@ -13,6 +13,7 @@ import { FloatingCart } from './components/FloatingCart';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutFlow } from './components/CheckoutFlow';
 import { ContactModal } from './components/ContactModal';
+import { InfoModal } from './components/InfoModal';
 
 // --- Loading Component ---
 const LoadingScreen = () => (
@@ -304,6 +305,7 @@ const App: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   
   const products = PRODUCTS;
 
@@ -318,6 +320,7 @@ const App: React.FC = () => {
       // List of critical images to wait for (Logo, Hero, Top products)
       const criticalImages = [
         'https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand',
+        'https://i.ibb.co/d4wj1KW2/POST-DELIVERY.png', // Preload Modal Image
         ...HERO_IMAGES,
         // Preload first 2 products to avoid pop-in on menu
         ...products.slice(0, 2).map(p => p.image) 
@@ -406,7 +409,8 @@ const App: React.FC = () => {
   };
 
   const handleOrderClick = () => {
-    setView('menu');
+    // INTERCEPT: Show Info Modal before going to menu
+    setIsInfoModalOpen(true);
   };
 
   const handleCheckoutClick = () => {
@@ -432,6 +436,9 @@ const App: React.FC = () => {
   const handleViewChange = (newView: ViewState) => {
     if (newView === 'contact') {
       setIsContactOpen(true);
+    } else if (newView === 'menu') {
+      // INTERCEPT: Show Info Modal before going to menu via nav bar
+      setIsInfoModalOpen(true);
     } else {
       setView(newView);
     }
@@ -511,6 +518,16 @@ const App: React.FC = () => {
         <ContactModal 
           isOpen={isContactOpen}
           onClose={() => setIsContactOpen(false)}
+        />
+
+        <InfoModal 
+          isOpen={isInfoModalOpen}
+          onClose={() => setIsInfoModalOpen(false)}
+          onContinue={() => {
+            setIsInfoModalOpen(false);
+            setView('menu');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
         />
 
         {cart.length > 0 && view !== 'cart' && !isCartOpen && (
