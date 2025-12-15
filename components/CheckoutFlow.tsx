@@ -11,12 +11,13 @@ interface CheckoutFlowProps {
   cart: CartItem[];
   total: number;
   onClearCart: () => void;
+  onReturnToHome?: () => void;
 }
 
 type LocationType = 'Marechal Cândido Rondon' | 'Foz do Iguaçu';
 type PaymentMethod = 'PIX' | 'Cartão' | 'Dinheiro';
 
-export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total, onClearCart }) => {
+export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total, onClearCart, onReturnToHome }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [location, setLocation] = useState<LocationType | null>(null);
   
@@ -88,6 +89,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       setStep(1); // Reset step for the next order
       setPaymentMethod(null); // Clear payment method for fresh start
       // Note: We keep Name, DOB, and Address for user convenience on repeat orders
+      
+      if (onReturnToHome) {
+        onReturnToHome();
+      }
     }
     onClose();
   };

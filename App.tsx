@@ -505,6 +505,7 @@ const App: React.FC = () => {
           cart={cart}
           total={cartTotal}
           onClearCart={clearCart}
+          onReturnToHome={() => setView('home')}
         />
 
         <ContactModal 
