@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calculator, ArrowRight } from 'lucide-react';
+import { Calculator, ArrowRight, Award } from 'lucide-react';
 import { Button } from './Button';
 
 interface HeroSliderProps {
@@ -31,12 +31,17 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
         {/* Overlay Content */}
         <div className="absolute inset-0 flex flex-col justify-end p-6 pb-12 z-10">
           
-          <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/50 backdrop-blur-md self-start animate-fade-in">
+          {/* Floating Medal Image - Added based on request */}
+          <div className="absolute right-4 bottom-44 z-20 animate-slide-up">
             <img 
               src={MEDAL_IMAGE} 
-              alt="Medalha" 
-              className="w-5 h-5 mr-2 object-contain"
+              alt="Prêmio" 
+              className="w-28 h-28 object-contain drop-shadow-[0_0_25px_rgba(245,158,11,0.4)] filter brightness-110"
             />
+          </div>
+
+          <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/50 backdrop-blur-md self-start animate-fade-in">
+            <Award className="w-5 h-5 mr-2 text-amber-500" />
             <span className="text-amber-500 text-xs font-bold tracking-wide uppercase">CERVEJARIA PREMIADA</span>
           </div>
           

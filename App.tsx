@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays } from 'lucide-react';
+import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award } from 'lucide-react';
 import { PRODUCTS, HERO_IMAGES } from './constants';
 import { Product, CartItem, ViewState, ProductCategory } from './types';
 import { Button } from './components/Button';
@@ -80,6 +80,19 @@ const HomeView: React.FC<{
           </p>
 
           <div className="grid grid-cols-1 gap-6">
+            {/* NEW ITEM: Cervejaria Premiada */}
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm">
+              <div className="p-3 bg-zinc-800 rounded-lg text-amber-500">
+                <Award size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-white">Cervejaria Premiada</h3>
+                <p className="text-sm text-zinc-400 mt-1">
+                  Uma das cervejarias mais premiadas do Brasil, com excelência reconhecida em cada barril.
+                </p>
+              </div>
+            </div>
+
             <div className="flex items-start gap-4 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm">
               <div className="p-3 bg-zinc-800 rounded-lg text-amber-500">
                 <Truck size={24} />
