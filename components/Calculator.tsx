@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from './Button';
 import { Users, Clock, Beer } from 'lucide-react';
@@ -83,10 +84,33 @@ export const Calculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         </div>
       </div>
 
-      <div className="text-center py-6 bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-2xl border border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
-        <p className="text-zinc-400 text-sm mb-1">Você vai precisar de aproximadamente:</p>
-        <div className="text-5xl font-bold text-white mb-2">{totalLiters} <span className="text-2xl text-amber-500">Litros</span></div>
-        <p className="text-xs text-zinc-500 px-4">Cálculo baseado em consumo médio. Recomendamos sempre uma margem de segurança de 10%.</p>
+      {/* Animated Beer Container */}
+      <div className="relative overflow-hidden text-center py-6 bg-zinc-900 rounded-2xl border border-zinc-700 shadow-[0_0_30px_rgba(245,158,11,0.1)] group">
+        
+        {/* Animated Liquid Background */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-amber-600 to-amber-400 animate-beer-fill opacity-80 z-0">
+            {/* Foam Layer */}
+            <div className="absolute top-0 w-full h-3 bg-white/90 blur-[2px] scale-x-110" />
+            <div className="absolute top-1 w-full h-2 bg-white/60 blur-md" />
+
+            {/* Rising Bubbles */}
+            <div className="absolute left-[10%] w-1.5 h-1.5 bg-white/40 rounded-full animate-bubble-rise" style={{ animationDelay: '0.2s' }}></div>
+            <div className="absolute left-[30%] w-2 h-2 bg-white/30 rounded-full animate-bubble-rise" style={{ animationDelay: '1.5s' }}></div>
+            <div className="absolute left-[50%] w-1 h-1 bg-white/50 rounded-full animate-bubble-rise" style={{ animationDelay: '0.8s' }}></div>
+            <div className="absolute left-[70%] w-1.5 h-1.5 bg-white/30 rounded-full animate-bubble-rise" style={{ animationDelay: '2.2s' }}></div>
+            <div className="absolute left-[90%] w-2 h-2 bg-white/40 rounded-full animate-bubble-rise" style={{ animationDelay: '1.0s' }}></div>
+        </div>
+
+        {/* Content on top */}
+        <div className="relative z-10">
+            <p className="text-zinc-100 font-medium text-sm mb-1 drop-shadow-md">Você vai precisar de aproximadamente:</p>
+            <div className="text-5xl font-bold text-white mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                {totalLiters} <span className="text-2xl text-white/90">Litros</span>
+            </div>
+            <p className="text-xs text-white/80 px-4 font-medium drop-shadow-md">
+                Cálculo baseado em consumo médio. Recomendamos sempre uma margem de segurança de 10%.
+            </p>
+        </div>
       </div>
 
       <Button fullWidth onClick={() => onCalculate(totalLiters)}>

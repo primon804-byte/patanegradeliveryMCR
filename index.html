@@ -36,6 +36,8 @@
               'slide-up': 'slideUp 0.5s ease-out forwards',
               'shimmer': 'shimmer 3s infinite',
               'float': 'float 6s ease-in-out infinite',
+              'beer-fill': 'beerFill 8s ease-in-out infinite',
+              'bubble-rise': 'bubbleRise 4s infinite linear',
             },
             keyframes: {
               fadeIn: {
@@ -53,6 +55,16 @@
               float: {
                 '0%, 100%': { transform: 'translateY(0)' },
                 '50%': { transform: 'translateY(-15px)' },
+              },
+              beerFill: {
+                '0%': { height: '30%' },
+                '50%': { height: '85%' }, /* Never reaches 100% */
+                '100%': { height: '30%' }
+              },
+              bubbleRise: {
+                '0%': { bottom: '0', opacity: '0', transform: 'translateX(0)' },
+                '50%': { opacity: '0.8' },
+                '100%': { bottom: '100%', opacity: '0', transform: 'translateX(10px)' }
               }
             }
           },
