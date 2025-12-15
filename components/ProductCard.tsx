@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Product } from '../types';
-import { Plus } from 'lucide-react';
+import { Plus, Trophy, Flame } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -15,11 +16,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClic
       onClick={() => onClick(product)}
       className={`relative group overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 ${featured ? 'col-span-2' : 'col-span-1'} cursor-pointer transition-transform active:scale-[0.98]`}
     >
-      {product.isPopular && (
-        <div className="absolute top-3 left-3 z-10 bg-amber-500 text-black text-xs font-bold px-2 py-1 rounded-md shadow-lg">
+      {/* BADGES */}
+      {product.isChampion ? (
+        <div className="absolute top-3 left-3 z-10 bg-zinc-100 border-2 border-amber-500 text-amber-700 text-[10px] font-extrabold px-2 py-1 rounded-md shadow-lg shadow-black/50 flex items-center gap-1">
+          <Trophy size={10} strokeWidth={3} className="text-amber-500" />
+          CAMPEÃO DE VENDAS
+        </div>
+      ) : product.isPopular ? (
+        <div className="absolute top-3 left-3 z-10 bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded-md shadow-lg flex items-center gap-1">
+          <Flame size={10} strokeWidth={3} />
           MAIS PEDIDO
         </div>
-      )}
+      ) : null}
       
       <div className={`relative ${featured ? 'h-48' : 'h-40'} w-full overflow-hidden`}>
         <img 

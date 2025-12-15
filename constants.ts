@@ -23,7 +23,7 @@ export const HERO_IMAGES = [
 
 export const PRODUCTS: Product[] = [
   // ============================================================================
-  // GROWLERS
+  // GROWLERS (Prioridade: Pilsen Cristal, Vinho Branco, Session IPA, Vinho Tinto)
   // ============================================================================
   {
     id: 'growler-pilsen-cristal-1l',
@@ -34,9 +34,52 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.GROWLER,
     type: BeerType.PILSEN,
     volumeLiters: 1,
+    isChampion: true, // Campeão de Vendas
     abv: 4.5,
     ibu: 7,
     pairing: 'Hambúrguer, Massas, Aperitivos, Queijos',
+  },
+  {
+    id: 'growler-vinho-branco-1l',
+    name: 'Chopp de Vinho Branco 1L',
+    description: 'Fermentado de uvas Moscato, levemente adocicado, ideal para dias quentes.',
+    price: 20,
+    image: 'https://www.starkdistribuidora.com.br/storage/products/a95saNB5bXxb9oOg.jpg',
+    category: ProductCategory.GROWLER,
+    type: BeerType.LAGER,
+    volumeLiters: 1,
+    isChampion: true, // Campeão de Vendas
+    abv: 5.0,
+    ibu: 0,
+    pairing: 'Carnes assadas, Queijos, Massas, Sobremesas',
+  },
+  {
+    id: 'growler-session-ipa-1l',
+    name: 'Session IPA 1L',
+    description: 'Cerveja leve, dourada, extremamente refrescante, com amargor moderado e aroma cítrico intenso.',
+    price: 22,
+    image: 'https://www.starkdistribuidora.com.br/storage/products/L8ciZMapSqAfmEja.jpg',
+    category: ProductCategory.GROWLER,
+    type: BeerType.IPA,
+    volumeLiters: 1,
+    isPopular: true,
+    abv: 5.0,
+    ibu: 30,
+    pairing: 'Hambúrguer, Comida mexicana, Carne assada, Massas',
+  },
+  {
+    id: 'growler-vinho-tinto-1l',
+    name: 'Chopp de Vinho Tinto 1L',
+    description: 'Fermentado de uvas Isabel e Bordeaux, com perfil frisante e creme marcante.',
+    price: 20,
+    image: 'https://www.starkdistribuidora.com.br/storage/products/TQp206a6s5GjQbRy.jpg',
+    category: ProductCategory.GROWLER,
+    type: BeerType.LAGER,
+    volumeLiters: 1,
+    isPopular: true,
+    abv: 5.0,
+    ibu: 0,
+    pairing: 'Carnes, Queijos, Massas, Sobremesas',
   },
   {
     id: 'growler-premium-lager-1l',
@@ -64,48 +107,9 @@ export const PRODUCTS: Product[] = [
     ibu: 47,
     pairing: 'Hambúrguer, Carne assada, Comida mexicana, Massas',
   },
-  {
-    id: 'growler-session-ipa-1l',
-    name: 'Session IPA 1L',
-    description: 'Cerveja leve, dourada, extremamente refrescante, com amargor moderado e aroma cítrico intenso.',
-    price: 22,
-    image: 'https://www.starkdistribuidora.com.br/storage/products/L8ciZMapSqAfmEja.jpg',
-    category: ProductCategory.GROWLER,
-    type: BeerType.IPA,
-    volumeLiters: 1,
-    abv: 5.0,
-    ibu: 30,
-    pairing: 'Hambúrguer, Comida mexicana, Carne assada, Massas',
-  },
-  {
-    id: 'growler-vinho-tinto-1l',
-    name: 'Chopp de Vinho Tinto 1L',
-    description: 'Fermentado de uvas Isabel e Bordeaux, com perfil frisante e creme marcante.',
-    price: 20,
-    image: 'https://www.starkdistribuidora.com.br/storage/products/TQp206a6s5GjQbRy.jpg',
-    category: ProductCategory.GROWLER,
-    type: BeerType.LAGER,
-    volumeLiters: 1,
-    abv: 5.0,
-    ibu: 0,
-    pairing: 'Carnes, Queijos, Massas, Sobremesas',
-  },
-  {
-    id: 'growler-vinho-branco-1l',
-    name: 'Chopp de Vinho Branco 1L',
-    description: 'Fermentado de uvas Moscato, levemente adocicado, ideal para dias quentes.',
-    price: 20,
-    image: 'https://www.starkdistribuidora.com.br/storage/products/a95saNB5bXxb9oOg.jpg',
-    category: ProductCategory.GROWLER,
-    type: BeerType.LAGER,
-    volumeLiters: 1,
-    abv: 5.0,
-    ibu: 0,
-    pairing: 'Carnes assadas, Queijos, Massas, Sobremesas',
-  },
 
   // ============================================================================
-  // BARRIS 30L
+  // BARRIS 30L (Prioridade: Pilsen, Premium Lager, Vinho Branco)
   // ============================================================================
   {
     id: 'keg-pilsen-30',
@@ -116,7 +120,7 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.KEG30,
     type: BeerType.PILSEN,
     volumeLiters: 30,
-    isPopular: true,
+    isChampion: true, // Campeão de Vendas
     abv: 4.5,
     ibu: 7,
     pairing: 'Churrasco completo, frango a passarinho e pizza margherita.',
@@ -130,9 +134,24 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.KEG30,
     type: BeerType.LAGER,
     volumeLiters: 30,
+    isChampion: true, // Campeão de Vendas
     abv: 4.5,
     ibu: 12,
     pairing: 'Hambúrguer, Massas, Pizza, Frutos do mar',
+  },
+  {
+    id: 'keg-vinho-branco-30',
+    name: 'Barril Vinho Branco 30L',
+    description: 'Fermentado de uvas Moscato, levemente adocicado, ideal para dias quentes.',
+    price: 450,
+    image: 'https://i.ibb.co/21CdL4Gy/patanegra-1765760193272.jpg',
+    category: ProductCategory.KEG30,
+    type: BeerType.LAGER,
+    volumeLiters: 30,
+    isPopular: true,
+    abv: 5.0,
+    ibu: 0,
+    pairing: 'Carnes assadas, Queijos, Massas, Sobremesas',
   },
   {
     id: 'keg-vinho-tinto-30',
@@ -146,19 +165,6 @@ export const PRODUCTS: Product[] = [
     abv: 5.0,
     ibu: 0,
     pairing: 'Carnes, Queijos, Massas, Sobremesas',
-  },
-  {
-    id: 'keg-vinho-branco-30',
-    name: 'Barril Vinho Branco 30L',
-    description: 'Fermentado de uvas Moscato, levemente adocicado, ideal para dias quentes.',
-    price: 450,
-    image: 'https://i.ibb.co/21CdL4Gy/patanegra-1765760193272.jpg',
-    category: ProductCategory.KEG30,
-    type: BeerType.LAGER,
-    volumeLiters: 30,
-    abv: 5.0,
-    ibu: 0,
-    pairing: 'Carnes assadas, Queijos, Massas, Sobremesas',
   },
   {
     id: 'keg-session-ipa-30',
@@ -175,7 +181,7 @@ export const PRODUCTS: Product[] = [
   },
 
   // ============================================================================
-  // BARRIS 50L
+  // BARRIS 50L (Prioridade: Pilsen)
   // ============================================================================
   {
     id: 'keg-pilsen-50',
@@ -186,6 +192,7 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.KEG50,
     type: BeerType.PILSEN,
     volumeLiters: 50,
+    isChampion: true, // Campeão de Vendas
     abv: 4.5,
     ibu: 7,
     pairing: 'Churrasco completo e eventos corporativos.',
@@ -199,6 +206,7 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.KEG50,
     type: BeerType.LAGER,
     volumeLiters: 50,
+    isPopular: true, // Mais Pedido
     abv: 4.5,
     ibu: 12,
     pairing: 'Churrasco completo, frango a passarinho e pizza margherita.',

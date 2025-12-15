@@ -23,6 +23,7 @@ export interface Product {
   category: ProductCategory;
   volumeLiters?: number; // e.g., 30, 50
   isPopular?: boolean;
+  isChampion?: boolean; // New flag for Sales Champion
   abv?: number; // Alcohol by volume
   ibu?: number; // Bitterness
   pairing?: string; // Food pairing suggestions
