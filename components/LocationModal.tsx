@@ -42,22 +42,22 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, o
 
         <div className="space-y-3 relative z-10">
           <button
-            onClick={() => onSelect('Marechal Cândido Rondon')}
+            onClick={() => onSelect('Foz do Iguaçu')}
             className="w-full group bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-500/50 p-4 rounded-xl flex items-center justify-between transition-all duration-300"
           >
             <div className="text-left">
-              <span className="block text-white font-bold group-hover:text-amber-500 transition-colors">Marechal Cândido Rondon</span>
+              <span className="block text-white font-bold group-hover:text-amber-500 transition-colors">Foz do Iguaçu</span>
               <span className="text-xs text-zinc-500">Matriz e Região</span>
             </div>
             <ChevronRight className="text-zinc-600 group-hover:text-amber-500 transition-colors" size={20} />
           </button>
 
           <button
-            onClick={() => onSelect('Foz do Iguaçu')}
+            onClick={() => onSelect('Marechal Cândido Rondon')}
             className="w-full group bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-500/50 p-4 rounded-xl flex items-center justify-between transition-all duration-300"
           >
             <div className="text-left">
-              <span className="block text-white font-bold group-hover:text-amber-500 transition-colors">Foz do Iguaçu</span>
+              <span className="block text-white font-bold group-hover:text-amber-500 transition-colors">Marechal Cândido Rondon</span>
               <span className="text-xs text-zinc-500">Filial e Região</span>
             </div>
             <ChevronRight className="text-zinc-600 group-hover:text-amber-500 transition-colors" size={20} />

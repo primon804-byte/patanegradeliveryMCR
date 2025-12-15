@@ -15,6 +15,7 @@ import { CheckoutFlow } from './components/CheckoutFlow';
 import { ContactModal } from './components/ContactModal';
 import { InfoModal } from './components/InfoModal';
 import { LocationModal } from './components/LocationModal';
+import { CartConflictModal } from './components/CartConflictModal';
 
 // --- Loading Component ---
 const LoadingScreen = () => (
@@ -326,6 +327,11 @@ const App: React.FC = () => {
   // Location State
   const [userLocation, setUserLocation] = useState<string | null>(null);
 
+  // Cart Context State
+  const [cartLocation, setCartLocation] = useState<string | null>(null);
+  const [pendingProduct, setPendingProduct] = useState<{product: Product, options?: Partial<CartItem>} | null>(null);
+
+
   // Dynamic Pricing Logic
   const adjustedProducts = useMemo(() => {
     if (userLocation === 'Foz do Iguaçu') {
@@ -386,8 +392,20 @@ const App: React.FC = () => {
     loadAssets();
   }, []);
 
-  // Update addToCart to handle options
+  // Update addToCart to handle options AND Location Conflicts
   const addToCart = (product: Product, options?: Partial<CartItem>) => {
+    
+    // CONFLICT CHECK
+    if (cart.length > 0 && cartLocation && userLocation && cartLocation !== userLocation) {
+        setPendingProduct({ product, options });
+        return;
+    }
+
+    // IF Cart is empty, set location
+    if (cart.length === 0 && userLocation) {
+        setCartLocation(userLocation);
+    }
+
     setCart(prev => {
       const existingIndex = prev.findIndex(item => item.id === product.id);
       
@@ -417,8 +435,42 @@ const App: React.FC = () => {
     });
   };
 
+  const handleResolveConflict = () => {
+      if (!pendingProduct || !userLocation) return;
+      
+      // Clear Cart
+      setCart([]);
+      
+      // Update Location Context
+      setCartLocation(userLocation);
+      
+      // Add pending product
+      const { product, options } = pendingProduct;
+      setCart([{ 
+        ...product, 
+        quantity: 1,
+        rentTables: options?.rentTables,
+        rentUmbrellas: options?.rentUmbrellas,
+        cupsQuantity: options?.cupsQuantity
+      }]);
+      
+      // Reset Pending
+      setPendingProduct(null);
+  };
+
+  const handleCancelConflict = () => {
+      setPendingProduct(null);
+  };
+
   const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.id !== productId));
+    setCart(prev => {
+        const newCart = prev.filter(item => item.id !== productId);
+        // Reset location if cart becomes empty
+        if (newCart.length === 0) {
+            setCartLocation(null);
+        }
+        return newCart;
+    });
   };
 
   const updateQuantity = (productId: string, delta: number) => {
@@ -433,6 +485,7 @@ const App: React.FC = () => {
 
   const clearCart = () => {
     setCart([]);
+    setCartLocation(null);
   };
 
   const handleOrderClick = () => {
@@ -587,6 +640,14 @@ const App: React.FC = () => {
             setIsLocationModalOpen(false);
           }}
           onSelect={handleLocationSelect}
+        />
+
+        <CartConflictModal 
+            isOpen={!!pendingProduct}
+            onClose={handleCancelConflict}
+            onConfirm={handleResolveConflict}
+            currentLocation={cartLocation || ''}
+            newLocation={userLocation || ''}
         />
 
         {cart.length > 0 && view !== 'cart' && !isCartOpen && (
