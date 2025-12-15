@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award, MapPin, ChevronDown } from 'lucide-react';
 import { PRODUCTS, HERO_IMAGES } from './constants';
 import { Product, CartItem, ViewState, ProductCategory } from './types';
 import { Button } from './components/Button';
@@ -14,6 +14,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { CheckoutFlow } from './components/CheckoutFlow';
 import { ContactModal } from './components/ContactModal';
 import { InfoModal } from './components/InfoModal';
+import { LocationModal } from './components/LocationModal';
 
 // --- Loading Component ---
 const LoadingScreen = () => (
@@ -142,15 +143,29 @@ const MenuView: React.FC<{
   recommendedVolume: number | null;
   activeCategory: ProductCategory;
   setActiveCategory: (c: ProductCategory) => void;
-}> = ({ products, addToCart, setSelectedProduct, recommendedVolume, activeCategory, setActiveCategory }) => {
+  userLocation: string | null;
+  onOpenLocationModal: () => void;
+}> = ({ products, addToCart, setSelectedProduct, recommendedVolume, activeCategory, setActiveCategory, userLocation, onOpenLocationModal }) => {
   // State lifted to App component
   const filteredProducts = products.filter(p => p.category === activeCategory);
 
   return (
     <div className="animate-fade-in pb-24 max-w-md mx-auto h-screen flex flex-col">
       <div className="p-4 pb-2 pt-8">
-        <div className="flex justify-between items-start">
-          <div>
+        <div className="flex flex-col items-start gap-2">
+          {/* Location Selector */}
+          <button 
+            onClick={onOpenLocationModal}
+            className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 hover:bg-amber-500/20 transition-colors active:scale-95"
+          >
+             <div className="bg-amber-500 text-black rounded-full p-1">
+                <MapPin size={12} strokeWidth={2.5} />
+             </div>
+             <span className="text-xs font-bold uppercase tracking-wide">{userLocation || 'Selecione a Unidade'}</span>
+             <ChevronDown size={14} />
+          </button>
+
+          <div className="flex justify-between items-start w-full">
             <h2 className="text-3xl font-serif text-white">Nosso Catálogo</h2>
           </div>
         </div>
@@ -306,8 +321,28 @@ const App: React.FC = () => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   
-  const products = PRODUCTS;
+  // Location State
+  const [userLocation, setUserLocation] = useState<string | null>(null);
+
+  // Dynamic Pricing Logic
+  const adjustedProducts = useMemo(() => {
+    if (userLocation === 'Foz do Iguaçu') {
+      return PRODUCTS.map(product => {
+        let newPrice = product.price;
+        // Logic for Foz do Iguaçu (Test: +2 for Growlers, +100 for Kegs)
+        if (product.category === ProductCategory.GROWLER) {
+          newPrice += 2;
+        } else if (product.category === ProductCategory.KEG30 || product.category === ProductCategory.KEG50) {
+          newPrice += 100;
+        }
+        return { ...product, price: newPrice };
+      });
+    }
+    // Default prices (Marechal Cândido Rondon)
+    return PRODUCTS;
+  }, [userLocation]);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [recommendedVolume, setRecommendedVolume] = useState<number | null>(null);
@@ -323,7 +358,7 @@ const App: React.FC = () => {
         'https://i.ibb.co/d4wj1KW2/POST-DELIVERY.png', // Preload Modal Image
         ...HERO_IMAGES,
         // Preload first 2 products to avoid pop-in on menu
-        ...products.slice(0, 2).map(p => p.image) 
+        ...PRODUCTS.slice(0, 2).map(p => p.image) 
       ];
 
       const promises = criticalImages.map(src => {
@@ -340,7 +375,7 @@ const App: React.FC = () => {
       await Promise.race([Promise.all(promises), timeout]);
 
       // Trigger background load for rest of products
-      products.slice(2).forEach(p => {
+      PRODUCTS.slice(2).forEach(p => {
         const img = new Image();
         img.src = p.image;
       });
@@ -354,22 +389,14 @@ const App: React.FC = () => {
   // Update addToCart to handle options
   const addToCart = (product: Product, options?: Partial<CartItem>) => {
     setCart(prev => {
-      // If adding a product with special options (kegs), we might want to treat it as unique or just update the latest one.
-      // For simplicity in this flow, if options are provided, we find if there is an exact match or just update the ID match.
-      // Given the requirement is simple, let's just update the existing cart item or add new.
-      
       const existingIndex = prev.findIndex(item => item.id === product.id);
       
       if (existingIndex >= 0) {
-        // Product exists. 
-        // If options are provided, overwrite the options of the existing item (assuming user wants to update their selection)
-        // Or if simple add (+), just increment quantity.
         const existingItem = prev[existingIndex];
         
         const updatedItem = {
            ...existingItem,
            quantity: existingItem.quantity + 1,
-           // Merge options if they are provided, otherwise keep existing
            rentTables: options?.rentTables ?? existingItem.rentTables,
            rentUmbrellas: options?.rentUmbrellas ?? existingItem.rentUmbrellas,
            cupsQuantity: options?.cupsQuantity ?? existingItem.cupsQuantity
@@ -409,8 +436,26 @@ const App: React.FC = () => {
   };
 
   const handleOrderClick = () => {
-    // INTERCEPT: Show Info Modal before going to menu
+    // 1. Show Info Modal
     setIsInfoModalOpen(true);
+  };
+
+  const handleInfoContinue = () => {
+     setIsInfoModalOpen(false);
+     // 2. Check if Location is set
+     if (!userLocation) {
+       setIsLocationModalOpen(true);
+     } else {
+       setView('menu');
+       window.scrollTo({ top: 0, behavior: 'smooth' });
+     }
+  };
+
+  const handleLocationSelect = (location: string) => {
+    setUserLocation(location);
+    setIsLocationModalOpen(false);
+    setView('menu');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCheckoutClick = () => {
@@ -428,8 +473,14 @@ const App: React.FC = () => {
     } else {
       setActiveCategory(ProductCategory.KEG50);
     }
-    setView('menu');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Check location before going to menu from calculator
+    if (!userLocation) {
+      setIsLocationModalOpen(true);
+    } else {
+      setView('menu');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // Logic to handle Navigation changes
@@ -463,12 +514,14 @@ const App: React.FC = () => {
 
         {view === 'menu' && (
           <MenuView 
-            products={products} 
+            products={adjustedProducts} 
             addToCart={addToCart} 
             setSelectedProduct={setSelectedProduct}
             recommendedVolume={recommendedVolume}
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
+            userLocation={userLocation}
+            onOpenLocationModal={() => setIsLocationModalOpen(true)}
           />
         )}
 
@@ -513,6 +566,7 @@ const App: React.FC = () => {
           total={cartTotal}
           onClearCart={clearCart}
           onReturnToHome={() => setView('home')}
+          userLocation={userLocation}
         />
 
         <ContactModal 
@@ -523,11 +577,16 @@ const App: React.FC = () => {
         <InfoModal 
           isOpen={isInfoModalOpen}
           onClose={() => setIsInfoModalOpen(false)}
-          onContinue={() => {
-            setIsInfoModalOpen(false);
-            setView('menu');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+          onContinue={handleInfoContinue}
+        />
+
+        <LocationModal 
+          isOpen={isLocationModalOpen}
+          onClose={() => {
+            // Optional: If user closes without selecting, maybe go back to home or keep closed
+            setIsLocationModalOpen(false);
           }}
+          onSelect={handleLocationSelect}
         />
 
         {cart.length > 0 && view !== 'cart' && !isCartOpen && (

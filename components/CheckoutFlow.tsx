@@ -12,14 +12,17 @@ interface CheckoutFlowProps {
   total: number;
   onClearCart: () => void;
   onReturnToHome?: () => void;
+  userLocation: string | null;
 }
 
 type PaymentMethod = 'PIX' | 'Cartão' | 'Dinheiro';
 
-export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total, onClearCart, onReturnToHome }) => {
+export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total, onClearCart, onReturnToHome, userLocation }) => {
   // Step 1: Form, Step 2: Success
   const [step, setStep] = useState<1 | 2>(1);
-  const location = 'Marechal Cândido Rondon';
+  
+  // Default to Marechal if something goes wrong, but UI should prevent this
+  const locationName = userLocation || 'Marechal Cândido Rondon'; 
   
   // Form State
   const [name, setName] = useState('');
@@ -33,8 +36,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     e.preventDefault();
     if (!name || !dob || !address || !paymentMethod) return;
 
-    // Use Marechal Number
-    const phoneNumber = WHATSAPP_NUMBERS.MARECHAL;
+    // Determine WhatsApp Number based on Location
+    const phoneNumber = locationName === 'Foz do Iguaçu' 
+      ? WHATSAPP_NUMBERS.FOZ 
+      : WHATSAPP_NUMBERS.MARECHAL;
 
     // Construct Message
     const header = `*Novo Pedido - Patanegra App*\n------------------\n`;
@@ -56,7 +61,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
     const totalMsg = `\n*Total Aprox.: R$ ${total.toFixed(2)}*`;
     
-    const clientInfo = `\n\n👤 *Dados do Cliente*\n------------------\nNome: ${name}\nNascimento: ${dob}\nEndereço: ${address}\n📍 Unidade: ${location}\n💰 Pagamento: ${paymentMethod}`;
+    const clientInfo = `\n\n👤 *Dados do Cliente*\n------------------\nNome: ${name}\nNascimento: ${dob}\nEndereço: ${address}\n📍 Unidade: ${locationName}\n💰 Pagamento: ${paymentMethod}`;
     const footer = `\n\n------------------\nGostaria de confirmar o pedido.`;
 
     const message = encodeURIComponent(header + items + totalMsg + clientInfo + footer);
@@ -126,7 +131,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 </div>
                 <div>
                     <p className="text-[10px] text-zinc-500 uppercase font-bold">Unidade de Entrega</p>
-                    <p className="text-sm font-medium text-white leading-tight">{location}</p>
+                    <p className="text-sm font-medium text-white leading-tight">{locationName}</p>
                 </div>
             </div>
 
