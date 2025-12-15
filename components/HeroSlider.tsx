@@ -50,8 +50,8 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
                 PEDIR AGORA
                 <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
               </span>
-              {/* Shimmer Effect Overlay */}
-              <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent z-0 pointer-events-none" />
+              {/* Shimmer Effect Overlay - Continuous & Brighter */}
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-0 pointer-events-none" />
             </Button>
             
             <Button 
