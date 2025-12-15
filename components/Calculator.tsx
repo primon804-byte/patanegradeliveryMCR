@@ -87,13 +87,13 @@ export const Calculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       {/* Animated Beer Container */}
       <div className="relative overflow-hidden text-center py-6 bg-zinc-900 rounded-2xl border border-zinc-700 shadow-[0_0_30px_rgba(245,158,11,0.1)] group">
         
-        {/* Animated Liquid Background */}
+        {/* Animated Liquid Background - Reverted to Original Darker Colors */}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-amber-600 to-amber-400 animate-beer-fill opacity-80 z-0">
-            {/* Foam Layer */}
+            {/* Foam Layer - Reverted to Original */}
             <div className="absolute top-0 w-full h-3 bg-white/90 blur-[2px] scale-x-110" />
             <div className="absolute top-1 w-full h-2 bg-white/60 blur-md" />
 
-            {/* Rising Bubbles */}
+            {/* Rising Bubbles - Reverted to Original */}
             <div className="absolute left-[10%] w-1.5 h-1.5 bg-white/40 rounded-full animate-bubble-rise" style={{ animationDelay: '0.2s' }}></div>
             <div className="absolute left-[30%] w-2 h-2 bg-white/30 rounded-full animate-bubble-rise" style={{ animationDelay: '1.5s' }}></div>
             <div className="absolute left-[50%] w-1 h-1 bg-white/50 rounded-full animate-bubble-rise" style={{ animationDelay: '0.8s' }}></div>

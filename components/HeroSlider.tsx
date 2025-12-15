@@ -72,10 +72,13 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
               fullWidth 
               variant="outline" 
               onClick={onCalcClick}
-              className="bg-zinc-950/40 backdrop-blur-md border-zinc-700 hover:bg-zinc-900 hover:border-amber-500 transition-all active:scale-95"
-              icon={<Calculator size={18} />}
+              className="relative bg-zinc-950/40 backdrop-blur-md border-zinc-700 hover:border-amber-400 transition-all active:scale-95"
             >
-               Calculadora de Chopp
+               {/* Button Content - Clean (No animation) */}
+               <div className="relative z-10 flex items-center justify-center gap-2 text-zinc-300 group-hover:text-amber-500 transition-colors duration-300">
+                  <Calculator size={18} />
+                  <span className="font-semibold">Calculadora de Chopp</span>
+               </div>
             </Button>
           </div>
         </div>
