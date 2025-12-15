@@ -4,7 +4,13 @@ export enum BeerType {
   IPA = 'IPA',
   WEISS = 'Weiss',
   STOUT = 'Stout',
-  LAGER = 'Puro Malte'
+  LAGER = 'Puro Malte',
+  SOUR = 'Sour',
+  APA = 'APA',
+  RED_ALE = 'Red Ale',
+  DUNKEL = 'Dunkel',
+  VIENNA = 'Vienna',
+  AMBER = 'Amber'
 }
 
 export enum ProductCategory {

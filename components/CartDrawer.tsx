@@ -108,6 +108,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <span className="text-zinc-400 text-sm">Total do Pedido</span>
               <span className="text-2xl font-bold text-amber-500 font-serif">R$ {total.toFixed(2)}</span>
             </div>
+
             <Button 
               fullWidth 
               onClick={onCheckout} 
