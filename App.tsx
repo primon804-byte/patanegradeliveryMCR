@@ -56,50 +56,66 @@ const HomeView: React.FC<{
         onCalcClick={() => setView('calculator')}
       />
 
-      <div className="px-6 py-10 bg-zinc-950 -mt-10 relative z-20 rounded-t-[2.5rem] border-t border-zinc-900 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
-        <div className="w-12 h-1 bg-zinc-800 mx-auto rounded-full mb-8 opacity-50"></div>
+      <div className="px-6 py-10 bg-zinc-950 -mt-10 relative z-20 rounded-t-[2.5rem] border-t border-zinc-900 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
         
-        <h2 className="text-3xl font-serif text-white mb-4 text-center">Por que Patanegra?</h2>
-        <p className="text-zinc-400 text-center mb-10 text-lg leading-relaxed max-w-xs mx-auto">
-          Transforme seu evento com o melhor chope da cidade. Rápido, gelado e sem complicações.
-        </p>
+        {/* Background Watermark Logo with Gradient Fade */}
+        <div className="absolute top-0 left-0 right-0 h-[400px] flex items-start justify-center pointer-events-none z-0 pt-12">
+            <div className="relative opacity-[0.06]">
+                <img 
+                  src="https://i.ibb.co/bMym2DFk/simbolo2.png" 
+                  alt="" 
+                  className="w-72 h-72 object-contain grayscale"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-950/20 to-zinc-950" />
+            </div>
+        </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          <div className="flex items-start gap-4 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-             <div className="p-3 bg-zinc-800 rounded-lg text-amber-500">
-               <Truck size={24} />
-             </div>
-             <div>
-               <h3 className="font-bold text-white">Entrega Expressa</h3>
-               <p className="text-sm text-zinc-400 mt-1">Seu chope chega na temperatura ideal e pronto para servir.</p>
-             </div>
-          </div>
+        {/* Content Wrapper to keep text above watermark */}
+        <div className="relative z-10">
+          <div className="w-12 h-1 bg-zinc-800 mx-auto rounded-full mb-8 opacity-50"></div>
           
-          <div className="flex items-start gap-4 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-             <div className="p-3 bg-zinc-800 rounded-lg text-amber-500">
-               <ShieldCheck size={24} />
-             </div>
-             <div>
-               <h3 className="font-bold text-white">Qualidade Garantida</h3>
-               <p className="text-sm text-zinc-400 mt-1">Barris selecionados e equipamentos profissionais.</p>
-             </div>
-          </div>
+          <h2 className="text-3xl font-serif text-white mb-4 text-center">Por que Patanegra?</h2>
+          <p className="text-zinc-400 text-center mb-10 text-lg leading-relaxed max-w-xs mx-auto">
+            Transforme seu evento com o melhor chope da cidade. Rápido, gelado e sem complicações.
+          </p>
 
-          <button 
-            onClick={onEventClick}
-            className="flex items-start text-left gap-4 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-amber-500/50 hover:bg-zinc-900 transition-all active:scale-[0.98]"
-          >
-             <div className="p-3 bg-zinc-800 rounded-lg text-amber-500">
-               <CalendarDays size={24} />
-             </div>
-             <div>
-               <h3 className="font-bold text-white flex items-center gap-2">
-                 Contate para Eventos
-                 <span className="text-[10px] bg-amber-500 text-black px-1.5 py-0.5 rounded font-bold uppercase">Novo</span>
-               </h3>
-               <p className="text-sm text-zinc-400 mt-1">Fale diretamente com nossa equipe via WhatsApp.</p>
-             </div>
-          </button>
+          <div className="grid grid-cols-1 gap-6">
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm">
+              <div className="p-3 bg-zinc-800 rounded-lg text-amber-500">
+                <Truck size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-white">Entrega Expressa</h3>
+                <p className="text-sm text-zinc-400 mt-1">Seu chope chega na temperatura ideal e pronto para servir.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm">
+              <div className="p-3 bg-zinc-800 rounded-lg text-amber-500">
+                <ShieldCheck size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-white">Qualidade Garantida</h3>
+                <p className="text-sm text-zinc-400 mt-1">Barris selecionados e equipamentos profissionais.</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={onEventClick}
+              className="flex items-start text-left gap-4 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-amber-500/50 hover:bg-zinc-900 transition-all active:scale-[0.98] backdrop-blur-sm"
+            >
+              <div className="p-3 bg-zinc-800 rounded-lg text-amber-500">
+                <CalendarDays size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-white flex items-center gap-2">
+                  Contate para Eventos
+                  <span className="text-[10px] bg-amber-500 text-black px-1.5 py-0.5 rounded font-bold uppercase">Novo</span>
+                </h3>
+                <p className="text-sm text-zinc-400 mt-1">Fale diretamente com nossa equipe via WhatsApp.</p>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </div>
