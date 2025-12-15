@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="https://via.placeholder.com/32/000000/F59E0B?text=P" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <meta name="theme-color" content="#09090b" />
+    <meta name="description" content="Patanegra - Distribuidora Premium de Chope" />
+    <title>Patanegra Premium Draft</title>
+    
+    <!-- CRITICAL RESOURCE PRELOADING -->
+    <link rel="preload" as="image" href="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" fetchpriority="high">
+    <link rel="preload" as="image" href="https://i.ibb.co/jZWpr3kK/IMG-9249-1.jpg" fetchpriority="high">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+            },
+            colors: {
+              brand: {
+                gold: '#F59E0B',
+                dark: '#09090b',
+                glass: 'rgba(255, 255, 255, 0.08)',
+              }
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'slide-up': 'slideUp 0.5s ease-out forwards',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(20px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #09090b;
+        color: #f4f4f5;
+        -webkit-tap-highlight-color: transparent;
+        margin: 0;
+      }
+      
+      /* Splash Screen Styles - Critical CSS */
+      .splash-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background-color: #09090b;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .splash-logo-container {
+        position: relative;
+        width: 8rem;
+        height: 8rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .splash-pulse {
+        position: absolute;
+        inset: 0;
+        background-color: rgba(245, 158, 11, 0.15);
+        border-radius: 9999px;
+        animation: splashPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+      }
+      
+      .splash-circle {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        height: 100%;
+        background-color: #18181b;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #27272a;
+        box-shadow: 0 0 40px -10px rgba(245, 158, 11, 0.1);
+      }
+      
+      .splash-img {
+        width: 5rem;
+        height: 5rem;
+        object-fit: contain;
+        animation: splashPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      
+      .splash-text {
+        color: #f59e0b;
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        opacity: 0.8;
+        animation: splashTextPulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes splashPing {
+        75%, 100% { transform: scale(1.5); opacity: 0; }
+      }
+      @keyframes splashPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(0.95); }
+      }
+      @keyframes splashTextPulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root">
+      <!-- STATIC LOADING SCREEN -->
+      <!-- This ensures immediate feedback while JS and Images load -->
+      <div class="splash-screen">
+         <div class="splash-logo-container">
+            <div class="splash-pulse"></div>
+            <div class="splash-circle">
+               <img 
+                 src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" 
+                 class="splash-img" 
+                 alt="Patanegra"
+               />
+            </div>
+         </div>
+         <div class="splash-text">Carregando</div>
+      </div>
+    </div>
+    <!-- Entry Point Script -->
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
