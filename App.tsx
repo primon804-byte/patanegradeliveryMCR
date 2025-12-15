@@ -524,7 +524,7 @@ const App: React.FC = () => {
     setIsCheckoutOpen(true);
   };
 
-  const handleResolveCheckoutConflict = (action: 'switch' | 'clear') => {
+  const handleResolveCheckoutConflict = (action: 'switch' | 'clear' | 'update') => {
       if (action === 'switch' && cartLocation) {
           // Switch user location to match cart and proceed to checkout
           setUserLocation(cartLocation);
@@ -535,6 +535,26 @@ const App: React.FC = () => {
           // Clear cart and stay in current location
           clearCart();
           setShowCheckoutConflict(false);
+      } else if (action === 'update' && userLocation) {
+          // Update items to current location pricing
+          setCart(prev => prev.map(item => {
+              // Find original base product to ensure we don't double-add or calculate from wrong base
+              const original = PRODUCTS.find(p => p.id === item.id) || item;
+              let newPrice = original.price;
+
+              if (userLocation === 'Foz do Iguaçu') {
+                  if (item.category === ProductCategory.GROWLER) newPrice += 2;
+                  else if (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) newPrice += 100;
+              }
+              // If location is Marechal (default), it stays base price.
+              
+              return { ...item, price: newPrice };
+          }));
+          
+          setCartLocation(userLocation);
+          setShowCheckoutConflict(false);
+          setIsCartOpen(false);
+          setIsCheckoutOpen(true);
       }
   };
 
@@ -679,6 +699,7 @@ const App: React.FC = () => {
             onClose={() => setShowCheckoutConflict(false)}
             onSwitch={() => handleResolveCheckoutConflict('switch')}
             onClear={() => handleResolveCheckoutConflict('clear')}
+            onUpdatePrices={() => handleResolveCheckoutConflict('update')}
             cartLocation={cartLocation || ''}
             userLocation={userLocation || ''}
         />

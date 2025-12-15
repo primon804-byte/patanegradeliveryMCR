@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AlertTriangle, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Trash2, TrendingUp } from 'lucide-react';
 import { Button } from './Button';
 
 interface CheckoutConflictModalProps {
@@ -8,12 +8,13 @@ interface CheckoutConflictModalProps {
   onClose: () => void;
   onSwitch: () => void;
   onClear: () => void;
+  onUpdatePrices: () => void;
   cartLocation: string;
   userLocation: string;
 }
 
 export const CheckoutConflictModal: React.FC<CheckoutConflictModalProps> = ({
-  isOpen, onClose, onSwitch, onClear, cartLocation, userLocation
+  isOpen, onClose, onSwitch, onClear, onUpdatePrices, cartLocation, userLocation
 }) => {
    if (!isOpen) return null;
 
@@ -32,20 +33,35 @@ export const CheckoutConflictModal: React.FC<CheckoutConflictModalProps> = ({
                   <AlertTriangle size={32} />
               </div>
               
-              <h2 className="text-xl font-serif text-white font-bold mb-2">Conflito de Localização</h2>
+              <h2 className="text-xl font-serif text-white font-bold mb-2">Diferença de Tabela</h2>
               
               <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
-                  Seu carrinho contém itens de <strong className="text-white">{cartLocation}</strong>, mas você está navegando em <strong className="text-white">{userLocation}</strong>.
+                  Seu carrinho foi montado com preços de <strong className="text-white">{cartLocation}</strong>, mas você está em <strong className="text-white">{userLocation}</strong>.
               </p>
 
               <div className="w-full space-y-3">
-                  <Button fullWidth onClick={onSwitch}>
+                  {/* Option 1: Update Prices (Recommended) */}
+                  <Button 
+                    fullWidth 
+                    onClick={onUpdatePrices}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 border border-emerald-500/50"
+                  >
                       <div className="flex items-center justify-center gap-2">
-                          <RefreshCw size={18} />
-                          <span>Mudar para {cartLocation} e Finalizar</span>
+                          <TrendingUp size={18} />
+                          <span>Atualizar valores para {userLocation}</span>
                       </div>
                   </Button>
+
+                  {/* Option 2: Switch Location */}
+                  <button 
+                      onClick={onSwitch}
+                      className="w-full py-3 rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors flex items-center justify-center gap-2 font-medium"
+                  >
+                      <RefreshCw size={18} />
+                      <span>Voltar para {cartLocation}</span>
+                  </button>
                   
+                  {/* Option 3: Clear */}
                    <button 
                       onClick={onClear}
                       className="w-full py-3 rounded-xl border border-red-900/30 bg-red-500/5 text-red-500 hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2 font-medium"
