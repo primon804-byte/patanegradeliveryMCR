@@ -31,14 +31,23 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
         {/* Overlay Content */}
         <div className="absolute inset-0 flex flex-col justify-end p-6 pb-12 z-10">
           
-          {/* Floating Medal Image - Added based on request */}
-          <div className="absolute right-4 bottom-44 z-20 animate-slide-up">
-            <img 
-              src={MEDAL_IMAGE} 
-              alt="Prêmio" 
-              className="w-28 h-28 object-contain drop-shadow-[0_0_25px_rgba(245,158,11,0.4)] filter brightness-110"
-            />
-          </div>
+          {/* Floating Medal Image - Interactive & Animated */}
+          <button 
+            type="button"
+            className="absolute right-4 bottom-44 z-20 animate-slide-up cursor-pointer group outline-none"
+            aria-label="Cervejaria Premiada"
+          >
+            <div className="relative transition-transform duration-300 ease-out transform group-hover:scale-110 group-active:scale-90 group-hover:-rotate-3">
+              {/* Glow behind the medal */}
+              <div className="absolute inset-4 bg-amber-500/30 blur-2xl rounded-full animate-pulse opacity-70 group-hover:opacity-100 transition-opacity" />
+              
+              <img 
+                src={MEDAL_IMAGE} 
+                alt="Prêmio" 
+                className="relative w-28 h-28 object-contain drop-shadow-[0_0_25px_rgba(245,158,11,0.5)] filter brightness-110 animate-float"
+              />
+            </div>
+          </button>
 
           <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/50 backdrop-blur-md self-start animate-fade-in">
             <Award className="w-5 h-5 mr-2 text-amber-500" />

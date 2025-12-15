@@ -35,6 +35,7 @@
               'fade-in': 'fadeIn 0.5s ease-out forwards',
               'slide-up': 'slideUp 0.5s ease-out forwards',
               'shimmer': 'shimmer 3s infinite',
+              'float': 'float 6s ease-in-out infinite',
             },
             keyframes: {
               fadeIn: {
@@ -48,6 +49,10 @@
               shimmer: {
                 '0%': { transform: 'translateX(-150%) skewX(-12deg)' },
                 '100%': { transform: 'translateX(150%) skewX(-12deg)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-15px)' },
               }
             }
           },
