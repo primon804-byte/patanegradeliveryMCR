@@ -17,6 +17,7 @@ import { InfoModal } from './components/InfoModal';
 import { LocationModal } from './components/LocationModal';
 import { CartConflictModal } from './components/CartConflictModal';
 import { CheckoutConflictModal } from './components/CheckoutConflictModal';
+import { UpsellModal } from './components/UpsellModal';
 
 // --- Loading Component ---
 const LoadingScreen = () => (
@@ -385,6 +386,10 @@ const App: React.FC = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
+  
+  // Upsell Config
+  const [upsellOptions, setUpsellOptions] = useState({ offerTonel: false, offerCups: false, offerMugs: false });
   
   // Location State
   const [userLocation, setUserLocation] = useState<string | null>(null);
@@ -618,15 +623,70 @@ const App: React.FC = () => {
   };
 
   const handleCheckoutClick = () => {
-    // CHECKOUT CONFLICT CHECK
-    // If cart has items AND cart location is set AND user location doesn't match
+    // 1. CHECKOUT CONFLICT CHECK
     if (cart.length > 0 && cartLocation && userLocation && cartLocation !== userLocation) {
         setShowCheckoutConflict(true);
         return;
     }
 
+    // 2. UPSELL CHECK (Check if user has Kegs but NO Tonel OR NO Cups OR NO Mugs)
+    const hasKeg = cart.some(item => 
+      item.category === ProductCategory.KEG30 || 
+      item.category === ProductCategory.KEG50
+    );
+    
+    // Check what is present in ANY of the kegs
+    const hasTonel = cart.some(item => item.rentTonel === true);
+    // Check if user has requested GLASS mugs
+    const hasMugs = cart.some(item => item.mugsQuantity);
+    // Check if user has requested extra disposable cups quote
+    const hasQuoteCups = cart.some(item => item.moreCups);
+
+    // Logic: Offer if keg exists AND missing premium items (Tonel or Mugs). 
+    // Disposable cups quote is functional, but let's offer it if they haven't selected anything else cup-related.
+    if (hasKeg && (!hasTonel || !hasMugs || !hasQuoteCups)) {
+       // Configure what to offer
+       setUpsellOptions({
+           offerTonel: !hasTonel,
+           offerMugs: !hasMugs,
+           offerCups: !hasQuoteCups
+       });
+       setIsCartOpen(false); // Close cart drawer
+       setIsUpsellModalOpen(true); // Open Upsell
+       return;
+    }
+
     setIsCartOpen(false); 
     setIsCheckoutOpen(true);
+  };
+
+  const handleUpsellConfirm = (addTonel: boolean, addCups: boolean, addMugs: { quantity: 24 | 36 | 48, price: number } | null) => {
+      // Add selected options to ALL Kegs in cart
+      if (addTonel || addCups || addMugs) {
+          setCart(prev => prev.map(item => {
+              if (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) {
+                  return { 
+                      ...item, 
+                      // Only update if requested, otherwise keep existing
+                      rentTonel: addTonel ? true : item.rentTonel,
+                      // If adding cups quote
+                      moreCups: addCups ? true : item.moreCups,
+                      // If adding mugs, apply the selected config
+                      mugsQuantity: addMugs ? addMugs.quantity : item.mugsQuantity,
+                      mugsPrice: addMugs ? addMugs.price : item.mugsPrice
+                  };
+              }
+              return item;
+          }));
+      }
+      
+      setIsUpsellModalOpen(false);
+      setIsCheckoutOpen(true);
+  };
+
+  const handleUpsellDecline = () => {
+      setIsUpsellModalOpen(false);
+      setIsCheckoutOpen(true);
   };
 
   const handleResolveCheckoutConflict = (action: 'switch' | 'clear' | 'update') => {
@@ -804,6 +864,16 @@ const App: React.FC = () => {
             setIsLocationModalOpen(false);
           }}
           onSelect={handleLocationSelect}
+        />
+
+        <UpsellModal 
+          isOpen={isUpsellModalOpen}
+          onClose={handleUpsellDecline} // Closing with X equals declining
+          onConfirm={handleUpsellConfirm}
+          onDecline={handleUpsellDecline}
+          offerTonel={upsellOptions.offerTonel}
+          offerCups={upsellOptions.offerCups}
+          offerMugs={upsellOptions.offerMugs}
         />
 
         {/* Modal for adding new item with conflict */}

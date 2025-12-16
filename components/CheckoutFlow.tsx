@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, UserCheck, RefreshCw, UserPlus, Truck, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, UserCheck, RefreshCw, UserPlus, Truck, Info, Building2 } from 'lucide-react';
 import { Button } from './Button';
 import { CartItem, ProductCategory } from '../types';
 import { WHATSAPP_NUMBERS } from '../constants';
@@ -38,17 +38,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const [birthDate, setBirthDate] = useState(''); 
   const [address, setAddress] = useState(''); // Acts as Residential Address (New) OR Delivery Address (Returning)
   const [neighborhood, setNeighborhood] = useState('');
+  const [city, setCity] = useState(''); // New: Residential/Delivery City
   const [mobilePhone, setMobilePhone] = useState('');
 
   // --- Event Data (Only for Kegs) ---
   const [receiverName, setReceiverName] = useState(''); 
   const [eventAddress, setEventAddress] = useState('');
+  const [eventCity, setEventCity] = useState(''); // New: Event City
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
   const [voltage, setVoltage] = useState<Voltage>('110v');
 
   // --- Payment ---
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+
+  // Auto-fill city based on location selection
+  useEffect(() => {
+    if (isOpen && userLocation) {
+        setCity(userLocation);
+        setEventCity(userLocation);
+    }
+  }, [isOpen, userLocation]);
 
   if (!isOpen) return null;
 
@@ -72,18 +82,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         // Cliente Recorrente
         if (hasKeg) {
             // Barril precisa de dados do evento
-            if (!eventAddress || !eventDate || !receiverName) return;
+            if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
         } else {
             // Growler precisa de endereço de entrega
-            if (!address || !neighborhood) return;
+            if (!address || !neighborhood || !city) return;
         }
     } else {
         // Novo Cliente (SEMPRE precisa de cadastro completo agora)
-        if (!cpf || !birthDate || !address || !neighborhood) return;
+        if (!cpf || !birthDate || !address || !neighborhood || !city) return;
         
         // Se for Barril, precisa TAMBÉM dos dados do evento
         if (hasKeg) {
-             if (!eventAddress || !eventDate || !receiverName) return;
+             if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
         }
     }
 
@@ -118,6 +128,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
               `\n--- DADOS DO EVENTO ---\n` +
               `*RECEBEDOR:* ${receiverName}\n` +
               `*ENDEREÇO DO EVENTO:* ${eventAddress}\n` +
+              `*CIDADE:* ${eventCity}\n` +
               `*DATA:* ${eventDate}\n` +
               `*HORA:* ${eventTime || 'Não definida'}\n` +
               `*VOLTAGEM:* ${voltage}\n` +
@@ -128,7 +139,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
              // Returning Growler: Include Delivery Address
              const deliveryBlock = 
                 `\n📍 *ENTREGAR EM:* ${address}\n` +
-                `🏘️ *BAIRRO:* ${neighborhood}`;
+                `🏘️ *BAIRRO:* ${neighborhood}\n` +
+                `🏙️ *CIDADE:* ${city}`;
              
              fullMessage = header + userBlock + deliveryBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
         }
@@ -145,6 +157,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             `*RG:* ${rg || 'Não informado'}\n` +
             `*END. RESIDENCIAL:* ${address}\n` +
             `*BAIRRO:* ${neighborhood}\n` +
+            `*CIDADE:* ${city}\n` +
             `*CELULAR:* ${mobilePhone}\n`;
 
         const docsBlock = `\n📸 *FOTOS (Enviarei a seguir):*\n- Comprovante de Residência\n- CNH (Documento com foto)\n`;
@@ -157,6 +170,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
               `\n--- DADOS DO EVENTO ---\n` +
               `*RECEBEDOR:* ${receiverName}\n` +
               `*ENDEREÇO DO EVENTO:* ${eventAddress}\n` +
+              `*CIDADE:* ${eventCity}\n` +
               `*DATA:* ${eventDate}\n` +
               `*HORA:* ${eventTime || 'Não definida'}\n` +
               `*VOLTAGEM:* ${voltage}\n` +
@@ -190,10 +204,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       // Reset Form
       setPaymentMethod(null);
       setIsReturningCustomer(false);
-      setName(''); setCpf(''); setRg(''); setAddress(''); setNeighborhood('');
+      setName(''); setCpf(''); setRg(''); setAddress(''); setNeighborhood(''); setCity('');
       setBirthDate(''); setReceiverName('');
       setMobilePhone('');
-      setEventAddress(''); setEventDate(''); setEventTime(''); setVoltage('110v');
+      setEventAddress(''); setEventCity(''); setEventDate(''); setEventTime(''); setVoltage('110v');
       
       if (onReturnToHome) onReturnToHome();
     }
@@ -207,18 +221,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
       // Logic for NEW Customers (Rigorous)
       if (!isReturningCustomer) {
-          if (!cpf || !birthDate || !address || !neighborhood) return true;
+          if (!cpf || !birthDate || !address || !neighborhood || !city) return true;
           // If Keg, needs event info too
-          if (hasKeg && (!eventAddress || !eventDate || !receiverName)) return true;
+          if (hasKeg && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
       } 
       // Logic for RETURNING Customers (Simple)
       else {
           if (hasKeg) {
               // Keg needs event info
-              if (!eventAddress || !eventDate || !receiverName) return true;
+              if (!eventAddress || !eventDate || !receiverName || !eventCity) return true;
           } else {
               // Growler needs address
-              if (!address || !neighborhood) return true;
+              if (!address || !neighborhood || !city) return true;
           }
       }
       
@@ -377,15 +391,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                       />
                       <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                     </div>
-                    <div className="relative">
-                      <input 
-                        required
-                        value={neighborhood}
-                        onChange={(e) => setNeighborhood(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                        placeholder="Bairro"
-                      />
-                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="relative">
+                          <input 
+                            required
+                            value={neighborhood}
+                            onChange={(e) => setNeighborhood(e.target.value)}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                            placeholder="Bairro"
+                          />
+                          <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        </div>
+                        <div className="relative">
+                          <input 
+                            required
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                            placeholder="Cidade"
+                          />
+                          <Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        </div>
                     </div>
                 </div>
             )}
@@ -478,15 +504,26 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                       <UserCheck size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                     </div>
 
-                    <div className="relative">
-                      <input
-                        required
-                        value={eventAddress}
-                        onChange={(e) => setEventAddress(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                        placeholder="Endereço do Evento (Entrega)"
-                      />
-                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    <div className="grid grid-cols-3 gap-3">
+                        <div className="relative col-span-2">
+                          <input
+                            required
+                            value={eventAddress}
+                            onChange={(e) => setEventAddress(e.target.value)}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                            placeholder="Endereço do Evento"
+                          />
+                          <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        </div>
+                        <div className="relative">
+                          <input
+                            required
+                            value={eventCity}
+                            onChange={(e) => setEventCity(e.target.value)}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-2 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600 text-center"
+                            placeholder="Cidade"
+                          />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
