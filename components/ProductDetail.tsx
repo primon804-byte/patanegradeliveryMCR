@@ -2,33 +2,58 @@
 import React, { useState, useEffect } from 'react';
 import { Product, ProductCategory, CartItem } from '../types';
 import { Button } from './Button';
-import { X, Droplets, Hop, Utensils, ShoppingBag, Umbrella, Beer, LayoutGrid, Check } from 'lucide-react';
+import { X, Droplets, Hop, Utensils, ShoppingBag, Beer, Check, Box, FileSignature, PlusCircle, Star, RefreshCw } from 'lucide-react';
 
 interface ProductDetailProps {
   product: Product;
   isOpen: boolean;
   onClose: () => void;
   onAdd: (product: Product, options?: Partial<CartItem>) => void;
+  editingItem?: CartItem | null; // New prop to handle edit mode
 }
 
-export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, onClose, onAdd }) => {
-  const [rentTables, setRentTables] = useState(false);
-  const [rentUmbrellas, setRentUmbrellas] = useState(false);
-  const [cupsQuantity, setCupsQuantity] = useState<number | null>(null);
+export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, onClose, onAdd, editingItem }) => {
+  const [rentTonel, setRentTonel] = useState(false);
+  const [mugsSelection, setMugsSelection] = useState<string>("");
+  const [wantMoreCups, setWantMoreCups] = useState(false);
 
-  // Reset state when product changes
+  // Initialize state based on editingItem OR reset defaults
   useEffect(() => {
     if (isOpen) {
-      setRentTables(false);
-      setRentUmbrellas(false);
-      setCupsQuantity(null);
+      if (editingItem) {
+        // Edit Mode: Pre-fill data
+        setRentTonel(!!editingItem.rentTonel);
+        setWantMoreCups(!!editingItem.moreCups);
+        
+        if (editingItem.mugsQuantity && editingItem.mugsPrice) {
+          setMugsSelection(`${editingItem.mugsQuantity}-${editingItem.mugsPrice}`);
+        } else {
+          setMugsSelection("");
+        }
+      } else {
+        // Add Mode: Reset
+        setRentTonel(false);
+        setMugsSelection("");
+        setWantMoreCups(false);
+      }
     }
-  }, [product, isOpen]);
+  }, [product, isOpen, editingItem]);
 
   if (!isOpen) return null;
 
   // Check if product is a Keg (allows extras)
   const isKeg = product.category === ProductCategory.KEG30 || product.category === ProductCategory.KEG50;
+
+  // Helper to parse mugs selection
+  const getMugsConfig = () => {
+    if (!mugsSelection) return { quantity: null, price: 0 };
+    const [qty, price] = mugsSelection.split('-').map(Number);
+    return { quantity: qty as 24 | 36 | 48, price };
+  };
+
+  const currentMugsConfig = getMugsConfig();
+  const extrasTotal = (rentTonel ? 30 : 0) + currentMugsConfig.price;
+  const finalUnitTestPrice = product.price + extrasTotal;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4">
@@ -110,66 +135,127 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
           
           {/* EXTRAS - Only for Kegs */}
           {isKeg && (
-            <div className="space-y-4 pt-2 border-t border-zinc-900">
-              <h3 className="text-amber-500 font-bold uppercase text-xs tracking-wider mb-2">Solicitar Orçamento de Adicionais</h3>
+            <div className="pt-2 border-t border-zinc-900">
               
-              {/* Tables Toggle */}
+              {/* Visual Divider for Premium Experience */}
+              <div className="flex items-center gap-2 mb-4 mt-2">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+                  <span className="text-amber-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                    <Star size={10} fill="currentColor" /> Experiência Premium
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+              </div>
+              
+              {/* Tonel Patanegra Toggle - HIGH VISIBILITY VERSION */}
               <button 
-                onClick={() => setRentTables(!rentTables)}
-                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${rentTables ? 'bg-amber-500/10 border-amber-500' : 'bg-zinc-900 border-zinc-800'}`}
+                onClick={() => setRentTonel(!rentTonel)}
+                className={`w-full relative overflow-hidden rounded-xl border-2 transition-all duration-300 mb-6 group
+                   ${rentTonel 
+                     ? 'border-amber-500 bg-zinc-900 shadow-[0_0_30px_rgba(245,158,11,0.15)] scale-[1.02]' 
+                     : 'border-zinc-800 bg-zinc-900/50 hover:border-amber-500/50 hover:bg-zinc-900'
+                   }
+                `}
               >
-                <div className="flex items-center gap-3">
-                  <LayoutGrid size={20} className={rentTables ? 'text-amber-500' : 'text-zinc-500'} />
-                  <div className="text-left">
-                     <span className={`block font-bold text-sm ${rentTables ? 'text-white' : 'text-zinc-400'}`}>Mesas</span>
-                     <span className="text-xs text-zinc-500">Incluir no orçamento</span>
-                  </div>
+                {/* Badge Status */}
+                <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-xl font-bold text-[10px] tracking-wider transition-colors z-10
+                    ${rentTonel ? 'bg-amber-500 text-black' : 'bg-zinc-800 text-zinc-500 border-l border-b border-zinc-700'}
+                `}>
+                    {rentTonel ? 'ADICIONADO' : 'RECOMENDADO'}
                 </div>
-                <div className={`w-6 h-6 rounded-full border flex items-center justify-center ${rentTables ? 'bg-amber-500 border-amber-500 text-black' : 'border-zinc-700'}`}>
-                   {rentTables && <Check size={14} />}
-                </div>
-              </button>
 
-              {/* Umbrellas Toggle */}
-              <button 
-                onClick={() => setRentUmbrellas(!rentUmbrellas)}
-                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${rentUmbrellas ? 'bg-amber-500/10 border-amber-500' : 'bg-zinc-900 border-zinc-800'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <Umbrella size={20} className={rentUmbrellas ? 'text-amber-500' : 'text-zinc-500'} />
-                  <div className="text-left">
-                     <span className={`block font-bold text-sm ${rentUmbrellas ? 'text-white' : 'text-zinc-400'}`}>Ombrelones</span>
-                     <span className="text-xs text-zinc-500">Incluir no orçamento</span>
-                  </div>
+                <div className="p-4 flex items-start gap-4 text-left relative z-0">
+                    {/* Icon Box */}
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-lg
+                        ${rentTonel 
+                            ? 'bg-amber-500 text-black rotate-3 scale-110' 
+                            : 'bg-zinc-800 text-zinc-500 group-hover:text-amber-500'
+                        }
+                    `}>
+                        <Box size={28} strokeWidth={2.5} />
+                    </div>
+
+                    <div className="flex-1">
+                        <h4 className={`font-bold text-lg mb-1 ${rentTonel ? 'text-amber-500' : 'text-white'}`}>
+                            Tonel Patanegra
+                        </h4>
+                        <p className="text-xs text-zinc-400 leading-relaxed mb-3 pr-8">
+                           Mesa de apoio sofisticada que oculta o barril e cilindro. Visual limpo e elegante para suas fotos.
+                        </p>
+                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold transition-colors
+                            ${rentTonel ? 'bg-amber-500/20 text-amber-500' : 'bg-zinc-800 text-zinc-400'}
+                        `}>
+                            {rentTonel ? <Check size={12} /> : <PlusCircle size={12} />}
+                            {rentTonel ? 'Incluído no pedido' : 'Adicionar por R$ 30,00'}
+                        </div>
+                    </div>
                 </div>
-                <div className={`w-6 h-6 rounded-full border flex items-center justify-center ${rentUmbrellas ? 'bg-amber-500 border-amber-500 text-black' : 'border-zinc-700'}`}>
-                   {rentUmbrellas && <Check size={14} />}
-                </div>
+                
+                {/* Glow Effect when selected */}
+                {rentTonel && <div className="absolute inset-0 bg-amber-500/5 pointer-events-none animate-pulse" />}
               </button>
               
-              {/* Cups Selector */}
-              <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800">
-                <div className="flex items-center gap-3 mb-2">
-                   <Beer size={20} className="text-zinc-500" />
-                   <span className="font-bold text-sm text-zinc-400">Copos Descartáveis</span>
+              <div className="space-y-4">
+                <h3 className="text-zinc-500 font-bold uppercase text-[10px] tracking-wider pl-1">Outros Adicionais</h3>
+                
+                {/* Mugs Selector */}
+                <div className={`bg-zinc-900 p-4 rounded-xl border ${mugsSelection ? 'border-amber-500/50' : 'border-zinc-800'}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                    <Beer size={20} className="text-amber-500" />
+                    <div>
+                        <span className="font-bold text-sm text-white block">Canecas de Vidro Patanegra (390ml)</span>
+                        <span className="text-[10px] text-zinc-500">Para combinar com sua comemoração</span>
+                    </div>
+                    </div>
+                    
+                    <select 
+                    className="w-full bg-zinc-950 text-white border border-zinc-700 rounded-lg p-3 text-sm focus:border-amber-500 focus:outline-none mb-3"
+                    value={mugsSelection}
+                    onChange={(e) => setMugsSelection(e.target.value)}
+                    >
+                    <option value="">Não desejo canecas de vidro</option>
+                    <option value="24-30">24 Canecas (+ R$ 30,00)</option>
+                    <option value="36-40">36 Canecas (+ R$ 40,00)</option>
+                    <option value="48-50">48 Canecas (+ R$ 50,00)</option>
+                    </select>
+
+                    {mugsSelection && (
+                    <div className="flex gap-2 items-start bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
+                        <FileSignature size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                        <p className="text-[10px] text-zinc-400 leading-tight">
+                        <strong className="text-amber-500">Importante:</strong> Necessário assinatura de termo de comodato na entrega. Itens não devolvidos ou avariados serão cobrados à parte.
+                        </p>
+                    </div>
+                    )}
                 </div>
-                <select 
-                  className="w-full bg-zinc-950 text-white border border-zinc-700 rounded-lg p-2 text-sm focus:border-amber-500 focus:outline-none"
-                  value={cupsQuantity || ''}
-                  onChange={(e) => setCupsQuantity(e.target.value ? Number(e.target.value) : null)}
-                >
-                  <option value="">Não preciso de copos</option>
-                  <option value="100">100 Copos</option>
-                  <option value="200">200 Copos</option>
-                  <option value="300">300 Copos</option>
-                  <option value="400">400 Copos</option>
-                  <option value="500">500 Copos</option>
-                  <option value="600">600 Copos</option>
-                  <option value="700">700 Copos</option>
-                  <option value="800">800 Copos</option>
-                  <option value="900">900 Copos</option>
-                  <option value="1000">1000 Copos</option>
-                </select>
+
+                {/* Disposable Cups Info & Extra Request */}
+                <div className="bg-zinc-900/30 rounded-lg border border-zinc-800 overflow-hidden">
+                    <div className="p-3 bg-zinc-900/80 flex items-center gap-3 border-b border-zinc-800">
+                    <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
+                        <Check size={16} />
+                    </div>
+                    <div>
+                        <p className="text-xs text-white font-bold">50 Copos Descartáveis Gratuitos</p>
+                        <p className="text-[10px] text-zinc-500">Incluído em cada barril.</p>
+                    </div>
+                    </div>
+                    
+                    {/* Checkbox for more cups */}
+                    <label className="flex items-center gap-3 p-3 cursor-pointer hover:bg-zinc-800/50 transition-colors">
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${wantMoreCups ? 'bg-amber-500 border-amber-500' : 'bg-transparent border-zinc-600'}`}>
+                            {wantMoreCups && <Check size={14} className="text-black" strokeWidth={3} />}
+                            <input 
+                            type="checkbox" 
+                            className="hidden" 
+                            checked={wantMoreCups} 
+                            onChange={(e) => setWantMoreCups(e.target.checked)} 
+                            />
+                        </div>
+                        <span className={`text-sm ${wantMoreCups ? 'text-amber-500 font-semibold' : 'text-zinc-400'}`}>
+                            Preciso de mais de 50 copos (Orçamento)
+                        </span>
+                    </label>
+                </div>
               </div>
 
             </div>
@@ -195,22 +281,25 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
         {/* Sticky Bottom Action */}
         <div className="p-4 border-t border-zinc-900 bg-zinc-950 pb-8 sm:pb-4">
           <div className="flex items-center justify-between gap-4 mb-4">
-             <div className="text-zinc-400 text-sm">Preço Unitário</div>
-             <div className="text-2xl font-serif text-white">R$ {product.price.toFixed(2)}</div>
+             <div className="text-zinc-400 text-sm">
+               Preço Unitário <span className="text-[10px] block text-zinc-600">(Produto + Adicionais)</span>
+             </div>
+             <div className="text-2xl font-serif text-white">R$ {finalUnitTestPrice.toFixed(2)}</div>
           </div>
           <Button 
             fullWidth 
-            icon={<ShoppingBag size={20} />} 
+            icon={editingItem ? <RefreshCw size={20} /> : <ShoppingBag size={20} />} 
             onClick={() => {
               onAdd(product, {
-                rentTables,
-                rentUmbrellas,
-                cupsQuantity
+                rentTonel,
+                mugsQuantity: currentMugsConfig.quantity,
+                mugsPrice: currentMugsConfig.price,
+                moreCups: wantMoreCups
               });
               onClose();
             }}
           >
-            Adicionar ao Pedido
+            {editingItem ? 'Atualizar Pedido' : 'Adicionar ao Pedido'}
           </Button>
         </div>
 

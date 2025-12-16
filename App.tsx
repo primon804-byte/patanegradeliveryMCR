@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award, MapPin, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award, MapPin, ChevronDown, Edit2 } from 'lucide-react';
 import { PRODUCTS, HERO_IMAGES } from './constants';
 import { Product, CartItem, ViewState, ProductCategory } from './types';
 import { Button } from './components/Button';
@@ -251,8 +251,9 @@ const CartView: React.FC<{
   setView: (v: ViewState) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, d: number) => void;
+  onEdit: (item: CartItem) => void;
   onCheckout: () => void;
-}> = ({ cart, cartTotal, setView, removeFromCart, updateQuantity, onCheckout }) => (
+}> = ({ cart, cartTotal, setView, removeFromCart, updateQuantity, onEdit, onCheckout }) => (
   <div className="animate-slide-up p-4 pt-8 pb-24 h-full flex flex-col max-w-md mx-auto min-h-screen">
       <h2 className="text-3xl font-serif text-white mb-6">Seu Pedido</h2>
       
@@ -267,45 +268,62 @@ const CartView: React.FC<{
       ) : (
         <>
           <div className="flex-1 space-y-4 overflow-y-auto">
-            {cart.map(item => (
-              <div key={item.id} className="flex flex-col gap-2 bg-zinc-900/80 p-4 rounded-xl border border-zinc-800">
-                <div className="flex items-center gap-4">
-                  <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
-                  <div className="flex-1">
-                    <h4 className="font-bold text-white">{item.name}</h4>
-                    <div className="text-amber-500 font-semibold">R$ {item.price.toFixed(2)}</div>
+            {cart.map(item => {
+               // Price Calc per Item View
+               const extras = (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0);
+               const totalItemPrice = item.price + extras;
+               const isKeg = item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50;
+               
+               return (
+                <div key={item.id} className="flex flex-col gap-2 bg-zinc-900/80 p-4 rounded-xl border border-zinc-800">
+                  <div className="flex items-center gap-4">
+                    <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                         <h4 className="font-bold text-white pr-2">{item.name}</h4>
+                         {isKeg && (
+                             <button 
+                               onClick={() => onEdit(item)}
+                               className="p-1 bg-zinc-800 text-amber-500 rounded hover:bg-amber-500 hover:text-black transition-colors"
+                             >
+                                <Edit2 size={12} />
+                             </button>
+                         )}
+                      </div>
+                      <div className="text-amber-500 font-semibold">R$ {totalItemPrice.toFixed(2)}</div>
+                    </div>
+                    
+                    <div className="flex flex-col items-end gap-2">
+                      <button onClick={() => removeFromCart(item.id)} className="text-zinc-500 hover:text-red-500">
+                        <Trash2 size={16} />
+                      </button>
+                      <div className="flex items-center bg-zinc-800 rounded-lg">
+                          <button 
+                            onClick={() => updateQuantity(item.id, -1)}
+                            className="w-8 h-8 flex items-center justify-center text-zinc-300 hover:text-white"
+                          >-</button>
+                          <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
+                          <button 
+                            onClick={() => updateQuantity(item.id, 1)}
+                            className="w-8 h-8 flex items-center justify-center text-zinc-300 hover:text-white"
+                          >+</button>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="flex flex-col items-end gap-2">
-                     <button onClick={() => removeFromCart(item.id)} className="text-zinc-500 hover:text-red-500">
-                       <Trash2 size={16} />
-                     </button>
-                     <div className="flex items-center bg-zinc-800 rounded-lg">
-                        <button 
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className="w-8 h-8 flex items-center justify-center text-zinc-300 hover:text-white"
-                        >-</button>
-                        <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
-                        <button 
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className="w-8 h-8 flex items-center justify-center text-zinc-300 hover:text-white"
-                        >+</button>
-                     </div>
-                  </div>
+                  {/* Extra info display */}
+                  {(item.rentTonel || item.mugsQuantity || item.moreCups) && (
+                    <div className="mt-2 pt-2 border-t border-zinc-800 text-xs text-zinc-400">
+                      <p className="font-bold text-amber-500 mb-1">Adicionais:</p>
+                      <ul className="list-disc pl-4 space-y-0.5">
+                        {item.rentTonel && <li>Tonel Patanegra (+R$30,00)</li>}
+                        {item.mugsQuantity && <li>Kit {item.mugsQuantity} Canecas de Vidro (+R${item.mugsPrice},00)</li>}
+                        {item.moreCups && <li>Solicitou orçamento de copos extras</li>}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-                {/* Extra info display */}
-                {(item.rentTables || item.rentUmbrellas || item.cupsQuantity) && (
-                   <div className="mt-2 pt-2 border-t border-zinc-800 text-xs text-zinc-400">
-                     <p className="font-bold text-amber-500 mb-1">Adicionais Solicitados:</p>
-                     <ul className="list-disc pl-4 space-y-0.5">
-                       {item.rentTables && <li>Orçamento de Mesas</li>}
-                       {item.rentUmbrellas && <li>Orçamento de Ombrelones</li>}
-                       {item.cupsQuantity && <li>{item.cupsQuantity} Copos descartáveis</li>}
-                     </ul>
-                   </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-6 bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
@@ -321,7 +339,7 @@ const CartView: React.FC<{
               Finalizar no WhatsApp
             </Button>
             <p className="text-xs text-center text-zinc-500 mt-3">
-              Ao clicar, você será redirecionado para o WhatsApp para confirmar entrega e pagamento.
+               Taxa de entrega a consultar na confirmação.
             </p>
           </div>
         </>
@@ -376,6 +394,14 @@ const App: React.FC = () => {
   const [pendingProduct, setPendingProduct] = useState<{product: Product, options?: Partial<CartItem>} | null>(null);
   const [showCheckoutConflict, setShowCheckoutConflict] = useState(false);
 
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [recommendedVolume, setRecommendedVolume] = useState<number | null>(null);
+
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
+  // EDIT STATE
+  const [editingItem, setEditingItem] = useState<CartItem | null>(null);
+
   // Dynamic Pricing Logic
   const adjustedProducts = useMemo(() => {
     if (userLocation === 'Foz do Iguaçu') {
@@ -398,11 +424,6 @@ const App: React.FC = () => {
     // Default prices (Marechal Cândido Rondon)
     return PRODUCTS;
   }, [userLocation]);
-
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [recommendedVolume, setRecommendedVolume] = useState<number | null>(null);
-
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // CRITICAL ASSET PRELOADING
   useEffect(() => {
@@ -464,9 +485,10 @@ const App: React.FC = () => {
         const updatedItem = {
            ...existingItem,
            quantity: existingItem.quantity + 1,
-           rentTables: options?.rentTables ?? existingItem.rentTables,
-           rentUmbrellas: options?.rentUmbrellas ?? existingItem.rentUmbrellas,
-           cupsQuantity: options?.cupsQuantity ?? existingItem.cupsQuantity
+           rentTonel: options?.rentTonel ?? existingItem.rentTonel,
+           mugsQuantity: options?.mugsQuantity ?? existingItem.mugsQuantity,
+           mugsPrice: options?.mugsPrice ?? existingItem.mugsPrice,
+           moreCups: options?.moreCups ?? existingItem.moreCups
         };
         
         const newCart = [...prev];
@@ -477,11 +499,45 @@ const App: React.FC = () => {
       return [...prev, { 
         ...product, 
         quantity: 1,
-        rentTables: options?.rentTables,
-        rentUmbrellas: options?.rentUmbrellas,
-        cupsQuantity: options?.cupsQuantity
+        rentTonel: options?.rentTonel,
+        mugsQuantity: options?.mugsQuantity,
+        mugsPrice: options?.mugsPrice,
+        moreCups: options?.moreCups
       }];
     });
+  };
+
+  const handleProductDetailAction = (product: Product, options?: Partial<CartItem>) => {
+      if (editingItem) {
+          // UPDATE LOGIC
+          setCart(prev => prev.map(item => {
+              if (item.id === editingItem.id) {
+                  return {
+                      ...item,
+                      rentTonel: options?.rentTonel,
+                      mugsQuantity: options?.mugsQuantity,
+                      mugsPrice: options?.mugsPrice,
+                      moreCups: options?.moreCups
+                  }
+              }
+              return item;
+          }));
+          setEditingItem(null);
+      } else {
+          // ADD LOGIC
+          addToCart(product, options);
+      }
+  };
+
+  const handleEditItem = (item: CartItem) => {
+      setEditingItem(item);
+      // We need to find the base product from adjustedProducts to show in the modal
+      // This ensures we have the correct price/image context
+      const baseProduct = adjustedProducts.find(p => p.id === item.id) || item;
+      setSelectedProduct(baseProduct);
+      
+      // Close cart drawer if open so modal is visible
+      setIsCartOpen(false);
   };
 
   const handleResolveConflict = () => {
@@ -498,9 +554,10 @@ const App: React.FC = () => {
       setCart([{ 
         ...product, 
         quantity: 1,
-        rentTables: options?.rentTables,
-        rentUmbrellas: options?.rentUmbrellas,
-        cupsQuantity: options?.cupsQuantity
+        rentTonel: options?.rentTonel,
+        mugsQuantity: options?.mugsQuantity,
+        mugsPrice: options?.mugsPrice,
+        moreCups: options?.moreCups
       }]);
       
       // Reset Pending
@@ -611,7 +668,13 @@ const App: React.FC = () => {
       }
   };
 
-  const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  // UPDATED CALCULATION LOGIC:
+  // (Base Price + Tonel + Mugs) * Quantity
+  const cartTotal = cart.reduce((acc, item) => {
+    const extras = (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0);
+    return acc + ((item.price + extras) * item.quantity);
+  }, 0);
+
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleCalculatorResult = (liters: number) => {
@@ -684,6 +747,7 @@ const App: React.FC = () => {
             setView={setView}
             removeFromCart={removeFromCart}
             updateQuantity={updateQuantity}
+            onEdit={handleEditItem}
             onCheckout={handleCheckoutClick}
           />
         )}
@@ -692,8 +756,12 @@ const App: React.FC = () => {
           <ProductDetail 
             product={selectedProduct} 
             isOpen={!!selectedProduct} 
-            onClose={() => setSelectedProduct(null)}
-            onAdd={addToCart}
+            onClose={() => {
+                setSelectedProduct(null);
+                setEditingItem(null); // Clear editing state on close
+            }}
+            onAdd={handleProductDetailAction}
+            editingItem={editingItem}
           />
         )}
 
@@ -704,6 +772,7 @@ const App: React.FC = () => {
           total={cartTotal}
           onUpdateQuantity={updateQuantity}
           onRemove={removeFromCart}
+          onEdit={handleEditItem}
           onCheckout={handleCheckoutClick}
         />
 
