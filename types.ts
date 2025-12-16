@@ -42,6 +42,9 @@ export interface CartItem extends Product {
   mugsQuantity?: 24 | 36 | 48 | null;
   mugsPrice?: number; // 30, 40, 50
   moreCups?: boolean; // Flag to request quota for extra cups
+  
+  // Internal Control Flag
+  isUpsell?: boolean; 
 }
 
 export interface CalculatorResult {

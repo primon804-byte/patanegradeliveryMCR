@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award, MapPin, ChevronDown, Edit2 } from 'lucide-react';
 import { PRODUCTS, HERO_IMAGES } from './constants';
-import { Product, CartItem, ViewState, ProductCategory } from './types';
+import { Product, CartItem, ViewState, ProductCategory, BeerType } from './types';
 import { Button } from './components/Button';
 import { ProductCard } from './components/ProductCard';
 import { Calculator } from './components/Calculator';
@@ -18,6 +18,7 @@ import { LocationModal } from './components/LocationModal';
 import { CartConflictModal } from './components/CartConflictModal';
 import { CheckoutConflictModal } from './components/CheckoutConflictModal';
 import { UpsellModal } from './components/UpsellModal';
+import { GrowlerUpsellModal } from './components/GrowlerUpsellModal';
 
 // --- Loading Component ---
 const LoadingScreen = () => (
@@ -388,6 +389,10 @@ const App: React.FC = () => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
   
+  // NEW: Growler Upsell State (ARRAY for 3 recommendations)
+  const [isGrowlerUpsellOpen, setIsGrowlerUpsellOpen] = useState(false);
+  const [recommendedGrowlers, setRecommendedGrowlers] = useState<Product[]>([]);
+
   // Upsell Config
   const [upsellOptions, setUpsellOptions] = useState({ offerTonel: false, offerCups: false, offerMugs: false });
   
@@ -493,7 +498,8 @@ const App: React.FC = () => {
            rentTonel: options?.rentTonel ?? existingItem.rentTonel,
            mugsQuantity: options?.mugsQuantity ?? existingItem.mugsQuantity,
            mugsPrice: options?.mugsPrice ?? existingItem.mugsPrice,
-           moreCups: options?.moreCups ?? existingItem.moreCups
+           moreCups: options?.moreCups ?? existingItem.moreCups,
+           isUpsell: existingItem.isUpsell || options?.isUpsell // Keep true if it was ever upsell
         };
         
         const newCart = [...prev];
@@ -507,7 +513,8 @@ const App: React.FC = () => {
         rentTonel: options?.rentTonel,
         mugsQuantity: options?.mugsQuantity,
         mugsPrice: options?.mugsPrice,
-        moreCups: options?.moreCups
+        moreCups: options?.moreCups,
+        isUpsell: options?.isUpsell || false
       }];
     });
   };
@@ -562,7 +569,8 @@ const App: React.FC = () => {
         rentTonel: options?.rentTonel,
         mugsQuantity: options?.mugsQuantity,
         mugsPrice: options?.mugsPrice,
-        moreCups: options?.moreCups
+        moreCups: options?.moreCups,
+        isUpsell: options?.isUpsell || false
       }]);
       
       // Reset Pending
@@ -622,6 +630,84 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // --- GROWLER RECOMMENDATION LOGIC (UPDATED FOR 3 ITEMS) ---
+  const getGrowlerRecommendations = (currentCart: CartItem[], allProducts: Product[]): Product[] => {
+      // Get the last added growler to base recommendation on
+      const growlersInCart = currentCart.filter(item => item.category === ProductCategory.GROWLER);
+      if (growlersInCart.length === 0) return [];
+      
+      const lastGrowler = growlersInCart[growlersInCart.length - 1];
+      
+      // Helper: Filter products not in cart and matches category
+      const availableGrowlers = allProducts.filter(p => 
+          p.category === ProductCategory.GROWLER && 
+          !currentCart.some(c => c.id === p.id)
+      );
+
+      if (availableGrowlers.length === 0) return [];
+
+      let primaryTargetTypes: BeerType[] = [];
+      let secondaryTargetTypes: BeerType[] = [];
+
+      // Logic Rules
+      switch(lastGrowler.type) {
+          case BeerType.PILSEN:
+              primaryTargetTypes = [BeerType.LAGER, BeerType.VIENNA];
+              secondaryTargetTypes = [BeerType.AMBER, BeerType.WEISS];
+              break;
+          case BeerType.LAGER: 
+               // Check if Wine
+               if (lastGrowler.name.toLowerCase().includes('vinho')) {
+                   if (lastGrowler.name.toLowerCase().includes('branco')) {
+                        // Priority: Red Wine
+                        const red = availableGrowlers.find(p => p.name.toLowerCase().includes('tinto'));
+                        if (red) return [red, ...availableGrowlers.filter(p => p.id !== red.id).slice(0, 2)];
+                   } else if (lastGrowler.name.toLowerCase().includes('tinto')) {
+                        // Priority: White Wine
+                        const white = availableGrowlers.find(p => p.name.toLowerCase().includes('branco'));
+                        if (white) return [white, ...availableGrowlers.filter(p => p.id !== white.id).slice(0, 2)];
+                   }
+               }
+               primaryTargetTypes = [BeerType.PILSEN, BeerType.VIENNA];
+               secondaryTargetTypes = [BeerType.AMBER, BeerType.DUNKEL];
+               break;
+          case BeerType.IPA:
+          case BeerType.APA:
+              primaryTargetTypes = [BeerType.IPA, BeerType.APA, BeerType.SOUR];
+              secondaryTargetTypes = [BeerType.LAGER, BeerType.PILSEN]; // Palate cleanser
+              break;
+          case BeerType.AMBER:
+          case BeerType.DUNKEL:
+          case BeerType.RED_ALE:
+          case BeerType.STOUT:
+              primaryTargetTypes = [BeerType.DUNKEL, BeerType.STOUT, BeerType.RED_ALE];
+              secondaryTargetTypes = [BeerType.IPA, BeerType.VIENNA];
+              break;
+          case BeerType.SOUR:
+              primaryTargetTypes = [BeerType.SOUR, BeerType.IPA];
+              secondaryTargetTypes = [BeerType.WEISS, BeerType.PILSEN];
+              break;
+          default:
+              primaryTargetTypes = [];
+      }
+
+      // Collect Primary Matches
+      const primaryMatches = availableGrowlers.filter(p => p.type && primaryTargetTypes.includes(p.type));
+      
+      // Collect Secondary Matches
+      const secondaryMatches = availableGrowlers.filter(p => p.type && secondaryTargetTypes.includes(p.type) && !primaryMatches.includes(p));
+
+      // Collect "Popular/Champions" as fillers
+      const fillers = availableGrowlers.filter(p => !primaryMatches.includes(p) && !secondaryMatches.includes(p))
+                                       .sort((a, b) => (b.isChampion ? 1 : 0) - (a.isChampion ? 1 : 0));
+
+      // Combine into a list of 3 unique items
+      const combined = [...primaryMatches, ...secondaryMatches, ...fillers];
+      
+      // Ensure uniqueness and slice 3
+      return combined.slice(0, 3);
+  };
+
   const handleCheckoutClick = () => {
     // 1. CHECKOUT CONFLICT CHECK
     if (cart.length > 0 && cartLocation && userLocation && cartLocation !== userLocation) {
@@ -629,49 +715,63 @@ const App: React.FC = () => {
         return;
     }
 
-    // 2. UPSELL CHECK (Check if user has Kegs but NO Tonel OR NO Cups OR NO Mugs)
+    // 2. KEG UPSELL CHECK (Priority)
     const hasKeg = cart.some(item => 
       item.category === ProductCategory.KEG30 || 
       item.category === ProductCategory.KEG50
     );
     
-    // Check what is present in ANY of the kegs
-    const hasTonel = cart.some(item => item.rentTonel === true);
-    // Check if user has requested GLASS mugs
-    const hasMugs = cart.some(item => item.mugsQuantity);
-    // Check if user has requested extra disposable cups quote
-    const hasQuoteCups = cart.some(item => item.moreCups);
+    if (hasKeg) {
+        // Check what is present in ANY of the kegs
+        const hasTonel = cart.some(item => item.rentTonel === true);
+        const hasMugs = cart.some(item => item.mugsQuantity);
+        const hasQuoteCups = cart.some(item => item.moreCups);
 
-    // Logic: Offer if keg exists AND missing premium items (Tonel or Mugs). 
-    // Disposable cups quote is functional, but let's offer it if they haven't selected anything else cup-related.
-    if (hasKeg && (!hasTonel || !hasMugs || !hasQuoteCups)) {
-       // Configure what to offer
-       setUpsellOptions({
-           offerTonel: !hasTonel,
-           offerMugs: !hasMugs,
-           offerCups: !hasQuoteCups
-       });
-       setIsCartOpen(false); // Close cart drawer
-       setIsUpsellModalOpen(true); // Open Upsell
-       return;
+        if (!hasTonel || !hasMugs || !hasQuoteCups) {
+           setUpsellOptions({
+               offerTonel: !hasTonel,
+               offerMugs: !hasMugs,
+               offerCups: !hasQuoteCups
+           });
+           setIsCartOpen(false);
+           setIsUpsellModalOpen(true);
+           return;
+        }
+    } 
+    // 3. GROWLER UPSELL CHECK
+    else {
+        // Only run if NO Kegs are in cart (Growler exclusive or Growler mix)
+        const hasGrowler = cart.some(item => item.category === ProductCategory.GROWLER);
+        
+        if (hasGrowler) {
+            // Find recommendations (Array of 3)
+            const recs = getGrowlerRecommendations(cart, adjustedProducts);
+            
+            if (recs.length > 0) {
+                setRecommendedGrowlers(recs);
+                setIsCartOpen(false);
+                setIsGrowlerUpsellOpen(true);
+                return;
+            }
+        }
     }
 
+    // If no upsells needed or available
     setIsCartOpen(false); 
     setIsCheckoutOpen(true);
   };
 
+  // --- Upsell Handlers ---
+
   const handleUpsellConfirm = (addTonel: boolean, addCups: boolean, addMugs: { quantity: 24 | 36 | 48, price: number } | null) => {
-      // Add selected options to ALL Kegs in cart
+      // Keg Upsell Logic
       if (addTonel || addCups || addMugs) {
           setCart(prev => prev.map(item => {
               if (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) {
                   return { 
                       ...item, 
-                      // Only update if requested, otherwise keep existing
                       rentTonel: addTonel ? true : item.rentTonel,
-                      // If adding cups quote
                       moreCups: addCups ? true : item.moreCups,
-                      // If adding mugs, apply the selected config
                       mugsQuantity: addMugs ? addMugs.quantity : item.mugsQuantity,
                       mugsPrice: addMugs ? addMugs.price : item.mugsPrice
                   };
@@ -679,13 +779,26 @@ const App: React.FC = () => {
               return item;
           }));
       }
-      
       setIsUpsellModalOpen(false);
       setIsCheckoutOpen(true);
   };
 
   const handleUpsellDecline = () => {
       setIsUpsellModalOpen(false);
+      setIsCheckoutOpen(true);
+  };
+
+  const handleGrowlerUpsellConfirm = (products: Product[]) => {
+      // Add all selected products
+      // PASSA A FLAG ISUPSELL=TRUE para marcar no carrinho
+      products.forEach(p => addToCart(p, { isUpsell: true }));
+      
+      setIsGrowlerUpsellOpen(false);
+      setIsCheckoutOpen(true);
+  };
+
+  const handleGrowlerUpsellDecline = () => {
+      setIsGrowlerUpsellOpen(false);
       setIsCheckoutOpen(true);
   };
 
@@ -874,6 +987,14 @@ const App: React.FC = () => {
           offerTonel={upsellOptions.offerTonel}
           offerCups={upsellOptions.offerCups}
           offerMugs={upsellOptions.offerMugs}
+        />
+
+        <GrowlerUpsellModal 
+            isOpen={isGrowlerUpsellOpen}
+            onClose={handleGrowlerUpsellDecline}
+            onConfirm={handleGrowlerUpsellConfirm}
+            onDecline={handleGrowlerUpsellDecline}
+            recommendations={recommendedGrowlers}
         />
 
         {/* Modal for adding new item with conflict */}
