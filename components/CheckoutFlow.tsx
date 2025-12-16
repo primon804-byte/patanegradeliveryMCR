@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone } from 'lucide-react';
+import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, UserCheck, RefreshCw, UserPlus, Truck, Info } from 'lucide-react';
 import { Button } from './Button';
 import { CartItem, ProductCategory } from '../types';
 import { WHATSAPP_NUMBERS } from '../constants';
@@ -21,6 +21,7 @@ type Voltage = '110v' | '220v' | 'Não sei';
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total, onClearCart, onReturnToHome, userLocation }) => {
   // Step 1: Form, Step 2: Success
   const [step, setStep] = useState<1 | 2>(1);
+  const [isReturningCustomer, setIsReturningCustomer] = useState(false);
   
   const locationName = userLocation || 'Marechal Cândido Rondon'; 
   
@@ -34,11 +35,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const [name, setName] = useState('');
   const [cpf, setCpf] = useState('');
   const [rg, setRg] = useState('');
-  const [address, setAddress] = useState(''); // Residential (Keg) or Delivery (Growler)
+  const [birthDate, setBirthDate] = useState(''); 
+  const [address, setAddress] = useState(''); // Acts as Residential Address (New Keg) OR Delivery Address (Growler)
   const [neighborhood, setNeighborhood] = useState('');
   const [mobilePhone, setMobilePhone] = useState('');
 
   // --- Event Data (Only for Kegs) ---
+  const [receiverName, setReceiverName] = useState(''); 
   const [eventAddress, setEventAddress] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
@@ -61,12 +64,24 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const handleFinalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic Validation
-    if (!name || !address || !mobilePhone || !neighborhood || !paymentMethod) return;
+    // 1. Validação Básica (Nome, Telefone, Pagamento)
+    if (!name || !mobilePhone || !paymentMethod) return;
 
-    // Extra Validation for Kegs
+    // 2. Validação Específica por Tipo de Pedido
     if (hasKeg) {
-        if (!cpf || !eventAddress || !eventDate) return;
+        // Barril (Seja Novo ou Recorrente): Precisa dos dados do evento
+        if (!eventAddress || !eventDate || !receiverName) return;
+
+        // Barril (Apenas Novo): Precisa de dados cadastrais completos
+        if (!isReturningCustomer) {
+            if (!cpf || !birthDate || !address || !neighborhood) return;
+        }
+    } else {
+        // Growler (Seja Novo ou Recorrente): Precisa de endereço de entrega
+        if (!address || !neighborhood) return;
+
+        // Growler (Apenas Novo): Precisa de Data Nascimento
+        if (!isReturningCustomer && !birthDate) return;
     }
 
     // Determine WhatsApp Number based on Location
@@ -76,59 +91,86 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
     let fullMessage = "";
 
-    // --- Message Construction for KEGS (Ficha Completa) ---
-    if (hasKeg) {
-        const header = `*FICHA DE CADASTRO - PATANEGRA*\n------------------\n`;
-        
-        const personalBlock = 
-          `*NOME:* ${name}\n` +
-          `*CPF:* ${cpf}\n` +
-          `*RG:* ${rg || 'Não informado'}\n` +
-          `*END. RESIDENCIAL:* ${address}\n` +
-          `*BAIRRO:* ${neighborhood}\n` +
-          `*CELULAR:* ${mobilePhone}\n`;
+    // --- Message Logic ---
+    const itemsBlock = `\n--- PEDIDO ---\n` + cart.map(item => {
+        let itemString = `• ${item.quantity}x ${item.name}`;
+        if (item.rentTonel) itemString += " (+ Tonel)";
+        if (item.mugsQuantity) itemString += ` (+ ${item.mugsQuantity} Canecas)`;
+        if (item.moreCups) itemString += ` (+ Cotar Copos)`;
+        return itemString;
+    }).join('\n');
 
-        const docsBlock = `\n📸 *FOTOS (Enviarei a seguir):*\n- Comprovante de Residência\n- CNH (Documento com foto)\n`;
+    const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
+    const totalMsg = `\n💵 *VALOR:* R$ ${total.toFixed(2)}`;
+    const freightNote = `\n\n⚠️ *FRETE:* A calcular na confirmação.`;
 
-        const eventBlock = 
-          `\n--- DADOS DO EVENTO ---\n` +
-          `*ENDEREÇO DO EVENTO:* ${eventAddress}\n` +
-          `*DATA:* ${eventDate.split('-').reverse().join('/')}\n` +
-          `*HORA:* ${eventTime || 'Não definida'}\n` +
-          `*VOLTAGEM:* ${voltage}\n` +
-          `*TOTAL LITROS:* ${totalLiters}L\n`;
+    // --- SCENARIO A: RETURNING CUSTOMER ---
+    if (isReturningCustomer) {
+        const header = `*PEDIDO - JÁ SOU CLIENTE*\n------------------\n`;
+        const userBlock = `👤 *CLIENTE:* ${name}\n📱 *TEL:* ${mobilePhone}\n`;
 
-        const itemsBlock = `\n--- PEDIDO ---\n` + cart.map(item => {
-          let itemString = `• ${item.quantity}x ${item.name}`;
-          if (item.rentTonel) itemString += " (+ Tonel)";
-          if (item.mugsQuantity) itemString += ` (+ ${item.mugsQuantity} Canecas)`;
-          if (item.moreCups) itemString += ` (+ Cotar Copos)`;
-          return itemString;
-        }).join('\n');
-
-        const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
-        const totalMsg = `\n💵 *VALOR APROX:* R$ ${total.toFixed(2)}`;
-        const freightNote = `\n\n⚠️ *FRETE / ENTREGA:*\nO valor do frete será calculado e informado na confirmação do pedido.`;
-
-        fullMessage = header + personalBlock + docsBlock + eventBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+        if (hasKeg) {
+             // Returning Keg: Include Event Data
+             const eventBlock = 
+              `\n--- DADOS DO EVENTO ---\n` +
+              `*RECEBEDOR:* ${receiverName}\n` +
+              `*ENDEREÇO DO EVENTO:* ${eventAddress}\n` +
+              `*DATA:* ${eventDate}\n` +
+              `*HORA:* ${eventTime || 'Não definida'}\n` +
+              `*VOLTAGEM:* ${voltage}\n` +
+              `*TOTAL LITROS:* ${totalLiters}L\n`;
+             
+             fullMessage = header + userBlock + eventBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+        } else {
+             // Returning Growler: Include Delivery Address
+             const deliveryBlock = 
+                `\n📍 *ENTREGAR EM:* ${address}\n` +
+                `🏘️ *BAIRRO:* ${neighborhood}`;
+             
+             fullMessage = header + userBlock + deliveryBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+        }
     } 
-    // --- Message Construction for GROWLERS (Pedido Simples) ---
+    // --- SCENARIO B: NEW CUSTOMER (FULL DATA) ---
     else {
-        const header = `*NOVO PEDIDO DELIVERY*\n------------------\n`;
-        
-        const itemsBlock = cart.map(item => `• ${item.quantity}x ${item.name} (R$ ${item.price})`).join('\n');
-        
-        const deliveryBlock = 
-            `\n\n👤 *CLIENTE:* ${name}\n` +
-            `📱 *CELULAR:* ${mobilePhone}\n` +
-            `📍 *ENTREGAR EM:* ${address}\n` +
-            `🏘️ *BAIRRO:* ${neighborhood}`;
+        // Has Keg -> Full Registration
+        if (hasKeg) {
+            const header = `*FICHA DE CADASTRO - PATANEGRA*\n------------------\n`;
             
-        const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
-        const totalMsg = `\n💵 *TOTAL:* R$ ${total.toFixed(2)}`;
-        const footer = `\n\n⚠️ *IMPORTANTE:* A taxa de entrega será calculada na confirmação.`;
-
-        fullMessage = header + itemsBlock + totalMsg + deliveryBlock + paymentBlock + footer;
+            const personalBlock = 
+              `*NOME:* ${name}\n` +
+              `*DATA NASC.:* ${birthDate}\n` +
+              `*CPF:* ${cpf}\n` +
+              `*RG:* ${rg || 'Não informado'}\n` +
+              `*END. RESIDENCIAL:* ${address}\n` +
+              `*BAIRRO:* ${neighborhood}\n` +
+              `*CELULAR:* ${mobilePhone}\n`;
+    
+            const docsBlock = `\n📸 *FOTOS (Enviarei a seguir):*\n- Comprovante de Residência\n- CNH (Documento com foto)\n`;
+    
+            const eventBlock = 
+              `\n--- DADOS DO EVENTO ---\n` +
+              `*RECEBEDOR:* ${receiverName}\n` +
+              `*ENDEREÇO DO EVENTO:* ${eventAddress}\n` +
+              `*DATA:* ${eventDate}\n` +
+              `*HORA:* ${eventTime || 'Não definida'}\n` +
+              `*VOLTAGEM:* ${voltage}\n` +
+              `*TOTAL LITROS:* ${totalLiters}L\n`;
+    
+            fullMessage = header + personalBlock + docsBlock + eventBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+        } 
+        // Growler Only -> Simple Delivery Registration
+        else {
+            const header = `*NOVO CADASTRO - DELIVERY*\n------------------\n`;
+            
+            const deliveryBlock = 
+                `\n\n👤 *CLIENTE:* ${name}\n` +
+                `📅 *NASCIMENTO:* ${birthDate}\n` +
+                `📱 *CELULAR:* ${mobilePhone}\n` +
+                `📍 *ENTREGAR EM:* ${address}\n` +
+                `🏘️ *BAIRRO:* ${neighborhood}`;
+                
+            fullMessage = header + itemsBlock + totalMsg + deliveryBlock + paymentBlock + freightNote;
+        }
     }
 
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(fullMessage)}`;
@@ -151,7 +193,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       setStep(1);
       // Reset Form
       setPaymentMethod(null);
+      setIsReturningCustomer(false);
       setName(''); setCpf(''); setRg(''); setAddress(''); setNeighborhood('');
+      setBirthDate(''); setReceiverName('');
       setMobilePhone('');
       setEventAddress(''); setEventDate(''); setEventTime(''); setVoltage('110v');
       
@@ -159,6 +203,33 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     }
     onClose();
   };
+
+  // Helper to determine if submit button is disabled
+  const isSubmitDisabled = () => {
+      // Common requirements
+      if (!name || !mobilePhone || !paymentMethod) return true;
+
+      if (hasKeg) {
+          // Keg ALWAYS requires event info
+          if (!eventAddress || !eventDate || !receiverName) return true;
+          // New Customer + Keg requires registration info
+          if (!isReturningCustomer) {
+              if (!cpf || !birthDate || !address || !neighborhood) return true;
+          }
+      } else {
+          // Growler ALWAYS requires address
+          if (!address || !neighborhood) return true;
+          // New Customer + Growler requires DOB
+          if (!isReturningCustomer && !birthDate) return true;
+      }
+      return false;
+  }
+
+  // Logic to determine if "Address" field (Residential/Delivery) should be shown
+  // Show if: 
+  // 1. It is NOT a keg order (Growler always needs delivery address)
+  // 2. It IS a keg order BUT it's a new customer (Needs residential address for contract)
+  const showMainAddressFields = !hasKeg || (!isReturningCustomer && hasKeg);
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -178,9 +249,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         <div className="flex items-center justify-between p-6 pb-2 min-h-[60px] flex-shrink-0 bg-zinc-950 z-20">
           <div className="flex flex-col">
               <h2 className="text-xl font-serif text-white">
-                {step === 1 ? (hasKeg ? 'Ficha Cadastral' : 'Finalizar Pedido') : ''}
+                {step === 1 ? 'Finalizar Pedido' : ''}
               </h2>
-              {step === 1 && !hasKeg && <span className="text-[10px] text-zinc-500">Delivery Rápido</span>}
           </div>
           <button 
             onClick={handleClose}
@@ -192,25 +262,71 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
         {/* STEP 1: Registration Form */}
         {step === 1 && (
-          <form onSubmit={handleFinalSubmit} className="p-6 pt-0 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
+          <form onSubmit={handleFinalSubmit} className="p-6 pt-0 flex flex-col gap-5 overflow-y-auto scrollbar-hide">
             
-            {/* Location Badge */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-3 flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                    <MapPin size={16} />
-                </div>
-                <div>
-                    <p className="text-[10px] text-zinc-500 uppercase font-bold">Unidade de Atendimento</p>
-                    <p className="text-sm font-medium text-white leading-tight">{locationName}</p>
-                </div>
+            {/* Customer Type Toggle - IMPROVED DESIGN WITH SHINE & SPACING */}
+            <div className="grid grid-cols-2 gap-3 mb-6 mt-4 flex-shrink-0">
+               
+               {/* SOU NOVO BUTTON (HIGHLIGHTED) */}
+               <div className="relative group">
+                   {!isReturningCustomer && (
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black text-amber-500 text-[9px] font-bold px-3 py-0.5 rounded-full border border-amber-500 uppercase tracking-widest shadow-md z-20 whitespace-nowrap">
+                          Primeira Compra?
+                      </span>
+                   )}
+                   <button
+                     type="button"
+                     onClick={() => setIsReturningCustomer(false)}
+                     className={`w-full relative overflow-hidden flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border-2 transition-all duration-300 ${
+                         !isReturningCustomer 
+                         ? 'bg-amber-500 border-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)] scale-[1.02] z-10' 
+                         : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-amber-500/50 hover:text-zinc-300'
+                     }`}
+                   >
+                      {/* SHINE EFFECT (Only when active) */}
+                      {!isReturningCustomer && (
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/25 to-transparent z-10 pointer-events-none" />
+                      )}
+
+                      <UserPlus size={22} strokeWidth={!isReturningCustomer ? 2.5 : 2} className="relative z-10" />
+                      <span className="relative z-10 text-xs font-extrabold uppercase tracking-wide">Sou Novo</span>
+                   </button>
+               </div>
+
+               {/* JÁ SOU CLIENTE BUTTON */}
+               <button
+                 type="button"
+                 onClick={() => setIsReturningCustomer(true)}
+                 className={`flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border-2 transition-all duration-300 ${
+                     isReturningCustomer 
+                     ? 'bg-zinc-100 border-white text-zinc-950 shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02] z-10' 
+                     : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                 }`}
+               >
+                  <RefreshCw size={22} strokeWidth={isReturningCustomer ? 2.5 : 2} />
+                  <span className="text-xs font-bold uppercase tracking-wide">Já sou Cliente</span>
+               </button>
             </div>
 
-            {/* --- DADOS BÁSICOS (Comuns) --- */}
+            {/* Location Badge */}
+            {!isReturningCustomer && (
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-3 flex-shrink-0 animate-fade-in">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                        <MapPin size={16} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-zinc-500 uppercase font-bold">Unidade de Atendimento</p>
+                        <p className="text-sm font-medium text-white leading-tight">{locationName}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* --- DADOS BÁSICOS (Sempre visíveis) --- */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 pb-1 border-b border-zinc-800">
                 <User size={16} className="text-amber-500" />
                 <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                    {hasKeg ? 'Dados do Contratante' : 'Seus Dados'}
+                    Identificação
                 </h3>
               </div>
 
@@ -239,151 +355,196 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                   />
                   <Smartphone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               </div>
-
-              {/* Campos EXTRAS apenas para Barril (CPF/RG) */}
-              {hasKeg && (
-                  <div className="grid grid-cols-2 gap-3 animate-fade-in">
-                      <div className="relative">
-                          <input 
-                              required
-                              type="text"
-                              value={cpf}
-                              onChange={(e) => setCpf(e.target.value)}
-                              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                              placeholder="CPF"
-                          />
-                          <Fingerprint size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                      </div>
-                      <div className="relative">
-                          <input 
-                              type="text"
-                              value={rg}
-                              onChange={(e) => setRg(e.target.value)}
-                              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                              placeholder="RG"
-                          />
-                          <FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                      </div>
-                  </div>
-              )}
-
-              {/* Endereço */}
-              <div className="space-y-3">
-                  <div className="relative">
-                    <input 
-                      required
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                      placeholder={hasKeg ? "Endereço Residencial (Cadastro)" : "Endereço de Entrega"}
-                    />
-                    <Home size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                  </div>
-                  <div className="relative">
-                    <input 
-                      required
-                      value={neighborhood}
-                      onChange={(e) => setNeighborhood(e.target.value)}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                      placeholder="Bairro"
-                    />
-                    <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                  </div>
-              </div>
             </div>
 
-            {/* --- SEÇÕES EXCLUSIVAS BARRIL --- */}
-            {hasKeg && (
-                <>
-                    {/* DOCUMENTOS */}
-                    <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-dashed animate-fade-in">
-                        <div className="flex items-center gap-2 mb-2 text-zinc-400">
-                            <Camera size={18} />
-                            <span className="text-xs font-bold uppercase">Documentação Necessária</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <div className="flex-1 h-20 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
-                                <FileText size={20} className="mb-1" />
-                                <span className="text-[10px] text-center px-2">Foto Comp. Residência</span>
-                            </div>
-                            <div className="flex-1 h-20 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
-                                <Fingerprint size={20} className="mb-1" />
-                                <span className="text-[10px] text-center px-2">Foto CNH / RG</span>
-                            </div>
-                        </div>
-                        <p className="text-[10px] text-amber-500 mt-2 text-center leading-tight">
-                            * Enviar fotos pelo WhatsApp após confirmar.
-                        </p>
+            {/* --- ENDEREÇO DE ENTREGA (GROWLER) OU RESIDENCIAL (NOVO BARRIL) --- */}
+            {showMainAddressFields && (
+                <div className="space-y-3 animate-slide-up">
+                    <div className="flex items-center gap-2 pb-1 border-b border-zinc-800">
+                      <Home size={16} className="text-amber-500" />
+                      <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                          {hasKeg ? 'Endereço Residencial (Cadastro)' : 'Endereço de Entrega'}
+                      </h3>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        required
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                        placeholder="Rua, Número e Complemento"
+                      />
+                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    </div>
+                    <div className="relative">
+                      <input 
+                        required
+                        value={neighborhood}
+                        onChange={(e) => setNeighborhood(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                        placeholder="Bairro"
+                      />
+                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    </div>
+                </div>
+            )}
+
+            {/* --- DADOS EXTRAS (Apenas se for NOVO CLIENTE) --- */}
+            {!isReturningCustomer && (
+              <div className="space-y-5 animate-slide-up">
+                
+                {/* Data Nascimento e CPF (Se barril) */}
+                <div className="space-y-3">
+                     <div className="relative">
+                        <input 
+                            required
+                            type="text"
+                            value={birthDate}
+                            onChange={(e) => setBirthDate(e.target.value)}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                            placeholder="Data de Nascimento (ex: 10/05/1990)"
+                        />
+                        <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                     </div>
 
-                    {/* DADOS DO EVENTO */}
-                    <div className="space-y-3 animate-fade-in">
-                      <div className="flex items-center gap-2 pb-1 border-b border-zinc-800">
-                        <Calendar size={16} className="text-amber-500" />
-                        <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Dados do Evento</h3>
-                      </div>
-
-                      <div className="relative">
-                        <input
-                          required
-                          value={eventAddress}
-                          onChange={(e) => setEventAddress(e.target.value)}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                          placeholder="Endereço do Evento (Entrega)"
-                        />
-                        <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                      </div>
-
+                    {hasKeg && (
                       <div className="grid grid-cols-2 gap-3">
                           <div className="relative">
                               <input 
                                   required
-                                  type="date"
-                                  value={eventDate}
-                                  onChange={(e) => setEventDate(e.target.value)}
-                                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none [color-scheme:dark]"
+                                  type="text"
+                                  value={cpf}
+                                  onChange={(e) => setCpf(e.target.value)}
+                                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                  placeholder="CPF"
                               />
-                              <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                              <Fingerprint size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                           </div>
                           <div className="relative">
                               <input 
-                                  type="time"
-                                  value={eventTime}
-                                  onChange={(e) => setEventTime(e.target.value)}
-                                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none [color-scheme:dark]"
+                                  type="text"
+                                  value={rg}
+                                  onChange={(e) => setRg(e.target.value)}
+                                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                  placeholder="RG (Opcional)"
                               />
-                              <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                              <FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                           </div>
                       </div>
+                    )}
+                </div>
 
-                      {/* Voltagem e Litragem */}
-                      <div className="grid grid-cols-2 gap-3">
-                         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
-                            <div className="flex items-center gap-2 mb-2 text-zinc-400">
-                                <Zap size={16} className="text-amber-500"/>
-                                <span className="text-[10px] font-bold uppercase">Voltagem</span>
-                            </div>
-                            <div className="flex gap-2">
-                                <button 
-                                    type="button"
-                                    onClick={() => setVoltage('110v')}
-                                    className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '110v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
-                                >110v</button>
-                                <button 
-                                    type="button"
-                                    onClick={() => setVoltage('220v')}
-                                    className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '220v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
-                                >220v</button>
-                            </div>
-                         </div>
-
-                         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col justify-center items-center">
-                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Volume Total</span>
-                            <span className="text-xl font-bold text-white">{totalLiters} <span className="text-sm font-normal text-zinc-400">Litros</span></span>
-                         </div>
+                {/* SEÇÕES EXCLUSIVAS BARRIL (Apenas Novo Cliente) */}
+                {hasKeg && (
+                  <>
+                      {/* DOCUMENTOS */}
+                      <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-dashed">
+                          <div className="flex items-center gap-2 mb-2 text-zinc-400">
+                              <Camera size={18} />
+                              <span className="text-xs font-bold uppercase">Documentação Necessária</span>
+                          </div>
+                          <div className="flex gap-2">
+                              <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
+                                  <FileText size={16} className="mb-1" />
+                                  <span className="text-[9px] text-center px-2">Foto Comp. Residência</span>
+                              </div>
+                              <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
+                                  <Fingerprint size={16} className="mb-1" />
+                                  <span className="text-[9px] text-center px-2">Foto CNH / RG</span>
+                              </div>
+                          </div>
+                          <p className="text-[9px] text-amber-500 mt-2 text-center leading-tight">
+                              * Enviar fotos pelo WhatsApp após confirmar.
+                          </p>
                       </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* --- DADOS DO EVENTO (BARRIL - SEMPRE APARECE) --- */}
+            {hasKeg && (
+                  <div className="space-y-3 animate-slide-up">
+                    <div className="flex items-center gap-2 pb-1 border-b border-zinc-800">
+                      <Calendar size={16} className="text-amber-500" />
+                      <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Dados do Evento</h3>
                     </div>
-                </>
+
+                    {/* Nome do Recebedor */}
+                    <div className="relative">
+                      <input
+                        required
+                        type="text"
+                        value={receiverName}
+                        onChange={(e) => setReceiverName(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                        placeholder="Quem vai receber o pedido?"
+                      />
+                      <UserCheck size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        required
+                        value={eventAddress}
+                        onChange={(e) => setEventAddress(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                        placeholder="Endereço do Evento (Entrega)"
+                      />
+                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="relative">
+                            <input 
+                                required
+                                type="text"
+                                value={eventDate}
+                                onChange={(e) => setEventDate(e.target.value)}
+                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                placeholder="Data (ex: 20/10)"
+                            />
+                            <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        </div>
+                        <div className="relative">
+                            <input 
+                                type="text"
+                                value={eventTime}
+                                onChange={(e) => setEventTime(e.target.value)}
+                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                placeholder="Hora (ex: 19h)"
+                            />
+                            <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        </div>
+                    </div>
+
+                    {/* Voltagem e Litragem */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
+                          <div className="flex items-center gap-2 mb-2 text-zinc-400">
+                              <Zap size={16} className="text-amber-500"/>
+                              <span className="text-[10px] font-bold uppercase">Voltagem</span>
+                          </div>
+                          <div className="flex gap-2">
+                              <button 
+                                  type="button"
+                                  onClick={() => setVoltage('110v')}
+                                  className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '110v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
+                              >110v</button>
+                              <button 
+                                  type="button"
+                                  onClick={() => setVoltage('220v')}
+                                  className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '220v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
+                              >220v</button>
+                          </div>
+                        </div>
+
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col justify-center items-center">
+                          <span className="text-[10px] text-zinc-500 uppercase font-bold">Volume Total</span>
+                          <span className="text-xl font-bold text-white">{totalLiters} <span className="text-sm font-normal text-zinc-400">Litros</span></span>
+                        </div>
+                    </div>
+                  </div>
             )}
 
             {/* --- SEÇÃO 4: PAGAMENTO --- */}
@@ -420,14 +581,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                </div>
             </div>
 
+            {/* FREIGHT NOTICE BLOCK - ALWAYS VISIBLE */}
+            <div className="mt-4 mb-2 p-3 bg-zinc-900/80 rounded-xl border border-amber-500/20 flex items-start gap-3">
+                 <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-500 mt-0.5">
+                     <Truck size={16} />
+                 </div>
+                 <div>
+                     <p className="text-xs text-zinc-300 leading-relaxed">
+                         <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">Política de Entrega</strong>
+                         O valor do frete será calculado e informado na confirmação do pedido via WhatsApp.
+                     </p>
+                 </div>
+            </div>
+
             <Button 
               type="submit" 
               fullWidth 
               className="mt-2 py-4"
               icon={<ArrowRight size={20} />}
-              disabled={!name || !address || !mobilePhone || !paymentMethod || (hasKeg && (!cpf || !eventAddress || !eventDate))}
+              disabled={isSubmitDisabled()}
             >
-              {hasKeg ? 'Enviar Ficha Cadastral' : 'Enviar Pedido WhatsApp'}
+              {isReturningCustomer ? 'Enviar Pedido Rápido' : (hasKeg ? 'Enviar Ficha Cadastral' : 'Enviar Pedido WhatsApp')}
             </Button>
             <div className="h-6"></div> {/* Bottom Spacer */}
           </form>
@@ -443,7 +617,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
              <h2 className="text-2xl font-serif text-white mb-1">Pedido Enviado!</h2>
              <p className="text-zinc-400 font-medium mb-6">Obrigado pela preferência!</p>
              
-             {hasKeg && (
+             {!isReturningCustomer && hasKeg && (
                  <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 mb-6 text-left w-full">
                     <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                     <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
@@ -453,7 +627,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                  </div>
              )}
              
-             {!hasKeg && (
+             {(isReturningCustomer || !hasKeg) && (
                  <p className="text-zinc-400 text-sm mb-6 leading-relaxed px-4">
                     Aguarde, iremos responder no WhatsApp confirmando seu pedido e informando o valor da <strong>taxa de entrega</strong>.
                  </p>
