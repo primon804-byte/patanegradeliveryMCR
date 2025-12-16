@@ -701,11 +701,33 @@ const App: React.FC = () => {
       const fillers = availableGrowlers.filter(p => !primaryMatches.includes(p) && !secondaryMatches.includes(p))
                                        .sort((a, b) => (b.isChampion ? 1 : 0) - (a.isChampion ? 1 : 0));
 
-      // Combine into a list of 3 unique items
-      const combined = [...primaryMatches, ...secondaryMatches, ...fillers];
-      
-      // Ensure uniqueness and slice 3
-      return combined.slice(0, 3);
+      // Combine all unique candidates ordered by relevance
+      const allCandidates = Array.from(new Set([...primaryMatches, ...secondaryMatches, ...fillers]));
+
+      // Define Forbidden Types for Mystery (Index 2)
+      const mysteryForbidden = [BeerType.PILSEN, BeerType.LAGER];
+
+      // 1. Find the best candidate for the Mystery Slot (Not Pilsen/Lager)
+      // We look through the list for the first item that matches criteria
+      const mysteryCandidate = allCandidates.find(p => !p.type || !mysteryForbidden.includes(p.type));
+
+      // 2. Construct the final list
+      let finalRecs: Product[] = [];
+
+      if (mysteryCandidate && allCandidates.length >= 3) {
+          // We have enough items to create a mystery experience
+          // Take the top 2 items that ARE NOT the mystery candidate
+          const standardSlots = allCandidates.filter(p => p.id !== mysteryCandidate.id).slice(0, 2);
+
+          // Combine: [Standard 1, Standard 2, Mystery]
+          finalRecs = [...standardSlots, mysteryCandidate];
+      } else {
+          // Not enough items or no suitable mystery candidate found
+          // Just take top 3
+          finalRecs = allCandidates.slice(0, 3);
+      }
+
+      return finalRecs;
   };
 
   const handleCheckoutClick = () => {

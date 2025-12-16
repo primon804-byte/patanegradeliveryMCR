@@ -106,14 +106,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
     // --- Message Logic ---
     
-    // Split items into Regular and Upsell (Suggested)
-    const regularItems = cart.filter(item => !item.isUpsell);
-    const upsellItems = cart.filter(item => item.isUpsell);
-
     // Function to format item list
     const formatItemList = (items: CartItem[]) => {
         return items.map(item => {
-            let itemString = `• ${item.quantity}x ${item.name}`;
+            // Mark Upsell items with ***
+            const upsellMark = item.isUpsell ? " ***" : "";
+
+            let itemString = `• ${item.quantity}x ${item.name}${upsellMark}`;
             if (item.rentTonel) itemString += " (+ Tonel)";
             if (item.mugsQuantity) itemString += ` (+ ${item.mugsQuantity} Canecas)`;
             if (item.moreCups) itemString += ` (+ Cotar Copos)`;
@@ -121,13 +120,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         }).join('\n');
     };
 
-    // Build the items block
-    let itemsBlock = `\n--- PEDIDO ---\n` + formatItemList(regularItems);
-
-    // Append Upsell Items block if exists
-    if (upsellItems.length > 0) {
-        itemsBlock += `\n\n--- ITENS SUGERIDOS ---\n` + formatItemList(upsellItems);
-    }
+    // Build the items block - UNIFIED LIST
+    let itemsBlock = `\n--- PEDIDO ---\n` + formatItemList(cart);
 
     const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
     const totalMsg = `\n💵 *VALOR:* R$ ${total.toFixed(2)}`;
