@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, UserCheck, RefreshCw, UserPlus, Truck, Info, Building2, Store } from 'lucide-react';
+import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, UserCheck, RefreshCw, UserPlus, Truck, Info, Building2, Store, Check } from 'lucide-react';
 import { Button } from './Button';
 import { CartItem, ProductCategory } from '../types';
 import { WHATSAPP_NUMBERS } from '../constants';
@@ -34,6 +34,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
   // Delivery Method State (Default to delivery)
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery');
+
+  // New State: Send Event Info Later
+  const [sendEventInfoLater, setSendEventInfoLater] = useState(false);
 
   // --- Personal Data ---
   const [name, setName] = useState('');
@@ -92,8 +95,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     if (isReturningCustomer) {
         // Cliente Recorrente
         if (hasKeg) {
-            // Barril precisa de dados do evento
-            if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
+            // Barril: Valida dados do evento APENAS SE não marcou "enviar depois"
+            if (!sendEventInfoLater) {
+                if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
+            }
         } else {
             // Growler: Se for ENTREGA, precisa de endereço. Se for RETIRADA, não precisa.
             if (deliveryMethod === 'delivery') {
@@ -104,9 +109,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         // Novo Cliente (SEMPRE precisa de cadastro completo, endereço residencial é obrigatório)
         if (!cpf || !birthDate || !address || !neighborhood || !city) return;
         
-        // Se for Barril, precisa TAMBÉM dos dados do evento
+        // Se for Barril, precisa TAMBÉM dos dados do evento (exceto se enviar depois)
         if (hasKeg) {
-             if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
+             if (!sendEventInfoLater) {
+                if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
+             }
         }
     }
 
@@ -144,15 +151,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         ? `\n\n⚠️ *FRETE:* A calcular na confirmação.` 
         : `\n\n📍 *MODO:* Cliente irá retirar na loja.`;
 
-    // --- SCENARIO A: RETURNING CUSTOMER ---
-    if (isReturningCustomer) {
-        const header = `*PEDIDO - JÁ SOU CLIENTE*\n------------------\n`;
-        const userBlock = `👤 *CLIENTE:* ${name}\n📱 *TEL:* ${mobilePhone}\n`;
-
-        if (hasKeg) {
-             // Returning Keg: Include Event Data
-             const eventBlock = 
-              `\n--- DADOS DO EVENTO ---\n` +
+    // Helper to build Event Block based on "Send Later" status
+    const buildEventBlock = () => {
+        if (sendEventInfoLater) {
+            return `\n--- DADOS DO EVENTO ---\n⚠️ *DADOS DO EVENTO:* A combinar / Enviar a seguir\n*TOTAL LITROS:* ${totalLiters}L\n`;
+        }
+        return `\n--- DADOS DO EVENTO ---\n` +
               `*RECEBEDOR:* ${receiverName}\n` +
               `*ENDEREÇO DO EVENTO:* ${eventAddress}\n` +
               `*CIDADE:* ${eventCity}\n` +
@@ -160,7 +164,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
               `*HORA:* ${eventTime || 'Não definida'}\n` +
               `*VOLTAGEM:* ${voltage}\n` +
               `*TOTAL LITROS:* ${totalLiters}L\n`;
-             
+    };
+
+    // --- SCENARIO A: RETURNING CUSTOMER ---
+    if (isReturningCustomer) {
+        const header = `*PEDIDO - JÁ SOU CLIENTE*\n------------------\n`;
+        const userBlock = `👤 *CLIENTE:* ${name}\n📱 *TEL:* ${mobilePhone}\n`;
+
+        if (hasKeg) {
+             // Returning Keg
+             const eventBlock = buildEventBlock();
              fullMessage = header + userBlock + eventBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
         } else {
              // Returning Growler
@@ -198,15 +211,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
         if (hasKeg) {
              // Se for Barril, adiciona dados do evento
-             extraBlock = 
-              `\n--- DADOS DO EVENTO ---\n` +
-              `*RECEBEDOR:* ${receiverName}\n` +
-              `*ENDEREÇO DO EVENTO:* ${eventAddress}\n` +
-              `*CIDADE:* ${eventCity}\n` +
-              `*DATA:* ${eventDate}\n` +
-              `*HORA:* ${eventTime || 'Não definida'}\n` +
-              `*VOLTAGEM:* ${voltage}\n` +
-              `*TOTAL LITROS:* ${totalLiters}L\n`;
+             extraBlock = buildEventBlock();
         } else {
              // Se for Growler
              if (deliveryMethod === 'delivery') {
@@ -245,6 +250,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       setMobilePhone('');
       setDeliveryMethod('delivery');
       setEventAddress(''); setEventCity(''); setEventDate(''); setEventTime(''); setVoltage('110v');
+      setSendEventInfoLater(false);
       
       if (onReturnToHome) onReturnToHome();
     }
@@ -260,14 +266,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       if (!isReturningCustomer) {
           // New customers must provide address for registration, even if picking up
           if (!cpf || !birthDate || !address || !neighborhood || !city) return true;
-          // If Keg, needs event info too
-          if (hasKeg && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
+          // If Keg, needs event info (Unless send later is checked)
+          if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
       } 
       // Logic for RETURNING Customers (Simple)
       else {
           if (hasKeg) {
-              // Keg needs event info
-              if (!eventAddress || !eventDate || !receiverName || !eventCity) return true;
+              // Keg needs event info (Unless send later is checked)
+              if (!sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
           } else {
               // Growler: Only needs address if Delivery
               if (deliveryMethod === 'delivery') {
@@ -570,96 +576,118 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             {/* --- DADOS DO EVENTO (BARRIL - SEMPRE APARECE) --- */}
             {hasKeg && (
                   <div className="space-y-3 animate-slide-up">
-                    <div className="flex items-center gap-2 pb-1 border-b border-zinc-800">
-                      <Calendar size={16} className="text-amber-500" />
-                      <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Dados do Evento</h3>
+                    <div className="flex items-center justify-between pb-1 border-b border-zinc-800">
+                      <div className="flex items-center gap-2">
+                          <Calendar size={16} className="text-amber-500" />
+                          <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Dados do Evento</h3>
+                      </div>
                     </div>
-
-                    {/* Nome do Recebedor */}
-                    <div className="relative">
-                      <input
-                        required
-                        type="text"
-                        value={receiverName}
-                        onChange={(e) => setReceiverName(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                        placeholder="Quem vai receber o pedido?"
-                      />
-                      <UserCheck size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="relative col-span-2">
-                          <input
-                            required
-                            value={eventAddress}
-                            onChange={(e) => setEventAddress(e.target.value)}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                            placeholder="Endereço do Evento"
-                          />
-                          <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    
+                    {/* OPTION TO SEND LATER */}
+                    <label className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 cursor-pointer hover:bg-zinc-900 transition-colors">
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${sendEventInfoLater ? 'bg-amber-500 border-amber-500' : 'bg-transparent border-zinc-600'}`}>
+                            {sendEventInfoLater && <Check size={14} className="text-black" strokeWidth={3} />}
                         </div>
-                        <div className="relative">
-                          <input
-                            required
-                            value={eventCity}
-                            onChange={(e) => setEventCity(e.target.value)}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-2 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600 text-center"
-                            placeholder="Cidade"
-                          />
-                        </div>
-                    </div>
+                        <input 
+                            type="checkbox" 
+                            className="hidden" 
+                            checked={sendEventInfoLater} 
+                            onChange={(e) => setSendEventInfoLater(e.target.checked)} 
+                        />
+                        <span className={`text-sm ${sendEventInfoLater ? 'text-white font-medium' : 'text-zinc-400'}`}>
+                            Enviar dados do evento posteriormente
+                        </span>
+                    </label>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="relative">
-                            <input 
+                    {!sendEventInfoLater && (
+                        <div className="space-y-3 animate-fade-in">
+                            {/* Nome do Recebedor */}
+                            <div className="relative">
+                            <input
                                 required
                                 type="text"
-                                value={eventDate}
-                                onChange={(e) => setEventDate(e.target.value)}
+                                value={receiverName}
+                                onChange={(e) => setReceiverName(e.target.value)}
                                 className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                placeholder="Data (ex: 20/10)"
+                                placeholder="Quem vai receber o pedido?"
                             />
-                            <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                        </div>
-                        <div className="relative">
-                            <input 
-                                type="text"
-                                value={eventTime}
-                                onChange={(e) => setEventTime(e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                placeholder="Hora (ex: 19h)"
-                            />
-                            <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                        </div>
-                    </div>
+                            <UserCheck size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                            </div>
 
-                    {/* Voltagem e Litragem */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
-                          <div className="flex items-center gap-2 mb-2 text-zinc-400">
-                              <Zap size={16} className="text-amber-500"/>
-                              <span className="text-[10px] font-bold uppercase">Voltagem</span>
-                          </div>
-                          <div className="flex gap-2">
-                              <button 
-                                  type="button"
-                                  onClick={() => setVoltage('110v')}
-                                  className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '110v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
-                              >110v</button>
-                              <button 
-                                  type="button"
-                                  onClick={() => setVoltage('220v')}
-                                  className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '220v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
-                              >220v</button>
-                          </div>
-                        </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="relative col-span-2">
+                                <input
+                                    required
+                                    value={eventAddress}
+                                    onChange={(e) => setEventAddress(e.target.value)}
+                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                    placeholder="Endereço do Evento"
+                                />
+                                <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                </div>
+                                <div className="relative">
+                                <input
+                                    required
+                                    value={eventCity}
+                                    onChange={(e) => setEventCity(e.target.value)}
+                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-2 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600 text-center"
+                                    placeholder="Cidade"
+                                />
+                                </div>
+                            </div>
 
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col justify-center items-center">
-                          <span className="text-[10px] text-zinc-500 uppercase font-bold">Volume Total</span>
-                          <span className="text-xl font-bold text-white">{totalLiters} <span className="text-sm font-normal text-zinc-400">Litros</span></span>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="relative">
+                                    <input 
+                                        required
+                                        type="text"
+                                        value={eventDate}
+                                        onChange={(e) => setEventDate(e.target.value)}
+                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                        placeholder="Data (ex: 20/10)"
+                                    />
+                                    <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                </div>
+                                <div className="relative">
+                                    <input 
+                                        type="text"
+                                        value={eventTime}
+                                        onChange={(e) => setEventTime(e.target.value)}
+                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                        placeholder="Hora (ex: 19h)"
+                                    />
+                                    <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                </div>
+                            </div>
+
+                            {/* Voltagem e Litragem */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
+                                <div className="flex items-center gap-2 mb-2 text-zinc-400">
+                                    <Zap size={16} className="text-amber-500"/>
+                                    <span className="text-[10px] font-bold uppercase">Voltagem</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setVoltage('110v')}
+                                        className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '110v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
+                                    >110v</button>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setVoltage('220v')}
+                                        className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '220v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
+                                    >220v</button>
+                                </div>
+                                </div>
+
+                                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col justify-center items-center">
+                                <span className="text-[10px] text-zinc-500 uppercase font-bold">Volume Total</span>
+                                <span className="text-xl font-bold text-white">{totalLiters} <span className="text-sm font-normal text-zinc-400">Litros</span></span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
                   </div>
             )}
 
