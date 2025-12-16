@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product, ProductCategory, CartItem } from '../types';
 import { Button } from './Button';
-import { X, Droplets, Hop, Utensils, ShoppingBag, Beer, Check, Box, FileSignature, PlusCircle, Star, RefreshCw } from 'lucide-react';
+import { X, Droplets, Hop, Utensils, ShoppingBag, Beer, Check, Box, FileSignature, PlusCircle, Star, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface ProductDetailProps {
   product: Product;
@@ -179,13 +179,20 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
                             Tonel Patanegra
                         </h4>
                         <p className="text-xs text-zinc-400 leading-relaxed mb-3 pr-8">
-                           Mesa de apoio sofisticada que oculta o barril e cilindro. Visual limpo e elegante para suas fotos.
+                           Mesa de apoio sofisticada que oculta o barril e cilindro. Visual limpo e elegante.
                         </p>
-                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold transition-colors
-                            ${rentTonel ? 'bg-amber-500/20 text-amber-500' : 'bg-zinc-800 text-zinc-400'}
-                        `}>
-                            {rentTonel ? <Check size={12} /> : <PlusCircle size={12} />}
-                            {rentTonel ? 'Incluído no pedido' : 'Adicionar por R$ 30,00'}
+                        <div className="flex flex-wrap gap-2">
+                             <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold transition-colors
+                                ${rentTonel ? 'bg-amber-500/20 text-amber-500' : 'bg-zinc-800 text-zinc-400'}
+                            `}>
+                                {rentTonel ? <Check size={12} /> : <PlusCircle size={12} />}
+                                {rentTonel ? 'Incluído no pedido' : 'Adicionar por R$ 30,00'}
+                            </div>
+                            {/* Availability Warning */}
+                            <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-zinc-800 text-amber-500/80">
+                                <AlertCircle size={10} />
+                                Verificar disponibilidade
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -203,7 +210,12 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
                     <Beer size={20} className="text-amber-500" />
                     <div>
                         <span className="font-bold text-sm text-white block">Canecas de Vidro Patanegra (390ml)</span>
-                        <span className="text-[10px] text-zinc-500">Para combinar com sua comemoração</span>
+                        <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                             Para combinar com sua comemoração
+                             <span className="text-amber-500/70 flex items-center gap-0.5 ml-1">
+                                <AlertCircle size={8} /> (Verificar Disp.)
+                             </span>
+                        </span>
                     </div>
                     </div>
                     
@@ -222,7 +234,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
                     <div className="flex gap-2 items-start bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
                         <FileSignature size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
                         <p className="text-[10px] text-zinc-400 leading-tight">
-                        <strong className="text-amber-500">Importante:</strong> Necessário assinatura de termo de comodato na entrega. Itens não devolvidos ou avariados serão cobrados à parte.
+                        <strong className="text-amber-500">Importante:</strong> Necessário assinatura de termo de comodato na entrega. Sujeito a disponibilidade de estoque.
                         </p>
                     </div>
                     )}

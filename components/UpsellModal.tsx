@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Box, Check, ArrowRight, Beer, CheckCircle2, GlassWater } from 'lucide-react';
+import { X, Box, Check, ArrowRight, Beer, CheckCircle2, GlassWater, AlertCircle } from 'lucide-react';
 import { Button } from './Button';
 
 interface UpsellModalProps {
@@ -116,6 +116,9 @@ export const UpsellModal: React.FC<UpsellModalProps> = ({
                                 <span className="text-xs font-semibold text-amber-500">+ R$ 30,00</span>
                             </div>
                             <p className="text-[10px] text-zinc-500 leading-tight mt-0.5">Mesa de apoio elegante.</p>
+                            <div className="flex items-center gap-1 mt-1 text-[9px] font-bold text-amber-500/80">
+                                <AlertCircle size={10} /> Verificar disponibilidade
+                            </div>
                         </div>
                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all flex-shrink-0
                             ${selectedTonel ? 'bg-amber-500 border-amber-500' : 'border-zinc-600'}
@@ -148,6 +151,9 @@ export const UpsellModal: React.FC<UpsellModalProps> = ({
                                     {selectedMugs && <span className="text-xs font-semibold text-amber-500">+ R$ {mugsConfig.price},00</span>}
                                 </div>
                                 <p className="text-[10px] text-zinc-500 leading-tight mt-0.5">Kit para brindar com estilo.</p>
+                                <div className="flex items-center gap-1 mt-1 text-[9px] font-bold text-amber-500/80">
+                                    <AlertCircle size={10} /> Verificar disponibilidade
+                                </div>
                             </div>
                             <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all flex-shrink-0
                                 ${selectedMugs ? 'bg-amber-500 border-amber-500' : 'border-zinc-600'}
