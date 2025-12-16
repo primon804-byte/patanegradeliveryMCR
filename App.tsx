@@ -646,6 +646,12 @@ const App: React.FC = () => {
 
       if (availableGrowlers.length === 0) return [];
 
+      // --- PRIORITY 1: ALWAYS SUGGEST THESE IF NOT IN CART ---
+      // Session IPA, Vinho Branco, Vinho Tinto
+      const priorityIds = ['growler-session-ipa-1l', 'growler-vinho-branco-1l', 'growler-vinho-tinto-1l'];
+      const priorityMatches = availableGrowlers.filter(p => priorityIds.includes(p.id));
+
+      // --- CONTEXTUAL PAIRING LOGIC (For remaining slots) ---
       let primaryTargetTypes: BeerType[] = [];
       let secondaryTargetTypes: BeerType[] = [];
 
@@ -658,14 +664,15 @@ const App: React.FC = () => {
           case BeerType.LAGER: 
                // Check if Wine
                if (lastGrowler.name.toLowerCase().includes('vinho')) {
+                   // Logic already handled by Priority list, but kept for fallback
                    if (lastGrowler.name.toLowerCase().includes('branco')) {
                         // Priority: Red Wine
                         const red = availableGrowlers.find(p => p.name.toLowerCase().includes('tinto'));
-                        if (red) return [red, ...availableGrowlers.filter(p => p.id !== red.id).slice(0, 2)];
+                        if (red) primaryTargetTypes = [red.type as BeerType];
                    } else if (lastGrowler.name.toLowerCase().includes('tinto')) {
                         // Priority: White Wine
                         const white = availableGrowlers.find(p => p.name.toLowerCase().includes('branco'));
-                        if (white) return [white, ...availableGrowlers.filter(p => p.id !== white.id).slice(0, 2)];
+                        if (white) primaryTargetTypes = [white.type as BeerType];
                    }
                }
                primaryTargetTypes = [BeerType.PILSEN, BeerType.VIENNA];
@@ -691,39 +698,42 @@ const App: React.FC = () => {
               primaryTargetTypes = [];
       }
 
-      // Collect Primary Matches
-      const primaryMatches = availableGrowlers.filter(p => p.type && primaryTargetTypes.includes(p.type));
+      // Collect Contextual Matches
+      const contextualPrimary = availableGrowlers.filter(p => p.type && primaryTargetTypes.includes(p.type));
+      const contextualSecondary = availableGrowlers.filter(p => p.type && secondaryTargetTypes.includes(p.type));
       
-      // Collect Secondary Matches
-      const secondaryMatches = availableGrowlers.filter(p => p.type && secondaryTargetTypes.includes(p.type) && !primaryMatches.includes(p));
-
       // Collect "Popular/Champions" as fillers
-      const fillers = availableGrowlers.filter(p => !primaryMatches.includes(p) && !secondaryMatches.includes(p))
-                                       .sort((a, b) => (b.isChampion ? 1 : 0) - (a.isChampion ? 1 : 0));
+      const fillers = availableGrowlers
+            .filter(p => !contextualPrimary.includes(p) && !contextualSecondary.includes(p))
+            .sort((a, b) => (b.isChampion ? 1 : 0) - (a.isChampion ? 1 : 0));
 
-      // Combine all unique candidates ordered by relevance
-      const allCandidates = Array.from(new Set([...primaryMatches, ...secondaryMatches, ...fillers]));
+      // Combine all unique candidates ordered by priority:
+      // 1. HARDCODED PRIORITY (Vinho/Session IPA)
+      // 2. PAIRING CONTEXT
+      // 3. FILLERS
+      const allCandidates = Array.from(new Set([...priorityMatches, ...contextualPrimary, ...contextualSecondary, ...fillers]));
 
-      // Define Forbidden Types for Mystery (Index 2)
-      const mysteryForbidden = [BeerType.PILSEN, BeerType.LAGER];
+      // --- MYSTERY ITEM LOGIC (Slot 3) ---
+      // Rule: Can be Wine, Can be Session IPA, but CANNOT be Standard Pilsen or Standard Lager
+      const isValidMystery = (p: Product) => {
+          // Exception: Wine is allowed (even if typed as LAGER in some configs)
+          if (p.name.toLowerCase().includes('vinho')) return true;
+          // Block Standard Pilsen/Lager
+          return p.type !== BeerType.PILSEN && p.type !== BeerType.LAGER;
+      };
 
-      // 1. Find the best candidate for the Mystery Slot (Not Pilsen/Lager)
-      // We look through the list for the first item that matches criteria
-      const mysteryCandidate = allCandidates.find(p => !p.type || !mysteryForbidden.includes(p.type));
+      // Try to find a valid mystery candidate from the pool
+      const mysteryCandidate = allCandidates.find(isValidMystery);
 
-      // 2. Construct the final list
+      // Construct final list of 3
       let finalRecs: Product[] = [];
 
       if (mysteryCandidate && allCandidates.length >= 3) {
-          // We have enough items to create a mystery experience
-          // Take the top 2 items that ARE NOT the mystery candidate
+          // Take top 2 that are NOT the mystery candidate
           const standardSlots = allCandidates.filter(p => p.id !== mysteryCandidate.id).slice(0, 2);
-
-          // Combine: [Standard 1, Standard 2, Mystery]
           finalRecs = [...standardSlots, mysteryCandidate];
       } else {
-          // Not enough items or no suitable mystery candidate found
-          // Just take top 3
+          // Fallback if no mystery candidate found (rare) or not enough products
           finalRecs = allCandidates.slice(0, 3);
       }
 
