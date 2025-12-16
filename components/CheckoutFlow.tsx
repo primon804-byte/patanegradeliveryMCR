@@ -25,7 +25,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   
   const locationName = userLocation || 'Marechal Cândido Rondon'; 
   
-  // Check if cart contains a Keg (requires full registration)
+  // Check if cart contains a Keg (requires Event Data)
   const hasKeg = cart.some(item => 
     item.category === ProductCategory.KEG30 || 
     item.category === ProductCategory.KEG50
@@ -36,7 +36,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const [cpf, setCpf] = useState('');
   const [rg, setRg] = useState('');
   const [birthDate, setBirthDate] = useState(''); 
-  const [address, setAddress] = useState(''); // Acts as Residential Address (New Keg) OR Delivery Address (Growler)
+  const [address, setAddress] = useState(''); // Acts as Residential Address (New) OR Delivery Address (Returning)
   const [neighborhood, setNeighborhood] = useState('');
   const [mobilePhone, setMobilePhone] = useState('');
 
@@ -64,24 +64,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const handleFinalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 1. Validação Básica (Nome, Telefone, Pagamento)
+    // 1. Validação Básica (Sempre necessária)
     if (!name || !mobilePhone || !paymentMethod) return;
 
-    // 2. Validação Específica por Tipo de Pedido
-    if (hasKeg) {
-        // Barril (Seja Novo ou Recorrente): Precisa dos dados do evento
-        if (!eventAddress || !eventDate || !receiverName) return;
-
-        // Barril (Apenas Novo): Precisa de dados cadastrais completos
-        if (!isReturningCustomer) {
-            if (!cpf || !birthDate || !address || !neighborhood) return;
+    // 2. Validação por Tipo de Cliente
+    if (isReturningCustomer) {
+        // Cliente Recorrente
+        if (hasKeg) {
+            // Barril precisa de dados do evento
+            if (!eventAddress || !eventDate || !receiverName) return;
+        } else {
+            // Growler precisa de endereço de entrega
+            if (!address || !neighborhood) return;
         }
     } else {
-        // Growler (Seja Novo ou Recorrente): Precisa de endereço de entrega
-        if (!address || !neighborhood) return;
-
-        // Growler (Apenas Novo): Precisa de Data Nascimento
-        if (!isReturningCustomer && !birthDate) return;
+        // Novo Cliente (SEMPRE precisa de cadastro completo agora)
+        if (!cpf || !birthDate || !address || !neighborhood) return;
+        
+        // Se for Barril, precisa TAMBÉM dos dados do evento
+        if (hasKeg) {
+             if (!eventAddress || !eventDate || !receiverName) return;
+        }
     }
 
     // Determine WhatsApp Number based on Location
@@ -130,24 +133,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
              fullMessage = header + userBlock + deliveryBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
         }
     } 
-    // --- SCENARIO B: NEW CUSTOMER (FULL DATA) ---
+    // --- SCENARIO B: NEW CUSTOMER (FULL DATA ALWAYS) ---
     else {
-        // Has Keg -> Full Registration
+        // Header padrão para cadastro
+        const header = `*FICHA DE CADASTRO - PATANEGRA*\n------------------\n`;
+        
+        const personalBlock = 
+            `*NOME:* ${name}\n` +
+            `*DATA NASC.:* ${birthDate}\n` +
+            `*CPF:* ${cpf}\n` +
+            `*RG:* ${rg || 'Não informado'}\n` +
+            `*END. RESIDENCIAL:* ${address}\n` +
+            `*BAIRRO:* ${neighborhood}\n` +
+            `*CELULAR:* ${mobilePhone}\n`;
+
+        const docsBlock = `\n📸 *FOTOS (Enviarei a seguir):*\n- Comprovante de Residência\n- CNH (Documento com foto)\n`;
+
+        let extraBlock = "";
+
         if (hasKeg) {
-            const header = `*FICHA DE CADASTRO - PATANEGRA*\n------------------\n`;
-            
-            const personalBlock = 
-              `*NOME:* ${name}\n` +
-              `*DATA NASC.:* ${birthDate}\n` +
-              `*CPF:* ${cpf}\n` +
-              `*RG:* ${rg || 'Não informado'}\n` +
-              `*END. RESIDENCIAL:* ${address}\n` +
-              `*BAIRRO:* ${neighborhood}\n` +
-              `*CELULAR:* ${mobilePhone}\n`;
-    
-            const docsBlock = `\n📸 *FOTOS (Enviarei a seguir):*\n- Comprovante de Residência\n- CNH (Documento com foto)\n`;
-    
-            const eventBlock = 
+             // Se for Barril, adiciona dados do evento
+             extraBlock = 
               `\n--- DADOS DO EVENTO ---\n` +
               `*RECEBEDOR:* ${receiverName}\n` +
               `*ENDEREÇO DO EVENTO:* ${eventAddress}\n` +
@@ -155,22 +161,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
               `*HORA:* ${eventTime || 'Não definida'}\n` +
               `*VOLTAGEM:* ${voltage}\n` +
               `*TOTAL LITROS:* ${totalLiters}L\n`;
-    
-            fullMessage = header + personalBlock + docsBlock + eventBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
-        } 
-        // Growler Only -> Simple Delivery Registration
-        else {
-            const header = `*NOVO CADASTRO - DELIVERY*\n------------------\n`;
-            
-            const deliveryBlock = 
-                `\n\n👤 *CLIENTE:* ${name}\n` +
-                `📅 *NASCIMENTO:* ${birthDate}\n` +
-                `📱 *CELULAR:* ${mobilePhone}\n` +
-                `📍 *ENTREGAR EM:* ${address}\n` +
-                `🏘️ *BAIRRO:* ${neighborhood}`;
-                
-            fullMessage = header + itemsBlock + totalMsg + deliveryBlock + paymentBlock + freightNote;
+        } else {
+             // Se for Growler, reforça que a entrega é no endereço residencial/cadastro
+             extraBlock = `\n📍 *ENTREGA:* No endereço residencial informado acima.\n`;
         }
+
+        fullMessage = header + personalBlock + docsBlock + extraBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
     }
 
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(fullMessage)}`;
@@ -209,27 +205,32 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       // Common requirements
       if (!name || !mobilePhone || !paymentMethod) return true;
 
-      if (hasKeg) {
-          // Keg ALWAYS requires event info
-          if (!eventAddress || !eventDate || !receiverName) return true;
-          // New Customer + Keg requires registration info
-          if (!isReturningCustomer) {
-              if (!cpf || !birthDate || !address || !neighborhood) return true;
+      // Logic for NEW Customers (Rigorous)
+      if (!isReturningCustomer) {
+          if (!cpf || !birthDate || !address || !neighborhood) return true;
+          // If Keg, needs event info too
+          if (hasKeg && (!eventAddress || !eventDate || !receiverName)) return true;
+      } 
+      // Logic for RETURNING Customers (Simple)
+      else {
+          if (hasKeg) {
+              // Keg needs event info
+              if (!eventAddress || !eventDate || !receiverName) return true;
+          } else {
+              // Growler needs address
+              if (!address || !neighborhood) return true;
           }
-      } else {
-          // Growler ALWAYS requires address
-          if (!address || !neighborhood) return true;
-          // New Customer + Growler requires DOB
-          if (!isReturningCustomer && !birthDate) return true;
       }
+      
       return false;
   }
 
   // Logic to determine if "Address" field (Residential/Delivery) should be shown
   // Show if: 
-  // 1. It is NOT a keg order (Growler always needs delivery address)
-  // 2. It IS a keg order BUT it's a new customer (Needs residential address for contract)
-  const showMainAddressFields = !hasKeg || (!isReturningCustomer && hasKeg);
+  // 1. New Customer (Always needs Residential Address for registration)
+  // 2. Returning Customer Buying Growler (Needs Delivery Address)
+  // Hide if: Returning Customer Buying Keg (Event address is separate)
+  const showMainAddressFields = !isReturningCustomer || (!hasKeg && isReturningCustomer);
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -357,13 +358,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
               </div>
             </div>
 
-            {/* --- ENDEREÇO DE ENTREGA (GROWLER) OU RESIDENCIAL (NOVO BARRIL) --- */}
+            {/* --- ENDEREÇO DE ENTREGA (GROWLER) OU RESIDENCIAL (NOVO CLIENTE GERAL) --- */}
             {showMainAddressFields && (
                 <div className="space-y-3 animate-slide-up">
                     <div className="flex items-center gap-2 pb-1 border-b border-zinc-800">
                       <Home size={16} className="text-amber-500" />
                       <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                          {hasKeg ? 'Endereço Residencial (Cadastro)' : 'Endereço de Entrega'}
+                          {!isReturningCustomer ? 'Endereço Residencial (Cadastro)' : 'Endereço de Entrega'}
                       </h3>
                     </div>
                     <div className="relative">
@@ -389,11 +390,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 </div>
             )}
 
-            {/* --- DADOS EXTRAS (Apenas se for NOVO CLIENTE) --- */}
+            {/* --- DADOS EXTRAS (Apenas se for NOVO CLIENTE - AGORA PARA TODOS) --- */}
             {!isReturningCustomer && (
               <div className="space-y-5 animate-slide-up">
                 
-                {/* Data Nascimento e CPF (Se barril) */}
+                {/* Data Nascimento e CPF (Para todos os novos) */}
                 <div className="space-y-3">
                      <div className="relative">
                         <input 
@@ -407,58 +408,52 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                         <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                     </div>
 
-                    {hasKeg && (
-                      <div className="grid grid-cols-2 gap-3">
-                          <div className="relative">
-                              <input 
-                                  required
-                                  type="text"
-                                  value={cpf}
-                                  onChange={(e) => setCpf(e.target.value)}
-                                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                  placeholder="CPF"
-                              />
-                              <Fingerprint size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                          </div>
-                          <div className="relative">
-                              <input 
-                                  type="text"
-                                  value={rg}
-                                  onChange={(e) => setRg(e.target.value)}
-                                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                  placeholder="RG (Opcional)"
-                              />
-                              <FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                          </div>
-                      </div>
-                    )}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="relative">
+                            <input 
+                                required
+                                type="text"
+                                value={cpf}
+                                onChange={(e) => setCpf(e.target.value)}
+                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                placeholder="CPF"
+                            />
+                            <Fingerprint size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        </div>
+                        <div className="relative">
+                            <input 
+                                type="text"
+                                value={rg}
+                                onChange={(e) => setRg(e.target.value)}
+                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                placeholder="RG (Opcional)"
+                            />
+                            <FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        </div>
+                    </div>
                 </div>
 
-                {/* SEÇÕES EXCLUSIVAS BARRIL (Apenas Novo Cliente) */}
-                {hasKeg && (
-                  <>
-                      {/* DOCUMENTOS */}
-                      <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-dashed">
-                          <div className="flex items-center gap-2 mb-2 text-zinc-400">
-                              <Camera size={18} />
-                              <span className="text-xs font-bold uppercase">Documentação Necessária</span>
-                          </div>
-                          <div className="flex gap-2">
-                              <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
-                                  <FileText size={16} className="mb-1" />
-                                  <span className="text-[9px] text-center px-2">Foto Comp. Residência</span>
-                              </div>
-                              <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
-                                  <Fingerprint size={16} className="mb-1" />
-                                  <span className="text-[9px] text-center px-2">Foto CNH / RG</span>
-                              </div>
-                          </div>
-                          <p className="text-[9px] text-amber-500 mt-2 text-center leading-tight">
-                              * Enviar fotos pelo WhatsApp após confirmar.
-                          </p>
-                      </div>
-                  </>
-                )}
+                {/* DOCUMENTOS (Para todos os novos) */}
+                <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-dashed">
+                    <div className="flex items-center gap-2 mb-2 text-zinc-400">
+                        <Camera size={18} />
+                        <span className="text-xs font-bold uppercase">Documentação Necessária</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
+                            <FileText size={16} className="mb-1" />
+                            <span className="text-[9px] text-center px-2">Foto Comp. Residência</span>
+                        </div>
+                        <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
+                            <Fingerprint size={16} className="mb-1" />
+                            <span className="text-[9px] text-center px-2">Foto CNH / RG</span>
+                        </div>
+                    </div>
+                    <p className="text-[9px] text-amber-500 mt-2 text-center leading-tight">
+                        * Enviar fotos pelo WhatsApp após confirmar.
+                    </p>
+                </div>
+
               </div>
             )}
 
@@ -601,7 +596,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
               icon={<ArrowRight size={20} />}
               disabled={isSubmitDisabled()}
             >
-              {isReturningCustomer ? 'Enviar Pedido Rápido' : (hasKeg ? 'Enviar Ficha Cadastral' : 'Enviar Pedido WhatsApp')}
+              {isReturningCustomer ? 'Enviar Pedido Rápido' : 'Enviar Ficha Cadastral'}
             </Button>
             <div className="h-6"></div> {/* Bottom Spacer */}
           </form>
@@ -617,7 +612,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
              <h2 className="text-2xl font-serif text-white mb-1">Pedido Enviado!</h2>
              <p className="text-zinc-400 font-medium mb-6">Obrigado pela preferência!</p>
              
-             {!isReturningCustomer && hasKeg && (
+             {!isReturningCustomer && (
                  <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 mb-6 text-left w-full">
                     <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                     <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
@@ -627,7 +622,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                  </div>
              )}
              
-             {(isReturningCustomer || !hasKeg) && (
+             {(isReturningCustomer) && (
                  <p className="text-zinc-400 text-sm mb-6 leading-relaxed px-4">
                     Aguarde, iremos responder no WhatsApp confirmando seu pedido e informando o valor da <strong>taxa de entrega</strong>.
                  </p>
