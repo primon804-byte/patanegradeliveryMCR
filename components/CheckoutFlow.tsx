@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, UserCheck, RefreshCw, UserPlus, Truck, Info, Building2 } from 'lucide-react';
+import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, UserCheck, RefreshCw, UserPlus, Truck, Info, Building2, Store } from 'lucide-react';
 import { Button } from './Button';
 import { CartItem, ProductCategory } from '../types';
 import { WHATSAPP_NUMBERS } from '../constants';
@@ -17,6 +17,7 @@ interface CheckoutFlowProps {
 
 type PaymentMethod = 'PIX' | 'Cartão' | 'Dinheiro';
 type Voltage = '110v' | '220v' | 'Não sei';
+type DeliveryMethod = 'delivery' | 'pickup';
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total, onClearCart, onReturnToHome, userLocation }) => {
   // Step 1: Form, Step 2: Success
@@ -30,6 +31,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     item.category === ProductCategory.KEG30 || 
     item.category === ProductCategory.KEG50
   );
+
+  // Delivery Method State (Default to delivery)
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery');
 
   // --- Personal Data ---
   const [name, setName] = useState('');
@@ -60,6 +64,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     }
   }, [isOpen, userLocation]);
 
+  // Reset delivery method if switching to Keg (Kegs usually need delivery/install)
+  useEffect(() => {
+    if (hasKeg) {
+        setDeliveryMethod('delivery');
+    }
+  }, [hasKeg]);
+
   if (!isOpen) return null;
 
   // Calculate total liters in cart
@@ -84,11 +95,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             // Barril precisa de dados do evento
             if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
         } else {
-            // Growler precisa de endereço de entrega
-            if (!address || !neighborhood || !city) return;
+            // Growler: Se for ENTREGA, precisa de endereço. Se for RETIRADA, não precisa.
+            if (deliveryMethod === 'delivery') {
+                if (!address || !neighborhood || !city) return;
+            }
         }
     } else {
-        // Novo Cliente (SEMPRE precisa de cadastro completo agora)
+        // Novo Cliente (SEMPRE precisa de cadastro completo, endereço residencial é obrigatório)
         if (!cpf || !birthDate || !address || !neighborhood || !city) return;
         
         // Se for Barril, precisa TAMBÉM dos dados do evento
@@ -125,7 +138,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
     const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
     const totalMsg = `\n💵 *VALOR:* R$ ${total.toFixed(2)}`;
-    const freightNote = `\n\n⚠️ *FRETE:* A calcular na confirmação.`;
+    
+    // Freight Note depends on Delivery Method
+    const freightNote = deliveryMethod === 'delivery' 
+        ? `\n\n⚠️ *FRETE:* A calcular na confirmação.` 
+        : `\n\n📍 *MODO:* Cliente irá retirar na loja.`;
 
     // --- SCENARIO A: RETURNING CUSTOMER ---
     if (isReturningCustomer) {
@@ -146,13 +163,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
              
              fullMessage = header + userBlock + eventBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
         } else {
-             // Returning Growler: Include Delivery Address
-             const deliveryBlock = 
-                `\n📍 *ENTREGAR EM:* ${address}\n` +
-                `🏘️ *BAIRRO:* ${neighborhood}\n` +
-                `🏙️ *CIDADE:* ${city}`;
-             
-             fullMessage = header + userBlock + deliveryBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+             // Returning Growler
+             if (deliveryMethod === 'delivery') {
+                const deliveryBlock = 
+                    `\n📍 *ENTREGAR EM:* ${address}\n` +
+                    `🏘️ *BAIRRO:* ${neighborhood}\n` +
+                    `🏙️ *CIDADE:* ${city}`;
+                fullMessage = header + userBlock + deliveryBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+             } else {
+                // Pickup Message
+                const pickupBlock = `\n📍 *RETIRADA NA LOJA* (${locationName})\nVerificar disponibilidade para retirada imediata.`;
+                fullMessage = header + userBlock + pickupBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+             }
         }
     } 
     // --- SCENARIO B: NEW CUSTOMER (FULL DATA ALWAYS) ---
@@ -186,8 +208,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
               `*VOLTAGEM:* ${voltage}\n` +
               `*TOTAL LITROS:* ${totalLiters}L\n`;
         } else {
-             // Se for Growler, reforça que a entrega é no endereço residencial/cadastro
-             extraBlock = `\n📍 *ENTREGA:* No endereço residencial informado acima.\n`;
+             // Se for Growler
+             if (deliveryMethod === 'delivery') {
+                extraBlock = `\n📍 *ENTREGA:* No endereço residencial informado acima.\n`;
+             } else {
+                extraBlock = `\n📍 *PEDIDO PARA RETIRADA NA LOJA*\n(${locationName})\n`;
+             }
         }
 
         fullMessage = header + personalBlock + docsBlock + extraBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
@@ -217,6 +243,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       setName(''); setCpf(''); setRg(''); setAddress(''); setNeighborhood(''); setCity('');
       setBirthDate(''); setReceiverName('');
       setMobilePhone('');
+      setDeliveryMethod('delivery');
       setEventAddress(''); setEventCity(''); setEventDate(''); setEventTime(''); setVoltage('110v');
       
       if (onReturnToHome) onReturnToHome();
@@ -231,6 +258,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
       // Logic for NEW Customers (Rigorous)
       if (!isReturningCustomer) {
+          // New customers must provide address for registration, even if picking up
           if (!cpf || !birthDate || !address || !neighborhood || !city) return true;
           // If Keg, needs event info too
           if (hasKeg && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
@@ -241,8 +269,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
               // Keg needs event info
               if (!eventAddress || !eventDate || !receiverName || !eventCity) return true;
           } else {
-              // Growler needs address
-              if (!address || !neighborhood || !city) return true;
+              // Growler: Only needs address if Delivery
+              if (deliveryMethod === 'delivery') {
+                  if (!address || !neighborhood || !city) return true;
+              }
           }
       }
       
@@ -252,9 +282,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   // Logic to determine if "Address" field (Residential/Delivery) should be shown
   // Show if: 
   // 1. New Customer (Always needs Residential Address for registration)
-  // 2. Returning Customer Buying Growler (Needs Delivery Address)
-  // Hide if: Returning Customer Buying Keg (Event address is separate)
-  const showMainAddressFields = !isReturningCustomer || (!hasKeg && isReturningCustomer);
+  // 2. Returning Customer Buying Growler AND Choosing Delivery
+  const showMainAddressFields = !isReturningCustomer || (!hasKeg && isReturningCustomer && deliveryMethod === 'delivery');
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -289,10 +318,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         {step === 1 && (
           <form onSubmit={handleFinalSubmit} className="p-6 pt-0 flex flex-col gap-5 overflow-y-auto scrollbar-hide">
             
-            {/* Customer Type Toggle - IMPROVED DESIGN WITH SHINE & SPACING */}
+            {/* Customer Type Toggle */}
             <div className="grid grid-cols-2 gap-3 mb-6 mt-4 flex-shrink-0">
                
-               {/* SOU NOVO BUTTON (HIGHLIGHTED) */}
+               {/* SOU NOVO BUTTON */}
                <div className="relative group">
                    {!isReturningCustomer && (
                       <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black text-amber-500 text-[9px] font-bold px-3 py-0.5 rounded-full border border-amber-500 uppercase tracking-widest shadow-md z-20 whitespace-nowrap">
@@ -308,7 +337,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                          : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-amber-500/50 hover:text-zinc-300'
                      }`}
                    >
-                      {/* SHINE EFFECT (Only when active) */}
                       {!isReturningCustomer && (
                         <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/25 to-transparent z-10 pointer-events-none" />
                       )}
@@ -381,6 +409,52 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                   <Smartphone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               </div>
             </div>
+
+            {/* --- DELIVERY vs PICKUP TOGGLE (GROWLERS ONLY) --- */}
+            {!hasKeg && (
+                <div className="bg-zinc-900/50 p-1 rounded-xl border border-zinc-800 flex relative mt-2">
+                    {/* Sliding Background */}
+                    <div 
+                        className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-amber-500 rounded-lg transition-all duration-300 z-0 shadow-lg shadow-amber-500/20
+                        ${deliveryMethod === 'pickup' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'}`}
+                    />
+                    
+                    <button
+                        type="button"
+                        onClick={() => setDeliveryMethod('delivery')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide relative z-10 transition-colors
+                            ${deliveryMethod === 'delivery' ? 'text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    >
+                        <Truck size={14} />
+                        Entrega
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDeliveryMethod('pickup')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide relative z-10 transition-colors
+                            ${deliveryMethod === 'pickup' ? 'text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    >
+                        <Store size={14} />
+                        Retirada
+                    </button>
+                </div>
+            )}
+
+            {/* --- PICKUP LOCATION INFO CARD --- */}
+            {!hasKeg && deliveryMethod === 'pickup' && (
+                <div className="bg-zinc-900/50 border border-amber-500/20 rounded-xl p-4 flex items-center gap-4 animate-fade-in">
+                    <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                        <Store size={20} />
+                    </div>
+                    <div>
+                        <h4 className="text-white text-sm font-bold">Retirada na Unidade</h4>
+                        <p className="text-xs text-zinc-400 mt-1">
+                            Você irá buscar seu pedido em: <br/>
+                            <strong className="text-amber-500">{locationName}</strong>
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* --- ENDEREÇO DE ENTREGA (GROWLER) OU RESIDENCIAL (NOVO CLIENTE GERAL) --- */}
             {showMainAddressFields && (
@@ -630,8 +704,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                  </div>
                  <div>
                      <p className="text-xs text-zinc-300 leading-relaxed">
-                         <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">Política de Entrega</strong>
-                         O valor do frete será calculado e informado na confirmação do pedido via WhatsApp.
+                         <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">
+                            {deliveryMethod === 'delivery' ? 'Política de Entrega' : 'Retirada na Loja'}
+                         </strong>
+                         {deliveryMethod === 'delivery' 
+                            ? 'O valor do frete será calculado e informado na confirmação do pedido via WhatsApp.'
+                            : `Você deve se dirigir à unidade de ${locationName} para retirar seu pedido.`}
                      </p>
                  </div>
             </div>
@@ -664,14 +742,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                     <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                     <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
                         <li>Envie as <strong>FOTOS</strong> do Comprovante de Residência e CNH/RG na conversa do WhatsApp que abriu.</li>
-                        <li>Aguarde nossa confirmação e cálculo da <strong>taxa de entrega</strong>.</li>
+                        {deliveryMethod === 'delivery' ? (
+                            <li>Aguarde nossa confirmação e cálculo da <strong>taxa de entrega</strong>.</li>
+                        ) : (
+                            <li>Aguarde a confirmação de disponibilidade para <strong>retirada</strong>.</li>
+                        )}
                     </ul>
                  </div>
              )}
              
              {(isReturningCustomer) && (
                  <p className="text-zinc-400 text-sm mb-6 leading-relaxed px-4">
-                    Aguarde, iremos responder no WhatsApp confirmando seu pedido e informando o valor da <strong>taxa de entrega</strong>.
+                    Aguarde, iremos responder no WhatsApp confirmando seu pedido.
                  </p>
              )}
 
