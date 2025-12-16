@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MapPin, X, User, Calendar, Map, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, Beer } from 'lucide-react';
+import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone } from 'lucide-react';
 import { Button } from './Button';
 import { CartItem, ProductCategory } from '../types';
 import { WHATSAPP_NUMBERS } from '../constants';
@@ -108,8 +108,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
         const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
         const totalMsg = `\n💵 *VALOR APROX:* R$ ${total.toFixed(2)}`;
+        const freightNote = `\n\n⚠️ *FRETE / ENTREGA:*\nO valor do frete será calculado e informado na confirmação do pedido.`;
 
-        fullMessage = header + personalBlock + docsBlock + eventBlock + itemsBlock + paymentBlock + totalMsg;
+        fullMessage = header + personalBlock + docsBlock + eventBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
     } 
     // --- Message Construction for GROWLERS (Pedido Simples) ---
     else {
@@ -125,7 +126,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             
         const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
         const totalMsg = `\n💵 *TOTAL:* R$ ${total.toFixed(2)}`;
-        const footer = `\n\n_(Aguardando taxa de entrega)_`;
+        const footer = `\n\n⚠️ *IMPORTANTE:* A taxa de entrega será calculada na confirmação.`;
 
         fullMessage = header + itemsBlock + totalMsg + deliveryBlock + paymentBlock + footer;
     }
@@ -447,14 +448,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                     <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                     <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
                         <li>Envie as <strong>FOTOS</strong> do Comprovante de Residência e CNH/RG na conversa do WhatsApp que abriu.</li>
-                        <li>Aguarde nossa confirmação de disponibilidade e cálculo da taxa de entrega.</li>
+                        <li>Aguarde nossa confirmação e cálculo da <strong>taxa de entrega</strong>.</li>
                     </ul>
                  </div>
              )}
              
              {!hasKeg && (
                  <p className="text-zinc-400 text-sm mb-6 leading-relaxed px-4">
-                    Aguarde, iremos responder no WhatsApp confirmando seu pedido e a taxa de entrega.
+                    Aguarde, iremos responder no WhatsApp confirmando seu pedido e informando o valor da <strong>taxa de entrega</strong>.
                  </p>
              )}
 
