@@ -354,6 +354,7 @@ const FOZ_PRICES: Record<string, number> = {
   // GROWLERS
   'growler-pilsen-cristal-1l': 18,
   'growler-premium-lager-1l': 19,
+  'growler-weiss-1l': 26,
   'growler-session-ipa-1l': 26,
   'growler-american-ipa-1l': 28,
   'growler-vinho-branco-1l': 21,

@@ -106,6 +106,19 @@ export const PRODUCTS: Product[] = [
 
   // R$ 22,00 (Vários Estilos)
   {
+    id: 'growler-weiss-1l',
+    name: 'Hefe Weiss 1L',
+    description: 'A clássica cerveja de trigo com espuma espessa, notas de cravo e banana, super encorpada e turva.',
+    price: 22,
+    image: 'https://www.starkdistribuidora.com.br/storage/products/Xqx1A0xpvoqXZVPa.jpg',
+    category: ProductCategory.GROWLER,
+    type: BeerType.WEISS,
+    volumeLiters: 1,
+    abv: 5.0,
+    ibu: 10,
+    pairing: 'Frutos do mar, saladas, carnes assadas e sobremesas.',
+  },
+  {
     id: 'growler-amber-lager-1l',
     name: 'Amber Lager 1L',
     description: 'Uma cerveja de coloração acobreada com notas maltadas e de caramelo sutis, corpo leve, espuma densa e leve aroma cítrico.',
@@ -168,7 +181,7 @@ export const PRODUCTS: Product[] = [
     volumeLiters: 1,
     abv: 5.2,
     ibu: 21,
-    pairing: 'Carne assada, comida alemã, comida mexicana, sopas e caldos',
+    pairing: 'Carne assada, comida alemã, comida mexicana, ao menos sopas e caldos',
   },
 
   // R$ 26,00
