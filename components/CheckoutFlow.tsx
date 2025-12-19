@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, UserCheck, RefreshCw, UserPlus, Truck, Info, Building2, Store, Check } from 'lucide-react';
+import { MapPin, X, User, Calendar, CheckCircle2, ArrowRight, QrCode, CreditCard, Banknote, Home, Fingerprint, FileText, Camera, Zap, Clock, Smartphone, UserCheck, RefreshCw, UserPlus, Truck, Info, Building2, Store, Check, Gift } from 'lucide-react';
 import { Button } from './Button';
 import { CartItem, ProductCategory } from '../types';
 import { WHATSAPP_NUMBERS } from '../constants';
@@ -38,6 +38,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   // New State: Send Event Info Later
   const [sendEventInfoLater, setSendEventInfoLater] = useState(false);
 
+  // New State: Send to different address (for Growlers/New Customers)
+  const [sendToDifferentAddress, setSendToDifferentAddress] = useState(false);
+
   // --- Personal Data ---
   const [name, setName] = useState('');
   const [cpf, setCpf] = useState('');
@@ -47,6 +50,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const [neighborhood, setNeighborhood] = useState('');
   const [city, setCity] = useState(''); // New: Residential/Delivery City
   const [mobilePhone, setMobilePhone] = useState('');
+
+  // --- Delivery Address Data (If different from Residential) ---
+  const [diffAddress, setDiffAddress] = useState('');
+  const [diffNeighborhood, setDiffNeighborhood] = useState('');
+  const [diffCity, setDiffCity] = useState('');
 
   // --- Event Data (Only for Kegs) ---
   const [receiverName, setReceiverName] = useState(''); 
@@ -64,6 +72,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     if (isOpen && userLocation) {
         setCity(userLocation);
         setEventCity(userLocation);
+        setDiffCity(userLocation);
     }
   }, [isOpen, userLocation]);
 
@@ -71,6 +80,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   useEffect(() => {
     if (hasKeg) {
         setDeliveryMethod('delivery');
+        setSendToDifferentAddress(false);
     }
   }, [hasKeg]);
 
@@ -114,6 +124,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
              if (!sendEventInfoLater) {
                 if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
              }
+        } else if (deliveryMethod === 'delivery' && sendToDifferentAddress) {
+             // Se for Growler e marcou outro endereço, valida os campos de entrega
+             if (!diffAddress || !diffNeighborhood || !diffCity) return;
         }
     }
 
@@ -135,7 +148,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             let itemString = `• ${item.quantity}x ${item.name}${upsellMark}`;
             if (item.rentTonel) itemString += " (+ Tonel)";
             if (item.mugsQuantity) itemString += ` (+ ${item.mugsQuantity} Canecas)`;
-            if (item.moreCups) itemString += ` (+ Cotar Copos)`;
+            if (item.moreCups) itemString += ` (+ Orçamento Copos)`;
             return itemString;
         }).join('\n');
     };
@@ -215,7 +228,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         } else {
              // Se for Growler
              if (deliveryMethod === 'delivery') {
-                extraBlock = `\n📍 *ENTREGA:* No endereço residencial informado acima.\n`;
+                if (sendToDifferentAddress) {
+                    extraBlock = `\n📍 *ENTREGA EM OUTRO ENDEREÇO:*\n*ENDEREÇO:* ${diffAddress}\n*BAIRRO:* ${diffNeighborhood}\n*CIDADE:* ${diffCity}\n`;
+                } else {
+                    extraBlock = `\n📍 *ENTREGA:* No endereço residencial informado acima.\n`;
+                }
              } else {
                 extraBlock = `\n📍 *PEDIDO PARA RETIRADA NA LOJA*\n(${locationName})\n`;
              }
@@ -251,6 +268,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       setDeliveryMethod('delivery');
       setEventAddress(''); setEventCity(''); setEventDate(''); setEventTime(''); setVoltage('110v');
       setSendEventInfoLater(false);
+      setSendToDifferentAddress(false);
+      setDiffAddress(''); setDiffNeighborhood(''); setDiffCity('');
       
       if (onReturnToHome) onReturnToHome();
     }
@@ -268,6 +287,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
           if (!cpf || !birthDate || !address || !neighborhood || !city) return true;
           // If Keg, needs event info (Unless send later is checked)
           if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
+          // If Growler + Different Address
+          if (!hasKeg && deliveryMethod === 'delivery' && sendToDifferentAddress && (!diffAddress || !diffNeighborhood || !diffCity)) return true;
       } 
       // Logic for RETURNING Customers (Simple)
       else {
@@ -503,6 +524,69 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                           <Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                         </div>
                     </div>
+
+                    {/* SEND TO DIFFERENT ADDRESS TOGGLE (Only for New Customers + Growler Delivery) */}
+                    {!isReturningCustomer && !hasKeg && deliveryMethod === 'delivery' && (
+                        <div className="mt-2 space-y-3">
+                            <label className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 cursor-pointer hover:bg-zinc-900 transition-colors">
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${sendToDifferentAddress ? 'bg-amber-500 border-amber-500' : 'bg-transparent border-zinc-600'}`}>
+                                    {sendToDifferentAddress && <Check size={14} className="text-black" strokeWidth={3} />}
+                                </div>
+                                <input 
+                                    type="checkbox" 
+                                    className="hidden" 
+                                    checked={sendToDifferentAddress} 
+                                    onChange={(e) => setSendToDifferentAddress(e.target.checked)} 
+                                />
+                                <span className={`text-sm flex items-center gap-2 ${sendToDifferentAddress ? 'text-white font-medium' : 'text-zinc-400'}`}>
+                                    <Gift size={14} className={sendToDifferentAddress ? 'text-amber-500' : ''} />
+                                    Enviar para endereço diferente do cadastro.
+                                </span>
+                            </label>
+
+                            {/* CONDITIONAL DELIVERY FIELDS */}
+                            {sendToDifferentAddress && (
+                                <div className="p-4 bg-zinc-900/80 rounded-2xl border border-amber-500/20 space-y-3 animate-fade-in">
+                                    <div className="flex items-center gap-2 pb-1 border-b border-zinc-800 mb-1">
+                                        <Truck size={14} className="text-amber-500" />
+                                        <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Endereço de Entrega</h4>
+                                    </div>
+                                    <div className="relative">
+                                        <input 
+                                            required
+                                            value={diffAddress}
+                                            onChange={(e) => setDiffAddress(e.target.value)}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                            placeholder="Rua e Número (Entrega)"
+                                        />
+                                        <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="relative">
+                                            <input 
+                                                required
+                                                value={diffNeighborhood}
+                                                onChange={(e) => setDiffNeighborhood(e.target.value)}
+                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                                placeholder="Bairro"
+                                            />
+                                            <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                        </div>
+                                        <div className="relative">
+                                            <input 
+                                                required
+                                                value={diffCity}
+                                                onChange={(e) => setDiffCity(e.target.value)}
+                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
+                                                placeholder="Cidade"
+                                            />
+                                            <Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 

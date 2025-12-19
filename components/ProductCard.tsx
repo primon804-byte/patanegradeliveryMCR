@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
 import { Plus, Flame } from 'lucide-react';
 
@@ -11,14 +11,16 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClick, featured = false }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   return (
     <div 
       onClick={() => onClick(product)}
-      className={`relative group overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 ${featured ? 'col-span-2' : 'col-span-1'} cursor-pointer transition-transform active:scale-[0.98]`}
+      className={`relative group overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800/60 ${featured ? 'col-span-2' : 'col-span-1'} cursor-pointer transition-all duration-300 hover:border-zinc-700 active:scale-[0.98] will-animate`}
     >
       {/* BADGES */}
       {product.isChampion ? (
-        <div className="absolute top-3 left-3 z-10 bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded-md shadow-lg flex items-center gap-1">
+        <div className="absolute top-3 left-3 z-10 bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded-md shadow-lg flex items-center gap-1 animate-fade-in">
           <div className="flex -space-x-1">
             <Flame size={10} strokeWidth={3} />
             <Flame size={10} strokeWidth={3} />
@@ -26,27 +28,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClic
           CAMPEÃO DE VENDAS
         </div>
       ) : product.isPopular ? (
-        <div className="absolute top-3 left-3 z-10 bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded-md shadow-lg flex items-center gap-1">
+        <div className="absolute top-3 left-3 z-10 bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded-md shadow-lg flex items-center gap-1 animate-fade-in">
           <Flame size={10} strokeWidth={3} />
           MAIS PEDIDO
         </div>
       ) : null}
       
-      <div className={`relative ${featured ? 'h-48' : 'h-40'} w-full overflow-hidden`}>
+      <div className={`relative ${featured ? 'h-48' : 'h-40'} w-full overflow-hidden bg-zinc-800`}>
         <img 
           src={product.image} 
           alt={product.name} 
-          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+          onLoad={() => setImageLoaded(true)}
+          className={`w-full h-full object-cover transition-all duration-700 ${imageLoaded ? 'opacity-80 blur-0 scale-100' : 'opacity-0 blur-lg scale-110'} group-hover:opacity-100 group-hover:scale-105`}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
       </div>
 
       <div className="p-4">
         <div className="flex justify-between items-start mb-1">
-          <h3 className="font-semibold text-lg text-white leading-tight">{product.name}</h3>
+          <h3 className="font-semibold text-lg text-white leading-tight tracking-tight">{product.name}</h3>
         </div>
         
-        <p className="text-zinc-400 text-xs mb-3 line-clamp-2 min-h-[2.5em]">{product.description}</p>
+        <p className="text-zinc-500 text-[11px] mb-3 line-clamp-2 min-h-[2.5em] leading-relaxed">{product.description}</p>
         
         <div className="flex items-center justify-between mt-auto">
           <span className="text-amber-500 font-bold text-lg">
@@ -58,7 +61,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClic
               e.stopPropagation();
               onAdd(product);
             }}
-            className="w-10 h-10 rounded-full bg-zinc-800 text-white flex items-center justify-center hover:bg-amber-500 hover:text-black transition-colors shadow-lg shadow-black/50"
+            className="w-10 h-10 rounded-full bg-zinc-800 text-white flex items-center justify-center hover:bg-amber-500 hover:text-black transition-all duration-300 shadow-lg active:scale-90"
           >
             <Plus size={20} />
           </button>
