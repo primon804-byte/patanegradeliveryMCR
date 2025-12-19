@@ -197,7 +197,6 @@ const MenuView: React.FC<{
   );
 };
 
-// --- Added CartView Component ---
 const CartView: React.FC<{
   cart: CartItem[];
   cartTotal: number;
@@ -338,14 +337,80 @@ const App: React.FC = () => {
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
 
   const adjustedProducts = useMemo(() => {
-    // Pricing logic remains the same
     return PRODUCTS; 
   }, [userLocation]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000); // Minimum splash time for "premium" feel
+    const timer = setTimeout(() => setLoading(false), 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  // --- RECOMENDAÇÃO DE GROWLERS ---
+  const getGrowlerRecommendations = (currentCart: CartItem[], allProducts: Product[]): Product[] => {
+      const growlersInCart = currentCart.filter(item => item.category === ProductCategory.GROWLER);
+      if (growlersInCart.length === 0) return [];
+      
+      const lastGrowler = growlersInCart[growlersInCart.length - 1];
+      const availableGrowlers = allProducts.filter(p => 
+          p.category === ProductCategory.GROWLER && 
+          !currentCart.some(c => c.id === p.id)
+      );
+
+      if (availableGrowlers.length === 0) return [];
+
+      const priorityIds = ['growler-session-ipa-1l', 'growler-vinho-branco-1l', 'growler-vinho-tinto-1l'];
+      const priorityMatches = availableGrowlers.filter(p => priorityIds.includes(p.id));
+
+      const fillers = availableGrowlers
+            .filter(p => !priorityMatches.includes(p))
+            .sort((a, b) => (b.isChampion ? 1 : 0) - (a.isChampion ? 1 : 0));
+
+      const allCandidates = Array.from(new Set([...priorityMatches, ...fillers]));
+      return allCandidates.slice(0, 3);
+  };
+
+  const handleCheckoutClick = () => {
+    if (cart.length > 0 && cartLocation && userLocation && cartLocation !== userLocation) {
+        setShowCheckoutConflict(true);
+        return;
+    }
+
+    const hasKeg = cart.some(item => 
+      item.category === ProductCategory.KEG30 || 
+      item.category === ProductCategory.KEG50
+    );
+    
+    if (hasKeg) {
+        const hasTonel = cart.some(item => item.rentTonel === true);
+        const hasMugs = cart.some(item => item.mugsQuantity);
+        const hasQuoteCups = cart.some(item => item.moreCups);
+
+        if (!hasTonel || !hasMugs || !hasQuoteCups) {
+           setUpsellOptions({
+               offerTonel: !hasTonel,
+               offerMugs: !hasMugs,
+               offerCups: !hasQuoteCups
+           });
+           setIsCartOpen(false);
+           setIsUpsellModalOpen(true);
+           return;
+        }
+    } else {
+        const hasGrowler = cart.some(item => item.category === ProductCategory.GROWLER);
+        if (hasGrowler) {
+            const recs = getGrowlerRecommendations(cart, adjustedProducts);
+            if (recs.length > 0) {
+                setRecommendedGrowlers(recs);
+                setIsCartOpen(false);
+                setIsGrowlerUpsellOpen(true);
+                return;
+            }
+        }
+    }
+
+    setIsCartOpen(false); 
+    setIsCheckoutOpen(true);
+  };
 
   const addToCart = (product: Product, options?: Partial<CartItem>) => {
     if (cart.length > 0 && cartLocation && userLocation && cartLocation !== userLocation) {
@@ -417,12 +482,11 @@ const App: React.FC = () => {
               removeFromCart={(id) => setCart(c => c.filter(i => i.id !== id))}
               updateQuantity={(id, d) => setCart(c => c.map(i => i.id === id ? {...i, quantity: Math.max(1, i.quantity + d)} : i))}
               onEdit={(item) => { setEditingItem(item); setSelectedProduct(PRODUCTS.find(p => p.id === item.id) || item); }}
-              onCheckout={() => setIsCheckoutOpen(true)}
+              onCheckout={handleCheckoutClick}
             />
           )}
         </ViewContainer>
 
-        {/* Modals & Overlays */}
         {selectedProduct && (
           <ProductDetail 
             product={selectedProduct} 
@@ -445,7 +509,7 @@ const App: React.FC = () => {
           onUpdateQuantity={(id, d) => setCart(c => c.map(i => i.id === id ? {...i, quantity: Math.max(1, i.quantity + d)} : i))}
           onRemove={(id) => setCart(c => c.filter(i => i.id !== id))}
           onEdit={(item) => { setIsCartOpen(false); setEditingItem(item); setSelectedProduct(PRODUCTS.find(p => p.id === item.id) || item); }}
-          onCheckout={() => setIsCheckoutOpen(true)}
+          onCheckout={handleCheckoutClick}
         />
 
         <CheckoutFlow 
@@ -467,6 +531,32 @@ const App: React.FC = () => {
           isOpen={isLocationModalOpen} 
           onClose={() => setIsLocationModalOpen(false)} 
           onSelect={(loc) => { setUserLocation(loc); setIsLocationModalOpen(false); setView('menu'); }} 
+        />
+
+        <UpsellModal 
+          isOpen={isUpsellModalOpen}
+          onClose={() => setIsCheckoutOpen(true)}
+          onConfirm={(t, c, m) => {
+              setCart(prev => prev.map(item => (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) ? {...item, rentTonel: t, moreCups: c, mugsQuantity: m?.quantity, mugsPrice: m?.price} : item));
+              setIsUpsellModalOpen(false);
+              setIsCheckoutOpen(true);
+          }}
+          onDecline={() => { setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }}
+          offerTonel={upsellOptions.offerTonel}
+          offerCups={upsellOptions.offerCups}
+          offerMugs={upsellOptions.offerMugs}
+        />
+
+        <GrowlerUpsellModal 
+            isOpen={isGrowlerUpsellOpen}
+            onClose={() => setIsCheckoutOpen(true)}
+            onConfirm={(products) => {
+                products.forEach(p => addToCart(p, { isUpsell: true }));
+                setIsGrowlerUpsellOpen(false);
+                setIsCheckoutOpen(true);
+            }}
+            onDecline={() => { setIsGrowlerUpsellOpen(false); setIsCheckoutOpen(true); }}
+            recommendations={recommendedGrowlers}
         />
         
         {cart.length > 0 && view !== 'cart' && !isCartOpen && (
