@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award, MapPin, ChevronDown, Edit2, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award, MapPin, ChevronDown, Edit2, ArrowRight, Star, AlertCircle, RefreshCw, UserPlus } from 'lucide-react';
 import { PRODUCTS, HERO_IMAGES } from './constants';
 import { Product, CartItem, ViewState, ProductCategory, BeerType } from './types';
 import { Button } from './components/Button';
@@ -20,7 +20,7 @@ import { CheckoutConflictModal } from './components/CheckoutConflictModal';
 import { UpsellModal } from './components/UpsellModal';
 import { GrowlerUpsellModal } from './components/GrowlerUpsellModal';
 
-// --- Preços específicos para Foz do Iguaçu ---
+// --- Preços específicos para Foz do Iguaçu (Matriz) ---
 const FOZ_PRICES: Record<string, number> = {
   'growler-pilsen-cristal-1l': 18,
   'growler-premium-lager-1l': 19,
@@ -45,7 +45,7 @@ const FOZ_PRICES: Record<string, number> = {
   'keg-vinho-tinto-30': 500,
 };
 
-// --- Loading Component ---
+// --- Componente de Loading Animado ---
 const LoadingScreen = () => (
   <div className="fixed inset-0 z-[200] bg-zinc-950 flex flex-col items-center justify-center animate-fade-in">
     <div className="relative w-28 h-28 mb-8 flex items-center justify-center">
@@ -62,15 +62,13 @@ const LoadingScreen = () => (
   </div>
 );
 
-// --- Transition Wrapper ---
 const ViewContainer: React.FC<{ children: React.ReactNode; viewKey: string }> = ({ children, viewKey }) => (
   <div key={viewKey} className="animate-slide-left will-animate h-full">
     {children}
   </div>
 );
 
-// --- Sub-Views ---
-
+// --- HomeView ---
 const HomeView: React.FC<{
   setView: (v: ViewState) => void;
   onOrderClick: () => void;
@@ -110,6 +108,7 @@ const HomeView: React.FC<{
     </div>
 );
 
+// --- MenuView ---
 const MenuView: React.FC<{
   products: Product[];
   addToCart: (p: Product, options?: Partial<CartItem>) => void;
@@ -152,6 +151,7 @@ const MenuView: React.FC<{
   );
 };
 
+// --- CartView ---
 const CartView: React.FC<{
   cart: CartItem[];
   cartTotal: number;
@@ -162,50 +162,61 @@ const CartView: React.FC<{
   onCheckout: () => void;
 }> = ({ cart, cartTotal, setView, removeFromCart, updateQuantity, onEdit, onCheckout }) => (
   <div className="pb-32 max-w-md mx-auto h-screen flex flex-col bg-zinc-950">
-    <div className="p-6 pb-2 pt-10 flex-shrink-0 flex items-center gap-4">
-      <button onClick={() => setView('menu')} className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors">
-        <ArrowRight className="rotate-180" size={24} />
-      </button>
+    <div className="p-4 pb-2 pt-8 flex-shrink-0 flex items-center justify-between">
       <h2 className="text-2xl font-serif text-white tracking-tight">Seu Pedido</h2>
+      {cart.length > 0 && (
+        <span className="text-amber-500 font-bold">{cart.length} {cart.length === 1 ? 'item' : 'itens'}</span>
+      )}
     </div>
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {cart.length === 0 ? (
-        <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-4">
-          <ShoppingBag size={48} className="opacity-20" />
-          <p>Seu carrinho está vazio.</p>
+        <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-6 animate-fade-in">
+          <div className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800">
+            <ShoppingBag size={40} className="opacity-20" />
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-medium text-zinc-300">Seu carrinho está vazio</p>
+            <p className="text-sm text-zinc-500 mt-1">Explore nosso cardápio e adicione <br/> seus itens favoritos.</p>
+          </div>
           <Button variant="outline" onClick={() => setView('menu')}>Ver Cardápio</Button>
         </div>
       ) : (
         cart.map((item) => {
           const extras = (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0);
           const totalItemPrice = (item.price + extras);
+          const isKeg = item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50;
           return (
-            <div key={item.id} className="flex gap-4 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50">
-              <img src={item.image} alt={item.name} className="w-20 h-20 rounded-xl object-cover bg-zinc-800" />
+            <div key={item.id} className="flex gap-4 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50 backdrop-blur-sm animate-slide-up">
+              <div className="w-20 h-20 rounded-xl overflow-hidden bg-zinc-800 flex-shrink-0">
+                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+              </div>
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start">
-                     <h4 className="font-bold text-white text-sm leading-tight pr-2">{item.name}</h4>
-                     {(item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) && (
-                         <button onClick={() => onEdit(item)} className="p-1.5 bg-zinc-800 text-amber-500 rounded-lg hover:bg-amber-500 hover:text-black transition-colors"><Edit2 size={14} /></button>
-                     )}
+                    <h4 className="font-bold text-white text-sm leading-tight pr-2">{item.name}</h4>
+                    {isKeg && (
+                      <button onClick={() => onEdit(item)} className="p-1.5 bg-zinc-800 text-amber-500 rounded-lg hover:bg-amber-500 hover:text-black transition-all"><Edit2 size={12} /></button>
+                    )}
                   </div>
-                  <div className="text-amber-500 font-bold text-sm mt-1">R$ {totalItemPrice.toFixed(2)}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-amber-500 font-bold text-sm">R$ {totalItemPrice.toFixed(2)}</span>
+                    {item.isUpsell && <span className="text-[8px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded font-black uppercase">Sugestão</span>}
+                  </div>
                   {(item.rentTonel || item.mugsQuantity || item.moreCups) && (
-                     <div className="mt-2 text-[10px] text-zinc-500 space-y-0.5">
-                        {item.rentTonel && <div className="flex items-center gap-1"><span className="w-1 h-1 bg-amber-500 rounded-full"></span> Tonel (+R$30)</div>}
-                        {item.mugsQuantity && <div className="flex items-center gap-1"><span className="w-1 h-1 bg-amber-500 rounded-full"></span> {item.mugsQuantity} Canecas (+R${item.mugsPrice})</div>}
-                        {item.moreCups && <div className="flex items-center gap-1"><span className="w-1 h-1 bg-amber-500 rounded-full"></span> Cotar Copos Extras</div>}
-                     </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {item.rentTonel && <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700">Tonel Inc.</span>}
+                      {item.mugsQuantity && <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700">{item.mugsQuantity} Canecas</span>}
+                      {item.moreCups && <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700">+ Copos</span>}
+                    </div>
                   )}
                 </div>
                 <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center bg-zinc-950 rounded-xl border border-zinc-800 h-9 px-1">
+                  <div className="flex items-center bg-zinc-950 rounded-xl border border-zinc-800 h-9 p-1">
                     <button onClick={() => updateQuantity(item.id, -1)} className="w-8 h-full flex items-center justify-center text-zinc-400 hover:text-white">-</button>
-                    <span className="w-8 text-center text-xs font-bold">{item.quantity}</span>
+                    <span className="w-8 text-center text-xs font-black">{item.quantity}</span>
                     <button onClick={() => updateQuantity(item.id, 1)} className="w-8 h-full flex items-center justify-center text-zinc-400 hover:text-white">+</button>
                   </div>
-                  <button onClick={() => removeFromCart(item.id)} className="text-zinc-600 hover:text-red-500 transition-colors p-2"><Trash2 size={18} /></button>
+                  <button onClick={() => removeFromCart(item.id)} className="w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-800 text-zinc-500 hover:bg-red-500/10 hover:text-red-500 transition-all"><Trash2 size={16} /></button>
                 </div>
               </div>
             </div>
@@ -214,22 +225,21 @@ const CartView: React.FC<{
       )}
     </div>
     {cart.length > 0 && (
-      <div className="p-6 border-t border-zinc-900 bg-zinc-950 pb-28">
+      <div className="p-6 border-t border-zinc-900 bg-zinc-950/80 backdrop-blur-xl sticky bottom-0 z-10 pb-28">
         <div className="flex justify-between items-end mb-6">
           <div className="flex flex-col">
-            <span className="text-zinc-500 text-xs uppercase tracking-widest font-bold">Total do Pedido</span>
-            <span className="text-[10px] text-zinc-600">Taxa de entrega a consultar</span>
+            <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">Total Estimado</span>
+            <span className="text-3xl font-serif text-white font-bold">R$ {cartTotal.toFixed(2)}</span>
           </div>
-          <span className="text-3xl font-bold text-amber-500 font-serif">R$ {cartTotal.toFixed(2)}</span>
+          <div className="text-right text-zinc-500 text-[10px] pb-1">Taxas a calcular</div>
         </div>
-        <Button fullWidth onClick={onCheckout} icon={<ShoppingCart size={20} />} className="py-4">Finalizar Pedido</Button>
+        <Button fullWidth onClick={onCheckout} className="py-4 text-lg shadow-[0_10px_30px_rgba(245,158,11,0.2)]">Finalizar Pedido</Button>
       </div>
     )}
   </div>
 );
 
-// --- Main App Component ---
-
+// --- App Component ---
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<ViewState>('home');
@@ -260,12 +270,31 @@ const App: React.FC = () => {
 
   useEffect(() => { const timer = setTimeout(() => setLoading(false), 1500); return () => clearTimeout(timer); }, []);
 
+  // --- Algoritmo de Recomendação Inteligente ---
   const getGrowlerRecommendations = (currentCart: CartItem[], allProducts: Product[]): Product[] => {
-      const available = allProducts.filter(p => p.category === ProductCategory.GROWLER && !currentCart.some(c => c.id === p.id));
+      // 1. Excluir Pilsen e Lager explicitamente do Upsell de Growlers (conforme solicitado)
+      const excludedIds = ['growler-pilsen-cristal-1l', 'growler-premium-lager-1l'];
+      
+      const available = allProducts.filter(p => 
+        p.category === ProductCategory.GROWLER && 
+        !currentCart.some(c => c.id === p.id) &&
+        !excludedIds.includes(p.id)
+      );
+
+      // 2. Prioridade Máxima: Session IPA e Vinhos (se não estiverem no carrinho)
       const priorityIds = ['growler-session-ipa-1l', 'growler-vinho-branco-1l', 'growler-vinho-tinto-1l'];
       const priorityMatches = available.filter(p => priorityIds.includes(p.id));
-      const fillers = available.filter(p => !priorityMatches.includes(p)).sort((a, b) => (b.isChampion ? 1 : 0) - (a.isChampion ? 1 : 0));
-      return Array.from(new Set([...priorityMatches, ...fillers])).slice(0, 3);
+      
+      // 3. Afinidade por Estilo: Se o cliente tem uma IPA, sugere outras lupuladas (APA, etc)
+      const cartTypes = currentCart.map(i => i.type);
+      const styleMatches = available.filter(p => cartTypes.includes(p.type) && !priorityIds.includes(p.id));
+
+      // 4. Preenchimento (Campeões de Venda restantes)
+      const fillers = available.filter(p => !priorityIds.includes(p.id) && !styleMatches.some(s => s.id === p.id))
+        .sort((a, b) => (b.isChampion ? 1 : 0) - (a.isChampion ? 1 : 0));
+
+      // Unificar e retornar os 3 melhores
+      return Array.from(new Set([...priorityMatches, ...styleMatches, ...fillers])).slice(0, 3);
   };
 
   const addToCart = (product: Product, options?: Partial<CartItem>) => {
@@ -361,7 +390,22 @@ const App: React.FC = () => {
         <CheckoutConflictModal isOpen={showCheckoutConflict} onClose={() => setShowCheckoutConflict(false)} onSwitch={() => handleResolveCheckoutConflict('switch')} onClear={() => handleResolveCheckoutConflict('clear')} onUpdatePrices={() => handleResolveCheckoutConflict('update')} cartLocation={cartLocation || ''} userLocation={userLocation || ''} />
         {cart.length > 0 && view !== 'cart' && !isCartOpen && <FloatingCart count={cartCount} total={cartTotal} onClick={() => setIsCartOpen(true)} />}
       </main>
-      <Navigation currentView={view} onChangeView={(v) => { if (v === 'contact') setIsContactOpen(true); else if (v === 'menu' && !userLocation) setIsInfoModalOpen(true); else setView(v); }} cartCount={cartCount} />
+
+      {/* Navegação Inferior com Fluxo Premium Obrigatório para Produtos */}
+      <Navigation 
+        currentView={view} 
+        onChangeView={(v) => { 
+          if (v === 'contact') {
+            setIsContactOpen(true); 
+          } else if (v === 'menu') {
+            // Intercepta SEMPRE para mostrar o banner premium e garantir a cidade
+            setIsInfoModalOpen(true); 
+          } else {
+            setView(v); 
+          }
+        }} 
+        cartCount={cartCount} 
+      />
     </div>
   );
 };
