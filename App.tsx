@@ -69,7 +69,7 @@ const ViewContainer: React.FC<{ children: React.ReactNode; viewKey: string }> = 
   </div>
 );
 
-// --- Views ---
+// --- Sub-Views ---
 
 const HomeView: React.FC<{
   setView: (v: ViewState) => void;
@@ -79,67 +79,28 @@ const HomeView: React.FC<{
   <div className="pb-32 relative bg-zinc-950">
       <div className="absolute top-0 left-0 right-0 z-40 flex justify-center pt-8 pointer-events-none">
          <div className="h-32 w-auto max-w-[80%] flex items-center justify-center">
-            <img 
-              src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" 
-              alt="Patanegra" 
-              className="h-full w-full object-contain filter drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
-            />
+            <img src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" alt="Patanegra" className="h-full w-full object-contain filter drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" />
          </div>
       </div>
-
-      <HeroSlider 
-        onOrderClick={onOrderClick}
-        onCalcClick={() => setView('calculator')}
-      />
-
+      <HeroSlider onOrderClick={onOrderClick} onCalcClick={() => setView('calculator')} />
       <div className="px-6 py-10 bg-zinc-950 -mt-10 relative z-20 rounded-t-[2.5rem] border-t border-zinc-900 shadow-[0_-15px_40px_rgba(0,0,0,0.9)]">
-        <div className="absolute top-0 left-0 right-0 h-[400px] flex items-start justify-center pointer-events-none z-0 pt-12">
-            <div className="relative opacity-[0.04]">
-                <img src="https://i.ibb.co/bMym2DFk/simbolo2.png" alt="" className="w-72 h-72 object-contain" />
-            </div>
-        </div>
-
         <div className="relative z-10">
           <div className="w-10 h-1 bg-zinc-800/50 mx-auto rounded-full mb-8"></div>
-          
           <h2 className="text-2xl font-serif text-white mb-3 text-center tracking-tight">Cervejaria Patanegra</h2>
-          <p className="text-zinc-500 text-center mb-10 text-sm leading-relaxed max-w-xs mx-auto">
-            A excelência do chope artesanal premiado, entregue onde você estiver.
-          </p>
-
+          <p className="text-zinc-500 text-center mb-10 text-sm leading-relaxed max-w-xs mx-auto">A excelência do chope artesanal premiado, entregue onde você estiver.</p>
           <div className="grid grid-cols-1 gap-5">
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/50 backdrop-blur-sm transition-transform active:scale-[0.98]">
-              <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500">
-                <Award size={22} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Tradição Premiada</h3>
-                <p className="text-[11px] text-zinc-500 mt-0.5">Qualidade atestada nos maiores concursos cervejeiros.</p>
-              </div>
+              <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500"><Award size={22} /></div>
+              <div><h3 className="text-sm font-bold text-white">Tradição Premiada</h3><p className="text-[11px] text-zinc-500 mt-0.5">Qualidade atestada nos maiores concursos cervejeiros.</p></div>
             </div>
-
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/50 backdrop-blur-sm transition-transform active:scale-[0.98]">
-              <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500">
-                <Truck size={22} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Logística Dedicada</h3>
-                <p className="text-[11px] text-zinc-500 mt-0.5">Entrega pontual e instalação técnica profissional.</p>
-              </div>
+              <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500"><Truck size={22} /></div>
+              <div><h3 className="text-sm font-bold text-white">Logística Dedicada</h3><p className="text-[11px] text-zinc-500 mt-0.5">Entrega pontual e instalação técnica profissional.</p></div>
             </div>
-
-            <button 
-              onClick={onEventClick}
-              className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/50 hover:border-amber-500/30 transition-all active:scale-[0.98] backdrop-blur-sm text-left"
-            >
-              <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500">
-                <CalendarDays size={22} />
-              </div>
+            <button onClick={onEventClick} className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/50 hover:border-amber-500/30 transition-all active:scale-[0.98] backdrop-blur-sm text-left">
+              <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500"><CalendarDays size={22} /></div>
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  Atendimento para Eventos
-                  <span className="text-[8px] bg-amber-500 text-black px-1.5 py-0.5 rounded-full font-black uppercase">Fale Conosco</span>
-                </h3>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">Atendimento para Eventos <span className="text-[8px] bg-amber-500 text-black px-1.5 py-0.5 rounded-full font-black uppercase">Fale Conosco</span></h3>
                 <p className="text-[11px] text-zinc-500 mt-0.5">Consultoria gratuita para o seu evento.</p>
               </div>
             </button>
@@ -160,58 +121,30 @@ const MenuView: React.FC<{
 }> = ({ products, addToCart, setSelectedProduct, activeCategory, setActiveCategory, userLocation, onOpenLocationModal }) => {
   const filteredProducts = products.filter(p => p.category === activeCategory);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [activeCategory]);
-
+  useEffect(() => { if (scrollContainerRef.current) scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' }); }, [activeCategory]);
   return (
     <div className="pb-24 max-w-md mx-auto h-screen flex flex-col bg-zinc-950">
       <div className="p-4 pb-2 pt-8 flex-shrink-0">
         <div className="flex flex-col items-start gap-3">
-          <button 
-            onClick={onOpenLocationModal}
-            className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 hover:bg-amber-500/20 transition-all active:scale-95"
-          >
-             <div className="bg-amber-500 text-black rounded-full p-1">
-                <MapPin size={10} strokeWidth={3} />
-             </div>
+          <button onClick={onOpenLocationModal} className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 hover:bg-amber-500/20 transition-all active:scale-95">
+             <div className="bg-amber-500 text-black rounded-full p-1"><MapPin size={10} strokeWidth={3} /></div>
              <span className="text-[10px] font-black uppercase tracking-widest">{userLocation || 'Sua Cidade'}</span>
              <ChevronDown size={14} />
           </button>
           <h2 className="text-2xl font-serif text-white tracking-tight">Escolha seu Chope</h2>
         </div>
       </div>
-      
       <div className="sticky top-0 z-20 bg-zinc-950/90 backdrop-blur-xl pt-2 pb-4 border-b border-zinc-900/50 flex-shrink-0">
         <div className="flex overflow-x-auto gap-2 px-4 scrollbar-hide snap-x">
           {Object.values(ProductCategory).map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`snap-center flex-shrink-0 px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
-                activeCategory === cat
-                  ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105'
-                  : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800/50'
-              }`}
-            >
-              {cat}
-            </button>
+            <button key={cat} onClick={() => setActiveCategory(cat)} className={`snap-center flex-shrink-0 px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${activeCategory === cat ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800/50'}`}>{cat}</button>
           ))}
         </div>
       </div>
-
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 scroll-smooth">
         <div className="grid grid-cols-2 gap-4 pb-32">
           {filteredProducts.map(product => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              onAdd={(p) => (p.category === ProductCategory.GROWLER ? addToCart(p) : setSelectedProduct(p))}
-              onClick={setSelectedProduct}
-            />
+            <ProductCard key={product.id} product={product} onAdd={(p) => (p.category === ProductCategory.GROWLER ? addToCart(p) : setSelectedProduct(p))} onClick={setSelectedProduct} />
           ))}
         </div>
       </div>
@@ -235,7 +168,6 @@ const CartView: React.FC<{
       </button>
       <h2 className="text-2xl font-serif text-white tracking-tight">Seu Pedido</h2>
     </div>
-
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {cart.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-4">
@@ -247,7 +179,6 @@ const CartView: React.FC<{
         cart.map((item) => {
           const extras = (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0);
           const totalItemPrice = (item.price + extras);
-          const isKeg = item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50;
           return (
             <div key={item.id} className="flex gap-4 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50">
               <img src={item.image} alt={item.name} className="w-20 h-20 rounded-xl object-cover bg-zinc-800" />
@@ -255,10 +186,8 @@ const CartView: React.FC<{
                 <div>
                   <div className="flex justify-between items-start">
                      <h4 className="font-bold text-white text-sm leading-tight pr-2">{item.name}</h4>
-                     {isKeg && (
-                         <button onClick={() => onEdit(item)} className="p-1.5 bg-zinc-800 text-amber-500 rounded-lg hover:bg-amber-500 hover:text-black transition-colors">
-                            <Edit2 size={14} />
-                         </button>
+                     {(item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) && (
+                         <button onClick={() => onEdit(item)} className="p-1.5 bg-zinc-800 text-amber-500 rounded-lg hover:bg-amber-500 hover:text-black transition-colors"><Edit2 size={14} /></button>
                      )}
                   </div>
                   <div className="text-amber-500 font-bold text-sm mt-1">R$ {totalItemPrice.toFixed(2)}</div>
@@ -276,9 +205,7 @@ const CartView: React.FC<{
                     <span className="w-8 text-center text-xs font-bold">{item.quantity}</span>
                     <button onClick={() => updateQuantity(item.id, 1)} className="w-8 h-full flex items-center justify-center text-zinc-400 hover:text-white">+</button>
                   </div>
-                  <button onClick={() => removeFromCart(item.id)} className="text-zinc-600 hover:text-red-500 transition-colors p-2">
-                    <Trash2 size={18} />
-                  </button>
+                  <button onClick={() => removeFromCart(item.id)} className="text-zinc-600 hover:text-red-500 transition-colors p-2"><Trash2 size={18} /></button>
                 </div>
               </div>
             </div>
@@ -286,7 +213,6 @@ const CartView: React.FC<{
         })
       )}
     </div>
-
     {cart.length > 0 && (
       <div className="p-6 border-t border-zinc-900 bg-zinc-950 pb-28">
         <div className="flex justify-between items-end mb-6">
@@ -296,15 +222,13 @@ const CartView: React.FC<{
           </div>
           <span className="text-3xl font-bold text-amber-500 font-serif">R$ {cartTotal.toFixed(2)}</span>
         </div>
-        <Button fullWidth onClick={onCheckout} icon={<ShoppingCart size={20} />} className="py-4">
-          Finalizar Pedido
-        </Button>
+        <Button fullWidth onClick={onCheckout} icon={<ShoppingCart size={20} />} className="py-4">Finalizar Pedido</Button>
       </div>
     )}
   </div>
 );
 
-// --- App Component ---
+// --- Main App Component ---
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -324,11 +248,9 @@ const App: React.FC = () => {
   const [pendingProduct, setPendingProduct] = useState<{product: Product, options?: Partial<CartItem>} | null>(null);
   const [showCheckoutConflict, setShowCheckoutConflict] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [recommendedVolume, setRecommendedVolume] = useState<number | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
 
-  // --- Precificação Inteligente ---
   const adjustedProducts = useMemo(() => {
     if (userLocation === 'Foz do Iguaçu') {
       return PRODUCTS.map(p => FOZ_PRICES[p.id] ? { ...p, price: FOZ_PRICES[p.id] } : p);
@@ -336,19 +258,13 @@ const App: React.FC = () => {
     return PRODUCTS; 
   }, [userLocation]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  useEffect(() => { const timer = setTimeout(() => setLoading(false), 1500); return () => clearTimeout(timer); }, []);
 
-  // --- RECOMENDAÇÃO DE GROWLERS ---
   const getGrowlerRecommendations = (currentCart: CartItem[], allProducts: Product[]): Product[] => {
-      const growlersInCart = currentCart.filter(item => item.category === ProductCategory.GROWLER);
-      if (growlersInCart.length === 0) return [];
-      const availableGrowlers = allProducts.filter(p => p.category === ProductCategory.GROWLER && !currentCart.some(c => c.id === p.id));
+      const available = allProducts.filter(p => p.category === ProductCategory.GROWLER && !currentCart.some(c => c.id === p.id));
       const priorityIds = ['growler-session-ipa-1l', 'growler-vinho-branco-1l', 'growler-vinho-tinto-1l'];
-      const priorityMatches = availableGrowlers.filter(p => priorityIds.includes(p.id));
-      const fillers = availableGrowlers.filter(p => !priorityMatches.includes(p)).sort((a, b) => (b.isChampion ? 1 : 0) - (a.isChampion ? 1 : 0));
+      const priorityMatches = available.filter(p => priorityIds.includes(p.id));
+      const fillers = available.filter(p => !priorityMatches.includes(p)).sort((a, b) => (b.isChampion ? 1 : 0) - (a.isChampion ? 1 : 0));
       return Array.from(new Set([...priorityMatches, ...fillers])).slice(0, 3);
   };
 
@@ -358,7 +274,6 @@ const App: React.FC = () => {
         return;
     }
     if (cart.length === 0 && userLocation) setCartLocation(userLocation);
-
     setCart(prev => {
       const idx = prev.findIndex(item => item.id === product.id);
       if (idx >= 0) {
@@ -380,16 +295,12 @@ const App: React.FC = () => {
   };
 
   const handleResolveCheckoutConflict = (action: 'switch' | 'clear' | 'update') => {
-    if (action === 'switch' && cartLocation) {
-        setUserLocation(cartLocation);
-    } else if (action === 'clear') {
-        setCart([]);
-        setCartLocation(null);
-    } else if (action === 'update' && userLocation) {
+    if (action === 'switch' && cartLocation) setUserLocation(cartLocation);
+    else if (action === 'clear') { setCart([]); setCartLocation(null); }
+    else if (action === 'update' && userLocation) {
         setCart(prev => prev.map(item => {
             const original = PRODUCTS.find(p => p.id === item.id) || item;
-            let newPrice = original.price;
-            if (userLocation === 'Foz do Iguaçu' && FOZ_PRICES[item.id]) newPrice = FOZ_PRICES[item.id];
+            const newPrice = (userLocation === 'Foz do Iguaçu' && FOZ_PRICES[item.id]) ? FOZ_PRICES[item.id] : original.price;
             return { ...item, price: newPrice };
         }));
         setCartLocation(userLocation);
@@ -398,13 +309,10 @@ const App: React.FC = () => {
   };
 
   const handleCheckoutClick = () => {
-    // 1. Check Location Conflict
     if (cart.length > 0 && cartLocation && userLocation && cartLocation !== userLocation) {
         setShowCheckoutConflict(true);
         return;
     }
-
-    // 2. Upsell Check
     const hasKeg = cart.some(item => item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50);
     if (hasKeg) {
         const hasTonel = cart.some(item => item.rentTonel === true);
@@ -412,31 +320,21 @@ const App: React.FC = () => {
         const hasQuoteCups = cart.some(item => item.moreCups);
         if (!hasTonel || !hasMugs || !hasQuoteCups) {
            setUpsellOptions({ offerTonel: !hasTonel, offerMugs: !hasMugs, offerCups: !hasQuoteCups });
-           setIsCartOpen(false);
-           setIsUpsellModalOpen(true);
+           setIsCartOpen(false); setIsUpsellModalOpen(true);
            return;
         }
-    } else {
-        const hasGrowler = cart.some(item => item.category === ProductCategory.GROWLER);
-        if (hasGrowler) {
-            const recs = getGrowlerRecommendations(cart, adjustedProducts);
-            if (recs.length > 0) {
-                setRecommendedGrowlers(recs);
-                setIsCartOpen(false);
-                setIsGrowlerUpsellOpen(true);
-                return;
-            }
+    } else if (cart.some(item => item.category === ProductCategory.GROWLER)) {
+        const recs = getGrowlerRecommendations(cart, adjustedProducts);
+        if (recs.length > 0) {
+            setRecommendedGrowlers(recs);
+            setIsCartOpen(false); setIsGrowlerUpsellOpen(true);
+            return;
         }
     }
-    setIsCartOpen(false); 
-    setIsCheckoutOpen(true);
+    setIsCartOpen(false); setIsCheckoutOpen(true);
   };
 
-  const cartTotal = cart.reduce((acc, item) => {
-    const extras = (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0);
-    return acc + ((item.price + extras) * item.quantity);
-  }, 0);
-
+  const cartTotal = cart.reduce((acc, item) => acc + ((item.price + (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0)) * item.quantity), 0);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   if (loading) return <LoadingScreen />;
@@ -444,156 +342,26 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-amber-500 selection:text-black overflow-hidden">
       <main className="max-w-md mx-auto min-h-screen bg-zinc-950 shadow-2xl relative overflow-hidden">
-        
         <ViewContainer viewKey={view}>
-          {view === 'home' && (
-            <HomeView 
-              setView={setView} 
-              onOrderClick={() => setIsInfoModalOpen(true)}
-              onEventClick={() => setIsContactOpen(true)}
-            />
-          )}
-
-          {view === 'menu' && (
-            <MenuView 
-              products={adjustedProducts} 
-              addToCart={addToCart} 
-              setSelectedProduct={setSelectedProduct}
-              activeCategory={activeCategory}
-              setActiveCategory={setActiveCategory}
-              userLocation={userLocation}
-              onOpenLocationModal={() => setIsLocationModalOpen(true)}
-            />
-          )}
-
-          {view === 'calculator' && (
-            <Calculator onCalculate={(liters) => {
-               setRecommendedVolume(liters);
-               setActiveCategory(liters <= 30 ? ProductCategory.KEG30 : ProductCategory.KEG50);
-               if (!userLocation) setIsLocationModalOpen(true);
-               else setView('menu');
-            }} />
-          )}
-
-          {view === 'cart' && (
-            <CartView 
-              cart={cart}
-              cartTotal={cartTotal}
-              setView={setView}
-              removeFromCart={(id) => {
-                  const newCart = cart.filter(i => i.id !== id);
-                  setCart(newCart);
-                  if (newCart.length === 0) setCartLocation(null);
-              }}
-              updateQuantity={(id, d) => setCart(c => c.map(i => i.id === id ? {...i, quantity: Math.max(1, i.quantity + d)} : i))}
-              onEdit={(item) => { setEditingItem(item); setSelectedProduct(PRODUCTS.find(p => p.id === item.id) || item); }}
-              onCheckout={handleCheckoutClick}
-            />
-          )}
+          {view === 'home' && <HomeView setView={setView} onOrderClick={() => setIsInfoModalOpen(true)} onEventClick={() => setIsContactOpen(true)} />}
+          {view === 'menu' && <MenuView products={adjustedProducts} addToCart={addToCart} setSelectedProduct={setSelectedProduct} activeCategory={activeCategory} setActiveCategory={setActiveCategory} userLocation={userLocation} onOpenLocationModal={() => setIsLocationModalOpen(true)} />}
+          {view === 'calculator' && <Calculator onCalculate={(liters) => { setActiveCategory(liters <= 30 ? ProductCategory.KEG30 : ProductCategory.KEG50); if (!userLocation) setIsInfoModalOpen(true); else setView('menu'); }} />}
+          {view === 'cart' && <CartView cart={cart} cartTotal={cartTotal} setView={setView} removeFromCart={(id) => { const newCart = cart.filter(i => i.id !== id); setCart(newCart); if (newCart.length === 0) setCartLocation(null); }} updateQuantity={(id, d) => setCart(c => c.map(i => i.id === id ? {...i, quantity: Math.max(1, i.quantity + d)} : i))} onEdit={(item) => { setEditingItem(item); setSelectedProduct(PRODUCTS.find(p => p.id === item.id) || item); }} onCheckout={handleCheckoutClick} />}
         </ViewContainer>
 
-        {selectedProduct && (
-          <ProductDetail 
-            product={selectedProduct} 
-            isOpen={!!selectedProduct} 
-            onClose={() => { setSelectedProduct(null); setEditingItem(null); }}
-            onAdd={(p, opts) => {
-               if (editingItem) setCart(c => c.map(i => i.id === editingItem.id ? {...i, ...opts} : i));
-               else addToCart(p, opts);
-               setEditingItem(null);
-            }}
-            editingItem={editingItem}
-          />
-        )}
-
-        <CartDrawer 
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cart={cart}
-          total={cartTotal}
-          onUpdateQuantity={(id, d) => setCart(c => c.map(i => i.id === id ? {...i, quantity: Math.max(1, i.quantity + d)} : i))}
-          onRemove={(id) => {
-              const newCart = cart.filter(i => i.id !== id);
-              setCart(newCart);
-              if (newCart.length === 0) setCartLocation(null);
-          }}
-          onEdit={(item) => { setIsCartOpen(false); setEditingItem(item); setSelectedProduct(PRODUCTS.find(p => p.id === item.id) || item); }}
-          onCheckout={handleCheckoutClick}
-        />
-
-        <CheckoutFlow 
-          isOpen={isCheckoutOpen}
-          onClose={() => setIsCheckoutOpen(false)}
-          cart={cart}
-          total={cartTotal}
-          onClearCart={() => { setCart([]); setCartLocation(null); }}
-          userLocation={userLocation}
-        />
-
+        {selectedProduct && <ProductDetail product={selectedProduct} isOpen={!!selectedProduct} onClose={() => { setSelectedProduct(null); setEditingItem(null); }} onAdd={(p, opts) => { if (editingItem) setCart(c => c.map(i => i.id === editingItem.id ? {...i, ...opts} : i)); else addToCart(p, opts); setEditingItem(null); }} editingItem={editingItem} />}
+        <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cart={cart} total={cartTotal} onUpdateQuantity={(id, d) => setCart(c => c.map(i => i.id === id ? {...i, quantity: Math.max(1, i.quantity + d)} : i))} onRemove={(id) => { const newCart = cart.filter(i => i.id !== id); setCart(newCart); if (newCart.length === 0) setCartLocation(null); }} onEdit={(item) => { setIsCartOpen(false); setEditingItem(item); setSelectedProduct(PRODUCTS.find(p => p.id === item.id) || item); }} onCheckout={handleCheckoutClick} />
+        <CheckoutFlow isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} cart={cart} total={cartTotal} onClearCart={() => { setCart([]); setCartLocation(null); }} userLocation={userLocation} />
         <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
-        
-        <InfoModal 
-          isOpen={isInfoModalOpen} 
-          onClose={() => setIsInfoModalOpen(false)} 
-          onContinue={() => { setIsInfoModalOpen(false); if (!userLocation) setIsLocationModalOpen(true); else setView('menu'); }} 
-        />
-        
-        <LocationModal 
-          isOpen={isLocationModalOpen} 
-          onClose={() => setIsLocationModalOpen(false)} 
-          onSelect={(loc) => { setUserLocation(loc); setIsLocationModalOpen(false); setView('menu'); }} 
-        />
-
-        <UpsellModal 
-          isOpen={isUpsellModalOpen}
-          onClose={() => setIsCheckoutOpen(true)}
-          onConfirm={(t, c, m) => {
-              setCart(prev => prev.map(item => (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) ? {...item, rentTonel: t, moreCups: c, mugsQuantity: m?.quantity, mugsPrice: m?.price} : item));
-              setIsUpsellModalOpen(false);
-              setIsCheckoutOpen(true);
-          }}
-          onDecline={() => { setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }}
-          offerTonel={upsellOptions.offerTonel}
-          offerCups={upsellOptions.offerCups}
-          offerMugs={upsellOptions.offerMugs}
-        />
-
-        <GrowlerUpsellModal 
-            isOpen={isGrowlerUpsellOpen}
-            onClose={() => setIsCheckoutOpen(true)}
-            onConfirm={(prods) => {
-                prods.forEach(p => addToCart(p, { isUpsell: true }));
-                setIsGrowlerUpsellOpen(false);
-                setIsCheckoutOpen(true);
-            }}
-            onDecline={() => { setIsGrowlerUpsellOpen(false); setIsCheckoutOpen(true); }}
-            recommendations={recommendedGrowlers}
-        />
-
-        <CartConflictModal 
-            isOpen={!!pendingProduct}
-            onClose={() => setPendingProduct(null)}
-            onConfirm={handleResolveConflict}
-            currentLocation={cartLocation || ''}
-            newLocation={userLocation || ''}
-        />
-
-        <CheckoutConflictModal
-            isOpen={showCheckoutConflict}
-            onClose={() => setShowCheckoutConflict(false)}
-            onSwitch={() => handleResolveCheckoutConflict('switch')}
-            onClear={() => handleResolveCheckoutConflict('clear')}
-            onUpdatePrices={() => handleResolveCheckoutConflict('update')}
-            cartLocation={cartLocation || ''}
-            userLocation={userLocation || ''}
-        />
-        
-        {cart.length > 0 && view !== 'cart' && !isCartOpen && (
-          <FloatingCart count={cartCount} total={cartTotal} onClick={() => setIsCartOpen(true)} />
-        )}
+        <InfoModal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} onContinue={() => { setIsInfoModalOpen(false); if (!userLocation) setIsLocationModalOpen(true); else setView('menu'); }} />
+        <LocationModal isOpen={isLocationModalOpen} onClose={() => setIsLocationModalOpen(false)} onSelect={(loc) => { setUserLocation(loc); setIsLocationModalOpen(false); setView('menu'); }} />
+        <UpsellModal isOpen={isUpsellModalOpen} onClose={() => setIsCheckoutOpen(true)} onConfirm={(t, c, m) => { setCart(prev => prev.map(item => (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) ? {...item, rentTonel: t, moreCups: c, mugsQuantity: m?.quantity, mugsPrice: m?.price} : item)); setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }} onDecline={() => { setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }} offerTonel={upsellOptions.offerTonel} offerCups={upsellOptions.offerCups} offerMugs={upsellOptions.offerMugs} />
+        <GrowlerUpsellModal isOpen={isGrowlerUpsellOpen} onClose={() => setIsCheckoutOpen(true)} onConfirm={(prods) => { prods.forEach(p => addToCart(p, { isUpsell: true })); setIsGrowlerUpsellOpen(false); setIsCheckoutOpen(true); }} onDecline={() => { setIsGrowlerUpsellOpen(false); setIsCheckoutOpen(true); }} recommendations={recommendedGrowlers} />
+        <CartConflictModal isOpen={!!pendingProduct} onClose={() => setPendingProduct(null)} onConfirm={handleResolveConflict} currentLocation={cartLocation || ''} newLocation={userLocation || ''} />
+        <CheckoutConflictModal isOpen={showCheckoutConflict} onClose={() => setShowCheckoutConflict(false)} onSwitch={() => handleResolveCheckoutConflict('switch')} onClear={() => handleResolveCheckoutConflict('clear')} onUpdatePrices={() => handleResolveCheckoutConflict('update')} cartLocation={cartLocation || ''} userLocation={userLocation || ''} />
+        {cart.length > 0 && view !== 'cart' && !isCartOpen && <FloatingCart count={cartCount} total={cartTotal} onClick={() => setIsCartOpen(true)} />}
       </main>
-      
-      <Navigation currentView={view} onChangeView={(v) => v === 'contact' ? setIsContactOpen(true) : setView(v)} cartCount={cartCount} />
+      <Navigation currentView={view} onChangeView={(v) => { if (v === 'contact') setIsContactOpen(true); else if (v === 'menu' && !userLocation) setIsInfoModalOpen(true); else setView(v); }} cartCount={cartCount} />
     </div>
   );
 };
