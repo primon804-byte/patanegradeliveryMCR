@@ -26,11 +26,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   
   const locationName = userLocation || 'Marechal Cândido Rondon'; 
   
-  // Check if cart contains a Keg (requires Event Data)
+  // Check types of items in cart
   const hasKeg = cart.some(item => 
     item.category === ProductCategory.KEG30 || 
     item.category === ProductCategory.KEG50
   );
+  
+  const isGrowlerOnly = !hasKeg && cart.every(item => item.category === ProductCategory.GROWLER);
 
   // Delivery Method State (Default to delivery)
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery');
@@ -142,9 +144,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     // Function to format item list
     const formatItemList = (items: CartItem[]) => {
         return items.map(item => {
-            // Mark Upsell items with ***
             const upsellMark = item.isUpsell ? " ***" : "";
-
             let itemString = `• ${item.quantity}x ${item.name}${upsellMark}`;
             if (item.rentTonel) itemString += " (+ Tonel)";
             if (item.mugsQuantity) itemString += ` (+ ${item.mugsQuantity} Canecas)`;
@@ -159,10 +159,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
     const totalMsg = `\n💵 *VALOR:* R$ ${total.toFixed(2)}`;
     
-    // Freight Note depends on Delivery Method
-    const freightNote = deliveryMethod === 'delivery' 
-        ? `\n\n⚠️ *FRETE:* A calcular na confirmação.` 
-        : `\n\n📍 *MODO:* Cliente irá retirar na loja.`;
+    // Freight Note depends on Delivery Method and Product Type
+    let freightNote = "";
+    if (deliveryMethod === 'delivery') {
+        if (isGrowlerOnly) {
+            freightNote = `\n\n🚚 *FRETE:* R$ 15,00 (Taxa fixa growler)`;
+        } else {
+            freightNote = `\n\n⚠️ *FRETE:* A calcular na confirmação.`;
+        }
+    } else {
+        freightNote = `\n\n📍 *MODO:* Cliente irá retirar na loja (14h às 18h).`;
+    }
 
     // Helper to build Event Block based on "Send Later" status
     const buildEventBlock = () => {
@@ -185,11 +192,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         const userBlock = `👤 *CLIENTE:* ${name}\n📱 *TEL:* ${mobilePhone}\n`;
 
         if (hasKeg) {
-             // Returning Keg
              const eventBlock = buildEventBlock();
              fullMessage = header + userBlock + eventBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
         } else {
-             // Returning Growler
              if (deliveryMethod === 'delivery') {
                 const deliveryBlock = 
                     `\n📍 *ENTREGAR EM:* ${address}\n` +
@@ -197,15 +202,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                     `🏙️ *CIDADE:* ${city}`;
                 fullMessage = header + userBlock + deliveryBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
              } else {
-                // Pickup Message
-                const pickupBlock = `\n📍 *RETIRADA NA LOJA* (${locationName})\nVerificar disponibilidade para retirada imediata.`;
+                const pickupBlock = `\n📍 *RETIRADA NA LOJA* (${locationName})\nHorário: 14:00 às 18:00.`;
                 fullMessage = header + userBlock + pickupBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
              }
         }
     } 
     // --- SCENARIO B: NEW CUSTOMER (FULL DATA ALWAYS) ---
     else {
-        // Header padrão para cadastro
         const header = `*FICHA DE CADASTRO - PATANEGRA*\n------------------\n`;
         
         const personalBlock = 
@@ -218,15 +221,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             `*CIDADE:* ${city}\n` +
             `*CELULAR:* ${mobilePhone}\n`;
 
-        const docsBlock = `\n📸 *FOTOS (Enviarei a seguir):*\n- Comprovante de Residência\n- CNH (Documento com foto)\n`;
+        // Omit photo requirement for Growler-only orders
+        const docsBlock = isGrowlerOnly 
+            ? "" 
+            : `\n📸 *FOTOS (Enviarei a seguir):*\n- Comprovante de Residência\n- CNH (Documento com foto)\n`;
 
         let extraBlock = "";
 
         if (hasKeg) {
-             // Se for Barril, adiciona dados do evento
              extraBlock = buildEventBlock();
         } else {
-             // Se for Growler
              if (deliveryMethod === 'delivery') {
                 if (sendToDifferentAddress) {
                     extraBlock = `\n📍 *ENTREGA EM OUTRO ENDEREÇO:*\n*ENDEREÇO:* ${diffAddress}\n*BAIRRO:* ${diffNeighborhood}\n*CIDADE:* ${diffCity}\n`;
@@ -234,7 +238,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                     extraBlock = `\n📍 *ENTREGA:* No endereço residencial informado acima.\n`;
                 }
              } else {
-                extraBlock = `\n📍 *PEDIDO PARA RETIRADA NA LOJA*\n(${locationName})\n`;
+                extraBlock = `\n📍 *PEDIDO PARA RETIRADA NA LOJA*\n(${locationName})\nHorário: 14:00 às 18:00.\n`;
              }
         }
 
@@ -243,7 +247,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(fullMessage)}`;
     
-    // Open WhatsApp
     const link = document.createElement('a');
     link.href = whatsappUrl;
     link.target = '_blank';
@@ -259,7 +262,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     if (step === 2) {
       onClearCart();
       setStep(1);
-      // Reset Form
       setPaymentMethod(null);
       setIsReturningCustomer(false);
       setName(''); setCpf(''); setRg(''); setAddress(''); setNeighborhood(''); setCity('');
@@ -276,40 +278,24 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     onClose();
   };
 
-  // Helper to determine if submit button is disabled
   const isSubmitDisabled = () => {
-      // Common requirements
       if (!name || !mobilePhone || !paymentMethod) return true;
-
-      // Logic for NEW Customers (Rigorous)
       if (!isReturningCustomer) {
-          // New customers must provide address for registration, even if picking up
           if (!cpf || !birthDate || !address || !neighborhood || !city) return true;
-          // If Keg, needs event info (Unless send later is checked)
           if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
-          // If Growler + Different Address
           if (!hasKeg && deliveryMethod === 'delivery' && sendToDifferentAddress && (!diffAddress || !diffNeighborhood || !diffCity)) return true;
-      } 
-      // Logic for RETURNING Customers (Simple)
-      else {
+      } else {
           if (hasKeg) {
-              // Keg needs event info (Unless send later is checked)
               if (!sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
           } else {
-              // Growler: Only needs address if Delivery
               if (deliveryMethod === 'delivery') {
                   if (!address || !neighborhood || !city) return true;
               }
           }
       }
-      
       return false;
   }
 
-  // Logic to determine if "Address" field (Residential/Delivery) should be shown
-  // Show if: 
-  // 1. New Customer (Always needs Residential Address for registration)
-  // 2. Returning Customer Buying Growler AND Choosing Delivery
   const showMainAddressFields = !isReturningCustomer || (!hasKeg && isReturningCustomer && deliveryMethod === 'delivery');
 
   return (
@@ -347,8 +333,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             
             {/* Customer Type Toggle */}
             <div className="grid grid-cols-2 gap-3 mb-6 mt-4 flex-shrink-0">
-               
-               {/* SOU NOVO BUTTON */}
                <div className="relative group">
                    {!isReturningCustomer && (
                       <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black text-amber-500 text-[9px] font-bold px-3 py-0.5 rounded-full border border-amber-500 uppercase tracking-widest shadow-md z-20 whitespace-nowrap">
@@ -367,13 +351,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                       {!isReturningCustomer && (
                         <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/25 to-transparent z-10 pointer-events-none" />
                       )}
-
                       <UserPlus size={22} strokeWidth={!isReturningCustomer ? 2.5 : 2} className="relative z-10" />
                       <span className="relative z-10 text-xs font-extrabold uppercase tracking-wide">Sou Novo</span>
                    </button>
                </div>
 
-               {/* JÁ SOU CLIENTE BUTTON */}
                <button
                  type="button"
                  onClick={() => setIsReturningCustomer(true)}
@@ -409,8 +391,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                     Identificação
                 </h3>
               </div>
-
-              {/* Nome */}
               <div className="relative">
                 <input 
                   required
@@ -422,8 +402,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 />
                 <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               </div>
-
-              {/* Celular */}
               <div className="relative">
                   <input 
                       required
@@ -440,12 +418,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             {/* --- DELIVERY vs PICKUP TOGGLE (GROWLERS ONLY) --- */}
             {!hasKeg && (
                 <div className="bg-zinc-900/50 p-1 rounded-xl border border-zinc-800 flex relative mt-2">
-                    {/* Sliding Background */}
                     <div 
                         className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-amber-500 rounded-lg transition-all duration-300 z-0 shadow-lg shadow-amber-500/20
                         ${deliveryMethod === 'pickup' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'}`}
                     />
-                    
                     <button
                         type="button"
                         onClick={() => setDeliveryMethod('delivery')}
@@ -467,23 +443,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 </div>
             )}
 
-            {/* --- PICKUP LOCATION INFO CARD --- */}
+            {/* --- PICKUP LOCATION INFO CARD (Updated Hours) --- */}
             {!hasKeg && deliveryMethod === 'pickup' && (
                 <div className="bg-zinc-900/50 border border-amber-500/20 rounded-xl p-4 flex items-center gap-4 animate-fade-in">
                     <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                        <Store size={20} />
+                        <Clock size={20} />
                     </div>
                     <div>
-                        <h4 className="text-white text-sm font-bold">Retirada na Unidade</h4>
+                        <h4 className="text-white text-sm font-bold">Retirada em {locationName}</h4>
                         <p className="text-xs text-zinc-400 mt-1">
-                            Você irá buscar seu pedido em: <br/>
-                            <strong className="text-amber-500">{locationName}</strong>
+                            Disponibilidade para retirada das <strong className="text-amber-500">14:00 às 18:00</strong>.
                         </p>
                     </div>
                 </div>
             )}
 
-            {/* --- ENDEREÇO DE ENTREGA (GROWLER) OU RESIDENCIAL (NOVO CLIENTE GERAL) --- */}
+            {/* --- ENDEREÇO --- */}
             {showMainAddressFields && (
                 <div className="space-y-3 animate-slide-up">
                     <div className="flex items-center gap-2 pb-1 border-b border-zinc-800">
@@ -525,7 +500,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                         </div>
                     </div>
 
-                    {/* SEND TO DIFFERENT ADDRESS TOGGLE (Only for New Customers + Growler Delivery) */}
                     {!isReturningCustomer && !hasKeg && deliveryMethod === 'delivery' && (
                         <div className="mt-2 space-y-3">
                             <label className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 cursor-pointer hover:bg-zinc-900 transition-colors">
@@ -543,8 +517,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                                     Enviar para endereço diferente do cadastro.
                                 </span>
                             </label>
-
-                            {/* CONDITIONAL DELIVERY FIELDS */}
                             {sendToDifferentAddress && (
                                 <div className="p-4 bg-zinc-900/80 rounded-2xl border border-amber-500/20 space-y-3 animate-fade-in">
                                     <div className="flex items-center gap-2 pb-1 border-b border-zinc-800 mb-1">
@@ -590,11 +562,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 </div>
             )}
 
-            {/* --- DADOS EXTRAS (Apenas se for NOVO CLIENTE - AGORA PARA TODOS) --- */}
+            {/* --- DADOS EXTRAS (Cadastro de Novo Cliente) --- */}
             {!isReturningCustomer && (
               <div className="space-y-5 animate-slide-up">
-                
-                {/* Data Nascimento e CPF (Para todos os novos) */}
                 <div className="space-y-3">
                      <div className="relative">
                         <input 
@@ -607,7 +577,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                         />
                         <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                     </div>
-
                     <div className="grid grid-cols-2 gap-3">
                         <div className="relative">
                             <input 
@@ -633,31 +602,32 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                     </div>
                 </div>
 
-                {/* DOCUMENTOS (Para todos os novos) */}
-                <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-dashed">
-                    <div className="flex items-center gap-2 mb-2 text-zinc-400">
-                        <Camera size={18} />
-                        <span className="text-xs font-bold uppercase">Documentação Necessária</span>
-                    </div>
-                    <div className="flex gap-2">
-                        <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
-                            <FileText size={16} className="mb-1" />
-                            <span className="text-[9px] text-center px-2">Foto Comp. Residência</span>
+                {/* DOCUMENTOS (Somente se não for growler only) */}
+                {!isGrowlerOnly && (
+                    <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-dashed">
+                        <div className="flex items-center gap-2 mb-2 text-zinc-400">
+                            <Camera size={18} />
+                            <span className="text-xs font-bold uppercase">Documentação Necessária</span>
                         </div>
-                        <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
-                            <Fingerprint size={16} className="mb-1" />
-                            <span className="text-[9px] text-center px-2">Foto CNH / RG</span>
+                        <div className="flex gap-2">
+                            <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
+                                <FileText size={16} className="mb-1" />
+                                <span className="text-[9px] text-center px-2">Foto Comp. Residência</span>
+                            </div>
+                            <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
+                                <Fingerprint size={16} className="mb-1" />
+                                <span className="text-[9px] text-center px-2">Foto CNH / RG</span>
+                            </div>
                         </div>
+                        <p className="text-[9px] text-amber-500 mt-2 text-center leading-tight">
+                            * Enviar fotos pelo WhatsApp após confirmar.
+                        </p>
                     </div>
-                    <p className="text-[9px] text-amber-500 mt-2 text-center leading-tight">
-                        * Enviar fotos pelo WhatsApp após confirmar.
-                    </p>
-                </div>
-
+                )}
               </div>
             )}
 
-            {/* --- DADOS DO EVENTO (BARRIL - SEMPRE APARECE) --- */}
+            {/* --- DADOS DO EVENTO (BARRIL) --- */}
             {hasKeg && (
                   <div className="space-y-3 animate-slide-up">
                     <div className="flex items-center justify-between pb-1 border-b border-zinc-800">
@@ -666,8 +636,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                           <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Dados do Evento</h3>
                       </div>
                     </div>
-                    
-                    {/* OPTION TO SEND LATER */}
                     <label className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 cursor-pointer hover:bg-zinc-900 transition-colors">
                         <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${sendEventInfoLater ? 'bg-amber-500 border-amber-500' : 'bg-transparent border-zinc-600'}`}>
                             {sendEventInfoLater && <Check size={14} className="text-black" strokeWidth={3} />}
@@ -682,10 +650,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                             Enviar dados do evento posteriormente
                         </span>
                     </label>
-
                     {!sendEventInfoLater && (
                         <div className="space-y-3 animate-fade-in">
-                            {/* Nome do Recebedor */}
                             <div className="relative">
                             <input
                                 required
@@ -697,7 +663,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                             />
                             <UserCheck size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                             </div>
-
                             <div className="grid grid-cols-3 gap-3">
                                 <div className="relative col-span-2">
                                 <input
@@ -719,7 +684,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                                 />
                                 </div>
                             </div>
-
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="relative">
                                     <input 
@@ -743,8 +707,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                                     <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                                 </div>
                             </div>
-
-                            {/* Voltagem e Litragem */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
                                 <div className="flex items-center gap-2 mb-2 text-zinc-400">
@@ -752,19 +714,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                                     <span className="text-[10px] font-bold uppercase">Voltagem</span>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button 
-                                        type="button"
-                                        onClick={() => setVoltage('110v')}
-                                        className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '110v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
-                                    >110v</button>
-                                    <button 
-                                        type="button"
-                                        onClick={() => setVoltage('220v')}
-                                        className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '220v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}
-                                    >220v</button>
+                                    <button type="button" onClick={() => setVoltage('110v')} className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '110v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}>110v</button>
+                                    <button type="button" onClick={() => setVoltage('220v')} className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '220v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}>220v</button>
                                 </div>
                                 </div>
-
                                 <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col justify-center items-center">
                                 <span className="text-[10px] text-zinc-500 uppercase font-bold">Volume Total</span>
                                 <span className="text-xl font-bold text-white">{totalLiters} <span className="text-sm font-normal text-zinc-400">Litros</span></span>
@@ -775,44 +728,29 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                   </div>
             )}
 
-            {/* --- SEÇÃO 4: PAGAMENTO --- */}
+            {/* --- PAGAMENTO --- */}
             <div className="space-y-2 pt-1">
                <div className="flex items-center gap-2 pb-1 border-b border-zinc-800 mb-2">
                  <CreditCard size={16} className="text-amber-500" />
                  <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Forma de Pagamento</h3>
                </div>
                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('PIX')}
-                    className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'PIX' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}
-                  >
-                    <QrCode size={20} />
-                    <span className="text-[10px] font-bold">PIX</span>
+                  <button type="button" onClick={() => setPaymentMethod('PIX')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'PIX' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}>
+                    <QrCode size={20} /><span className="text-[10px] font-bold">PIX</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('Cartão')}
-                    className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'Cartão' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}
-                  >
-                    <CreditCard size={20} />
-                    <span className="text-[10px] font-bold">Cartão</span>
+                  <button type="button" onClick={() => setPaymentMethod('Cartão')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'Cartão' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}>
+                    <CreditCard size={20} /><span className="text-[10px] font-bold">Cartão</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('Dinheiro')}
-                    className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'Dinheiro' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}
-                  >
-                    <Banknote size={20} />
-                    <span className="text-[10px] font-bold">Dinheiro</span>
+                  <button type="button" onClick={() => setPaymentMethod('Dinheiro')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'Dinheiro' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}>
+                    <Banknote size={20} /><span className="text-[10px] font-bold">Dinheiro</span>
                   </button>
                </div>
             </div>
 
-            {/* FREIGHT NOTICE BLOCK - ALWAYS VISIBLE */}
+            {/* FREIGHT/PICKUP NOTICE (Updated Growler Rules) */}
             <div className="mt-4 mb-2 p-3 bg-zinc-900/80 rounded-xl border border-amber-500/20 flex items-start gap-3">
                  <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-500 mt-0.5">
-                     <Truck size={16} />
+                     {deliveryMethod === 'delivery' ? <Truck size={16} /> : <Store size={16} />}
                  </div>
                  <div>
                      <p className="text-xs text-zinc-300 leading-relaxed">
@@ -820,22 +758,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                             {deliveryMethod === 'delivery' ? 'Política de Entrega' : 'Retirada na Loja'}
                          </strong>
                          {deliveryMethod === 'delivery' 
-                            ? 'O valor do frete será calculado e informado na confirmação do pedido via WhatsApp.'
-                            : `Você deve se dirigir à unidade de ${locationName} para retirar seu pedido.`}
+                            ? (isGrowlerOnly 
+                                ? 'Taxa fixa de entrega para growlers: R$ 15,00.' 
+                                : 'O valor do frete será informado na confirmação do pedido via WhatsApp.')
+                            : `Retirada em ${locationName} disponível das 14:00 às 18:00.`}
                      </p>
                  </div>
             </div>
 
-            <Button 
-              type="submit" 
-              fullWidth 
-              className="mt-2 py-4"
-              icon={<ArrowRight size={20} />}
-              disabled={isSubmitDisabled()}
-            >
+            <Button type="submit" fullWidth className="mt-2 py-4" icon={<ArrowRight size={20} />} disabled={isSubmitDisabled()}>
               {isReturningCustomer ? 'Enviar Pedido Rápido' : 'Enviar Ficha Cadastral'}
             </Button>
-            <div className="h-6"></div> {/* Bottom Spacer */}
+            <div className="h-6"></div>
           </form>
         )}
 
@@ -853,25 +787,25 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                  <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 mb-6 text-left w-full">
                     <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                     <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
-                        <li>Envie as <strong>FOTOS</strong> do Comprovante de Residência e CNH/RG na conversa do WhatsApp que abriu.</li>
+                        {!isGrowlerOnly && (
+                            <li>Envie as <strong>FOTOS</strong> do Comprovante de Residência e CNH/RG na conversa do WhatsApp que abriu.</li>
+                        )}
                         {deliveryMethod === 'delivery' ? (
-                            <li>Aguarde nossa confirmação e cálculo da <strong>taxa de entrega</strong>.</li>
+                            <li>Aguarde nossa confirmação {isGrowlerOnly ? '(Taxa R$ 15,00)' : 'e cálculo da taxa de entrega'}.</li>
                         ) : (
-                            <li>Aguarde a confirmação de disponibilidade para <strong>retirada</strong>.</li>
+                            <li>Aguarde a confirmação para retirada (Horário: 14h-18h).</li>
                         )}
                     </ul>
                  </div>
              )}
              
-             {(isReturningCustomer) && (
+             {isReturningCustomer && (
                  <p className="text-zinc-400 text-sm mb-6 leading-relaxed px-4">
                     Aguarde, iremos responder no WhatsApp confirmando seu pedido.
                  </p>
              )}
 
-             <Button fullWidth onClick={handleClose} variant="secondary">
-                Fechar
-             </Button>
+             <Button fullWidth onClick={handleClose} variant="secondary">Fechar</Button>
           </div>
         )}
       </div>
