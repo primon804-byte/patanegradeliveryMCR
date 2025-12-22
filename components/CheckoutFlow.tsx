@@ -20,13 +20,11 @@ type Voltage = '110v' | '220v' | 'Não sei';
 type DeliveryMethod = 'delivery' | 'pickup';
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, cart, total, onClearCart, onReturnToHome, userLocation }) => {
-  // Step 1: Form, Step 2: Success
   const [step, setStep] = useState<1 | 2>(1);
   const [isReturningCustomer, setIsReturningCustomer] = useState(false);
   
   const locationName = userLocation || 'Marechal Cândido Rondon'; 
   
-  // Check types of items in cart
   const hasKeg = cart.some(item => 
     item.category === ProductCategory.KEG30 || 
     item.category === ProductCategory.KEG50
@@ -34,13 +32,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   
   const isGrowlerOnly = !hasKeg && cart.every(item => item.category === ProductCategory.GROWLER);
 
-  // Delivery Method State (Default to delivery)
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery');
-
-  // New State: Send Event Info Later
   const [sendEventInfoLater, setSendEventInfoLater] = useState(false);
-
-  // New State: Send to different address (for Growlers/New Customers)
   const [sendToDifferentAddress, setSendToDifferentAddress] = useState(false);
 
   // --- Personal Data ---
@@ -48,20 +41,20 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const [cpf, setCpf] = useState('');
   const [rg, setRg] = useState('');
   const [birthDate, setBirthDate] = useState(''); 
-  const [address, setAddress] = useState(''); // Acts as Residential Address (New) OR Delivery Address (Returning)
+  const [address, setAddress] = useState(''); 
   const [neighborhood, setNeighborhood] = useState('');
-  const [city, setCity] = useState(''); // New: Residential/Delivery City
+  const [city, setCity] = useState(''); 
   const [mobilePhone, setMobilePhone] = useState('');
 
-  // --- Delivery Address Data (If different from Residential) ---
+  // --- Delivery Address Data ---
   const [diffAddress, setDiffAddress] = useState('');
   const [diffNeighborhood, setDiffNeighborhood] = useState('');
   const [diffCity, setDiffCity] = useState('');
 
-  // --- Event Data (Only for Kegs) ---
+  // --- Event Data ---
   const [receiverName, setReceiverName] = useState(''); 
   const [eventAddress, setEventAddress] = useState('');
-  const [eventCity, setEventCity] = useState(''); // New: Event City
+  const [eventCity, setEventCity] = useState(''); 
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
   const [voltage, setVoltage] = useState<Voltage>('110v');
@@ -69,7 +62,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   // --- Payment ---
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
 
-  // Auto-fill city based on location selection
   useEffect(() => {
     if (isOpen && userLocation) {
         setCity(userLocation);
@@ -78,7 +70,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     }
   }, [isOpen, userLocation]);
 
-  // Reset delivery method if switching to Keg (Kegs usually need delivery/install)
   useEffect(() => {
     if (hasKeg) {
         setDeliveryMethod('delivery');
@@ -88,7 +79,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
   if (!isOpen) return null;
 
-  // Calculate total liters in cart
   const totalLiters = cart.reduce((acc, item) => {
     let vol = item.volumeLiters || 0;
     if (item.category === ProductCategory.KEG30) vol = 30;
@@ -97,51 +87,29 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     return acc + (vol * item.quantity);
   }, 0);
 
+  const getUnitAddress = () => {
+    if (locationName === 'Marechal Cândido Rondon') {
+      return "Rua Elói Lohmann, 162 - Parque Industrial, Mal. Cândido Rondon - PR, 85963-104";
+    }
+    return "Endereço a confirmar com o atendente";
+  };
+
   const handleFinalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // 1. Validação Básica (Sempre necessária)
     if (!name || !mobilePhone || !paymentMethod) return;
 
-    // 2. Validação por Tipo de Cliente
     if (isReturningCustomer) {
-        // Cliente Recorrente
-        if (hasKeg) {
-            // Barril: Valida dados do evento APENAS SE não marcou "enviar depois"
-            if (!sendEventInfoLater) {
-                if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
-            }
-        } else {
-            // Growler: Se for ENTREGA, precisa de endereço. Se for RETIRADA, não precisa.
-            if (deliveryMethod === 'delivery') {
-                if (!address || !neighborhood || !city) return;
-            }
-        }
+        if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return;
+        if (!hasKeg && deliveryMethod === 'delivery' && (!address || !neighborhood || !city)) return;
     } else {
-        // Novo Cliente (SEMPRE precisa de cadastro completo, endereço residencial é obrigatório)
         if (!cpf || !birthDate || !address || !neighborhood || !city) return;
-        
-        // Se for Barril, precisa TAMBÉM dos dados do evento (exceto se enviar depois)
-        if (hasKeg) {
-             if (!sendEventInfoLater) {
-                if (!eventAddress || !eventDate || !receiverName || !eventCity) return;
-             }
-        } else if (deliveryMethod === 'delivery' && sendToDifferentAddress) {
-             // Se for Growler e marcou outro endereço, valida os campos de entrega
-             if (!diffAddress || !diffNeighborhood || !diffCity) return;
-        }
+        if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return;
+        if (!hasKeg && deliveryMethod === 'delivery' && sendToDifferentAddress && (!diffAddress || !diffNeighborhood || !diffCity)) return;
     }
 
-    // Determine WhatsApp Number based on Location
-    const phoneNumber = locationName === 'Foz do Iguaçu' 
-      ? WHATSAPP_NUMBERS.FOZ 
-      : WHATSAPP_NUMBERS.MARECHAL;
-
+    const phoneNumber = locationName === 'Foz do Iguaçu' ? WHATSAPP_NUMBERS.FOZ : WHATSAPP_NUMBERS.MARECHAL;
     let fullMessage = "";
 
-    // --- Message Logic ---
-    
-    // Function to format item list
     const formatItemList = (items: CartItem[]) => {
         return items.map(item => {
             const upsellMark = item.isUpsell ? " ***" : "";
@@ -153,108 +121,55 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         }).join('\n');
     };
 
-    // Build the items block - UNIFIED LIST
     let itemsBlock = `\n--- PEDIDO ---\n` + formatItemList(cart);
-
     const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
     const totalMsg = `\n💵 *VALOR:* R$ ${total.toFixed(2)}`;
     
-    // Freight Note depends on Delivery Method and Product Type
     let freightNote = "";
     if (deliveryMethod === 'delivery') {
-        if (isGrowlerOnly) {
-            freightNote = `\n\n🚚 *FRETE:* R$ 15,00 (Taxa fixa growler)`;
-        } else {
-            freightNote = `\n\n⚠️ *FRETE:* A calcular na confirmação.`;
-        }
+        freightNote = isGrowlerOnly 
+            ? `\n\n🚚 *FRETE:* R$ 15,00 (Taxa fixa growler)` 
+            : `\n\n⚠️ *FRETE:* A calcular na confirmação.`;
     } else {
-        freightNote = `\n\n📍 *MODO:* Cliente irá retirar na loja (14h às 18h).`;
+        freightNote = `\n\n📍 *MODO:* Cliente irá retirar na loja (14h às 18h).\n*LOCAL:* ${getUnitAddress()}`;
     }
 
-    // Helper to build Event Block based on "Send Later" status
     const buildEventBlock = () => {
-        if (sendEventInfoLater) {
-            return `\n--- DADOS DO EVENTO ---\n⚠️ *DADOS DO EVENTO:* A combinar / Enviar a seguir\n*TOTAL LITROS:* ${totalLiters}L\n`;
-        }
-        return `\n--- DADOS DO EVENTO ---\n` +
-              `*RECEBEDOR:* ${receiverName}\n` +
-              `*ENDEREÇO DO EVENTO:* ${eventAddress}\n` +
-              `*CIDADE:* ${eventCity}\n` +
-              `*DATA:* ${eventDate}\n` +
-              `*HORA:* ${eventTime || 'Não definida'}\n` +
-              `*VOLTAGEM:* ${voltage}\n` +
-              `*TOTAL LITROS:* ${totalLiters}L\n`;
+        if (sendEventInfoLater) return `\n--- DADOS DO EVENTO ---\n⚠️ *DADOS DO EVENTO:* A combinar / Enviar a seguir\n*TOTAL LITROS:* ${totalLiters}L\n`;
+        return `\n--- DADOS DO EVENTO ---\n*RECEBEDOR:* ${receiverName}\n*ENDEREÇO DO EVENTO:* ${eventAddress}\n*CIDADE:* ${eventCity}\n*DATA:* ${eventDate}\n*HORA:* ${eventTime || 'Não definida'}\n*VOLTAGEM:* ${voltage}\n*TOTAL LITROS:* ${totalLiters}L\n`;
     };
 
-    // --- SCENARIO A: RETURNING CUSTOMER ---
     if (isReturningCustomer) {
         const header = `*PEDIDO - JÁ SOU CLIENTE*\n------------------\n`;
         const userBlock = `👤 *CLIENTE:* ${name}\n📱 *TEL:* ${mobilePhone}\n`;
-
         if (hasKeg) {
-             const eventBlock = buildEventBlock();
-             fullMessage = header + userBlock + eventBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+             fullMessage = header + userBlock + buildEventBlock() + itemsBlock + paymentBlock + totalMsg + freightNote;
         } else {
              if (deliveryMethod === 'delivery') {
-                const deliveryBlock = 
-                    `\n📍 *ENTREGAR EM:* ${address}\n` +
-                    `🏘️ *BAIRRO:* ${neighborhood}\n` +
-                    `🏙️ *CIDADE:* ${city}`;
+                const deliveryBlock = `\n📍 *ENTREGAR EM:* ${address}\n🏘️ *BAIRRO:* ${neighborhood}\n🏙️ *CIDADE:* ${city}`;
                 fullMessage = header + userBlock + deliveryBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
              } else {
-                const pickupBlock = `\n📍 *RETIRADA NA LOJA* (${locationName})\nHorário: 14:00 às 18:00.`;
-                fullMessage = header + userBlock + pickupBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+                fullMessage = header + userBlock + `\n📍 *RETIRADA NA LOJA*` + itemsBlock + paymentBlock + totalMsg + freightNote;
              }
         }
-    } 
-    // --- SCENARIO B: NEW CUSTOMER (FULL DATA ALWAYS) ---
-    else {
+    } else {
         const header = `*FICHA DE CADASTRO - PATANEGRA*\n------------------\n`;
-        
-        const personalBlock = 
-            `*NOME:* ${name}\n` +
-            `*DATA NASC.:* ${birthDate}\n` +
-            `*CPF:* ${cpf}\n` +
-            `*RG:* ${rg || 'Não informado'}\n` +
-            `*END. RESIDENCIAL:* ${address}\n` +
-            `*BAIRRO:* ${neighborhood}\n` +
-            `*CIDADE:* ${city}\n` +
-            `*CELULAR:* ${mobilePhone}\n`;
-
-        // Omit photo requirement for Growler-only orders
-        const docsBlock = isGrowlerOnly 
-            ? "" 
-            : `\n📸 *FOTOS (Enviarei a seguir):*\n- Comprovante de Residência\n- CNH (Documento com foto)\n`;
-
+        const personalBlock = `*NOME:* ${name}\n*DATA NASC.:* ${birthDate}\n*CPF:* ${cpf}\n*RG:* ${rg || 'Não informado'}\n*END. RESIDENCIAL:* ${address}\n*BAIRRO:* ${neighborhood}\n*CIDADE:* ${city}\n*CELULAR:* ${mobilePhone}\n`;
+        const docsBlock = isGrowlerOnly ? "" : `\n📸 *FOTOS (Enviarei a seguir):*\n- Comprovante de Residência\n- CNH (Documento com foto)\n`;
         let extraBlock = "";
-
         if (hasKeg) {
              extraBlock = buildEventBlock();
         } else {
              if (deliveryMethod === 'delivery') {
-                if (sendToDifferentAddress) {
-                    extraBlock = `\n📍 *ENTREGA EM OUTRO ENDEREÇO:*\n*ENDEREÇO:* ${diffAddress}\n*BAIRRO:* ${diffNeighborhood}\n*CIDADE:* ${diffCity}\n`;
-                } else {
-                    extraBlock = `\n📍 *ENTREGA:* No endereço residencial informado acima.\n`;
-                }
+                extraBlock = sendToDifferentAddress ? `\n📍 *ENTREGA EM OUTRO ENDEREÇO:*\n*ENDEREÇO:* ${diffAddress}\n*BAIRRO:* ${diffNeighborhood}\n*CIDADE:* ${diffCity}\n` : `\n📍 *ENTREGA:* No endereço residencial informado acima.\n`;
              } else {
-                extraBlock = `\n📍 *PEDIDO PARA RETIRADA NA LOJA*\n(${locationName})\nHorário: 14:00 às 18:00.\n`;
+                extraBlock = `\n📍 *PEDIDO PARA RETIRADA NA LOJA*\n`;
              }
         }
-
         fullMessage = header + personalBlock + docsBlock + extraBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
     }
 
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(fullMessage)}`;
-    
-    const link = document.createElement('a');
-    link.href = whatsappUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
+    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(fullMessage)}`, '_blank');
     setStep(2);
   };
 
@@ -272,7 +187,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       setSendEventInfoLater(false);
       setSendToDifferentAddress(false);
       setDiffAddress(''); setDiffNeighborhood(''); setDiffCity('');
-      
       if (onReturnToHome) onReturnToHome();
     }
     onClose();
@@ -285,13 +199,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
           if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
           if (!hasKeg && deliveryMethod === 'delivery' && sendToDifferentAddress && (!diffAddress || !diffNeighborhood || !diffCity)) return true;
       } else {
-          if (hasKeg) {
-              if (!sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
-          } else {
-              if (deliveryMethod === 'delivery') {
-                  if (!address || !neighborhood || !city) return true;
-              }
-          }
+          if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
+          if (!hasKeg && deliveryMethod === 'delivery' && (!address || !neighborhood || !city)) return true;
       }
       return false;
   }
@@ -300,260 +209,101 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/90 backdrop-blur-sm animate-fade-in"
-        onClick={handleClose}
-      />
-
-      {/* Content Container */}
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-sm animate-fade-in" onClick={handleClose} />
       <div className="relative w-full max-w-md bg-zinc-950 rounded-3xl border border-zinc-800 shadow-2xl overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">
-        
-        {/* Glow Effect */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50" />
-
-        {/* Header */}
         <div className="flex items-center justify-between p-6 pb-2 min-h-[60px] flex-shrink-0 bg-zinc-950 z-20">
-          <div className="flex flex-col">
-              <h2 className="text-xl font-serif text-white">
-                {step === 1 ? 'Finalizar Pedido' : ''}
-              </h2>
-          </div>
-          <button 
-            onClick={handleClose}
-            className="text-zinc-500 hover:text-white transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <h2 className="text-xl font-serif text-white">{step === 1 ? 'Finalizar Pedido' : ''}</h2>
+          <button onClick={handleClose} className="text-zinc-500 hover:text-white transition-colors"><X size={20} /></button>
         </div>
 
-        {/* STEP 1: Registration Form */}
         {step === 1 && (
           <form onSubmit={handleFinalSubmit} className="p-6 pt-0 flex flex-col gap-5 overflow-y-auto scrollbar-hide">
-            
-            {/* Customer Type Toggle */}
             <div className="grid grid-cols-2 gap-3 mb-6 mt-4 flex-shrink-0">
-               <div className="relative group">
-                   {!isReturningCustomer && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black text-amber-500 text-[9px] font-bold px-3 py-0.5 rounded-full border border-amber-500 uppercase tracking-widest shadow-md z-20 whitespace-nowrap">
-                          Primeira Compra?
-                      </span>
-                   )}
-                   <button
-                     type="button"
-                     onClick={() => setIsReturningCustomer(false)}
-                     className={`w-full relative overflow-hidden flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border-2 transition-all duration-300 ${
-                         !isReturningCustomer 
-                         ? 'bg-amber-500 border-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)] scale-[1.02] z-10' 
-                         : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-amber-500/50 hover:text-zinc-300'
-                     }`}
-                   >
-                      {!isReturningCustomer && (
-                        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/25 to-transparent z-10 pointer-events-none" />
-                      )}
-                      <UserPlus size={22} strokeWidth={!isReturningCustomer ? 2.5 : 2} className="relative z-10" />
-                      <span className="relative z-10 text-xs font-extrabold uppercase tracking-wide">Sou Novo</span>
-                   </button>
-               </div>
-
-               <button
-                 type="button"
-                 onClick={() => setIsReturningCustomer(true)}
-                 className={`flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border-2 transition-all duration-300 ${
-                     isReturningCustomer 
-                     ? 'bg-zinc-100 border-white text-zinc-950 shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02] z-10' 
-                     : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
-                 }`}
-               >
+               <button type="button" onClick={() => setIsReturningCustomer(false)} className={`w-full relative overflow-hidden flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border-2 transition-all duration-300 ${!isReturningCustomer ? 'bg-amber-500 border-amber-500 text-black shadow-lg scale-[1.02] z-10' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}>
+                  <UserPlus size={22} strokeWidth={!isReturningCustomer ? 2.5 : 2} />
+                  <span className="text-xs font-extrabold uppercase tracking-wide">Sou Novo</span>
+               </button>
+               <button type="button" onClick={() => setIsReturningCustomer(true)} className={`flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border-2 transition-all duration-300 ${isReturningCustomer ? 'bg-zinc-100 border-white text-zinc-950 shadow-lg scale-[1.02] z-10' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}>
                   <RefreshCw size={22} strokeWidth={isReturningCustomer ? 2.5 : 2} />
                   <span className="text-xs font-bold uppercase tracking-wide">Já sou Cliente</span>
                </button>
             </div>
 
-            {/* Location Badge */}
-            {!isReturningCustomer && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-3 flex-shrink-0 animate-fade-in">
-                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                        <MapPin size={16} />
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-zinc-500 uppercase font-bold">Unidade de Atendimento</p>
-                        <p className="text-sm font-medium text-white leading-tight">{locationName}</p>
-                    </div>
-                </div>
-            )}
-
-            {/* --- DADOS BÁSICOS (Sempre visíveis) --- */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 pb-1 border-b border-zinc-800">
                 <User size={16} className="text-amber-500" />
-                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                    Identificação
-                </h3>
+                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Identificação</h3>
               </div>
               <div className="relative">
-                <input 
-                  required
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none transition-colors placeholder:text-zinc-600"
-                  placeholder="Nome Completo"
-                />
+                <input required type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none transition-colors placeholder:text-zinc-600" placeholder="Nome Completo" />
                 <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               </div>
               <div className="relative">
-                  <input 
-                      required
-                      type="tel"
-                      value={mobilePhone}
-                      onChange={(e) => setMobilePhone(e.target.value)}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                      placeholder="Celular (WhatsApp)"
-                  />
+                  <input required type="tel" value={mobilePhone} onChange={(e) => setMobilePhone(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600" placeholder="Celular (WhatsApp)" />
                   <Smartphone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               </div>
             </div>
 
-            {/* --- DELIVERY vs PICKUP TOGGLE (GROWLERS ONLY) --- */}
             {!hasKeg && (
                 <div className="bg-zinc-900/50 p-1 rounded-xl border border-zinc-800 flex relative mt-2">
-                    <div 
-                        className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-amber-500 rounded-lg transition-all duration-300 z-0 shadow-lg shadow-amber-500/20
-                        ${deliveryMethod === 'pickup' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'}`}
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setDeliveryMethod('delivery')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide relative z-10 transition-colors
-                            ${deliveryMethod === 'delivery' ? 'text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    >
-                        <Truck size={14} />
-                        Entrega
+                    <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-amber-500 rounded-lg transition-all duration-300 z-0 shadow-lg shadow-amber-500/20 ${deliveryMethod === 'pickup' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'}`} />
+                    <button type="button" onClick={() => setDeliveryMethod('delivery')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide relative z-10 transition-colors ${deliveryMethod === 'delivery' ? 'text-black' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                        <Truck size={14} /> Entrega
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => setDeliveryMethod('pickup')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide relative z-10 transition-colors
-                            ${deliveryMethod === 'pickup' ? 'text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    >
-                        <Store size={14} />
-                        Retirada
+                    <button type="button" onClick={() => setDeliveryMethod('pickup')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide relative z-10 transition-colors ${deliveryMethod === 'pickup' ? 'text-black' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                        <Store size={14} /> Retirada
                     </button>
                 </div>
             )}
 
-            {/* --- PICKUP LOCATION INFO CARD (Updated Hours) --- */}
             {!hasKeg && deliveryMethod === 'pickup' && (
-                <div className="bg-zinc-900/50 border border-amber-500/20 rounded-xl p-4 flex items-center gap-4 animate-fade-in">
-                    <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                        <Clock size={20} />
+                <div className="bg-zinc-900/50 border border-amber-500/20 rounded-xl p-4 flex flex-col gap-3 animate-fade-in">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                          <Clock size={20} />
+                      </div>
+                      <div>
+                          <h4 className="text-white text-sm font-bold">Retirada em {locationName}</h4>
+                          <p className="text-xs text-zinc-400 mt-1">Disponível das <strong className="text-amber-500">14:00 às 18:00</strong>.</p>
+                      </div>
                     </div>
-                    <div>
-                        <h4 className="text-white text-sm font-bold">Retirada em {locationName}</h4>
-                        <p className="text-xs text-zinc-400 mt-1">
-                            Disponibilidade para retirada das <strong className="text-amber-500">14:00 às 18:00</strong>.
-                        </p>
+                    <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800">
+                        <div className="flex items-center gap-2 mb-1 text-zinc-500">
+                           <MapPin size={12} />
+                           <span className="text-[10px] uppercase font-bold tracking-widest">Endereço da Unidade</span>
+                        </div>
+                        <p className="text-xs text-zinc-300 leading-tight">{getUnitAddress()}</p>
                     </div>
                 </div>
             )}
 
-            {/* --- ENDEREÇO --- */}
             {showMainAddressFields && (
                 <div className="space-y-3 animate-slide-up">
                     <div className="flex items-center gap-2 pb-1 border-b border-zinc-800">
                       <Home size={16} className="text-amber-500" />
-                      <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                          {!isReturningCustomer ? 'Endereço Residencial (Cadastro)' : 'Endereço de Entrega'}
-                      </h3>
+                      <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">{!isReturningCustomer ? 'Endereço Residencial (Cadastro)' : 'Endereço de Entrega'}</h3>
                     </div>
-                    <div className="relative">
-                      <input 
-                        required
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                        placeholder="Rua, Número e Complemento"
-                      />
-                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                    </div>
+                    <div className="relative"><input required value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white placeholder:text-zinc-600" placeholder="Rua, Número e Complemento" /><MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="relative">
-                          <input 
-                            required
-                            value={neighborhood}
-                            onChange={(e) => setNeighborhood(e.target.value)}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                            placeholder="Bairro"
-                          />
-                          <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                        </div>
-                        <div className="relative">
-                          <input 
-                            required
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                            placeholder="Cidade"
-                          />
-                          <Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                        </div>
+                        <div className="relative"><input required value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white placeholder:text-zinc-600" placeholder="Bairro" /><MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
+                        <div className="relative"><input required value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white placeholder:text-zinc-600" placeholder="Cidade" /><Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
                     </div>
-
                     {!isReturningCustomer && !hasKeg && deliveryMethod === 'delivery' && (
                         <div className="mt-2 space-y-3">
-                            <label className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 cursor-pointer hover:bg-zinc-900 transition-colors">
+                            <label className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 cursor-pointer">
                                 <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${sendToDifferentAddress ? 'bg-amber-500 border-amber-500' : 'bg-transparent border-zinc-600'}`}>
                                     {sendToDifferentAddress && <Check size={14} className="text-black" strokeWidth={3} />}
                                 </div>
-                                <input 
-                                    type="checkbox" 
-                                    className="hidden" 
-                                    checked={sendToDifferentAddress} 
-                                    onChange={(e) => setSendToDifferentAddress(e.target.checked)} 
-                                />
-                                <span className={`text-sm flex items-center gap-2 ${sendToDifferentAddress ? 'text-white font-medium' : 'text-zinc-400'}`}>
-                                    <Gift size={14} className={sendToDifferentAddress ? 'text-amber-500' : ''} />
-                                    Enviar para endereço diferente do cadastro.
-                                </span>
+                                <input type="checkbox" className="hidden" checked={sendToDifferentAddress} onChange={(e) => setSendToDifferentAddress(e.target.checked)} />
+                                <span className={`text-sm ${sendToDifferentAddress ? 'text-white font-medium' : 'text-zinc-400'}`}>Enviar para endereço diferente.</span>
                             </label>
                             {sendToDifferentAddress && (
                                 <div className="p-4 bg-zinc-900/80 rounded-2xl border border-amber-500/20 space-y-3 animate-fade-in">
-                                    <div className="flex items-center gap-2 pb-1 border-b border-zinc-800 mb-1">
-                                        <Truck size={14} className="text-amber-500" />
-                                        <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Endereço de Entrega</h4>
-                                    </div>
-                                    <div className="relative">
-                                        <input 
-                                            required
-                                            value={diffAddress}
-                                            onChange={(e) => setDiffAddress(e.target.value)}
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                            placeholder="Rua e Número (Entrega)"
-                                        />
-                                        <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                                    </div>
+                                    <div className="relative"><input required value={diffAddress} onChange={(e) => setDiffAddress(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 pl-10 text-white" placeholder="Rua e Número (Entrega)" /><MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="relative">
-                                            <input 
-                                                required
-                                                value={diffNeighborhood}
-                                                onChange={(e) => setDiffNeighborhood(e.target.value)}
-                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                                placeholder="Bairro"
-                                            />
-                                            <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                                        </div>
-                                        <div className="relative">
-                                            <input 
-                                                required
-                                                value={diffCity}
-                                                onChange={(e) => setDiffCity(e.target.value)}
-                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                                placeholder="Cidade"
-                                            />
-                                            <Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                                        </div>
+                                        <input required value={diffNeighborhood} onChange={(e) => setDiffNeighborhood(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white" placeholder="Bairro" />
+                                        <input required value={diffCity} onChange={(e) => setDiffCity(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white" placeholder="Cidade" />
                                     </div>
                                 </div>
                             )}
@@ -562,165 +312,60 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 </div>
             )}
 
-            {/* --- DADOS EXTRAS (Cadastro de Novo Cliente) --- */}
             {!isReturningCustomer && (
               <div className="space-y-5 animate-slide-up">
                 <div className="space-y-3">
-                     <div className="relative">
-                        <input 
-                            required
-                            type="text"
-                            value={birthDate}
-                            onChange={(e) => setBirthDate(e.target.value)}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                            placeholder="Data de Nascimento (ex: 10/05/1990)"
-                        />
-                        <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                    </div>
+                    <div className="relative"><input required type="text" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white placeholder:text-zinc-600" placeholder="Data de Nascimento (ex: 10/05/1990)" /><Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="relative">
-                            <input 
-                                required
-                                type="text"
-                                value={cpf}
-                                onChange={(e) => setCpf(e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                placeholder="CPF"
-                            />
-                            <Fingerprint size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                        </div>
-                        <div className="relative">
-                            <input 
-                                type="text"
-                                value={rg}
-                                onChange={(e) => setRg(e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                placeholder="RG (Opcional)"
-                            />
-                            <FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                        </div>
+                        <div className="relative"><input required type="text" value={cpf} onChange={(e) => setCpf(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white" placeholder="CPF" /><Fingerprint size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
+                        <div className="relative"><input type="text" value={rg} onChange={(e) => setRg(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white" placeholder="RG (Opcional)" /><FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
                     </div>
                 </div>
-
-                {/* DOCUMENTOS (Somente se não for growler only) */}
                 {!isGrowlerOnly && (
                     <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 border-dashed">
-                        <div className="flex items-center gap-2 mb-2 text-zinc-400">
-                            <Camera size={18} />
-                            <span className="text-xs font-bold uppercase">Documentação Necessária</span>
-                        </div>
+                        <div className="flex items-center gap-2 mb-2 text-zinc-400"><Camera size={18} /><span className="text-xs font-bold uppercase">Documentação</span></div>
                         <div className="flex gap-2">
-                            <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
-                                <FileText size={16} className="mb-1" />
-                                <span className="text-[9px] text-center px-2">Foto Comp. Residência</span>
-                            </div>
-                            <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800">
-                                <Fingerprint size={16} className="mb-1" />
-                                <span className="text-[9px] text-center px-2">Foto CNH / RG</span>
-                            </div>
+                            <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800"><span className="text-[9px] text-center">Foto Comprovante</span></div>
+                            <div className="flex-1 h-16 bg-zinc-900 rounded-lg flex flex-col items-center justify-center text-zinc-600 border border-zinc-800"><span className="text-[9px] text-center">Foto CNH/RG</span></div>
                         </div>
-                        <p className="text-[9px] text-amber-500 mt-2 text-center leading-tight">
-                            * Enviar fotos pelo WhatsApp após confirmar.
-                        </p>
+                        <p className="text-[9px] text-amber-500 mt-2 text-center leading-tight">* Fotos enviadas via WhatsApp após confirmação.</p>
                     </div>
                 )}
               </div>
             )}
 
-            {/* --- DADOS DO EVENTO (BARRIL) --- */}
             {hasKeg && (
                   <div className="space-y-3 animate-slide-up">
                     <div className="flex items-center justify-between pb-1 border-b border-zinc-800">
-                      <div className="flex items-center gap-2">
-                          <Calendar size={16} className="text-amber-500" />
-                          <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Dados do Evento</h3>
-                      </div>
+                      <div className="flex items-center gap-2"><Calendar size={16} className="text-amber-500" /><h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Dados do Evento</h3></div>
                     </div>
-                    <label className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 cursor-pointer hover:bg-zinc-900 transition-colors">
-                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${sendEventInfoLater ? 'bg-amber-500 border-amber-500' : 'bg-transparent border-zinc-600'}`}>
-                            {sendEventInfoLater && <Check size={14} className="text-black" strokeWidth={3} />}
-                        </div>
-                        <input 
-                            type="checkbox" 
-                            className="hidden" 
-                            checked={sendEventInfoLater} 
-                            onChange={(e) => setSendEventInfoLater(e.target.checked)} 
-                        />
-                        <span className={`text-sm ${sendEventInfoLater ? 'text-white font-medium' : 'text-zinc-400'}`}>
-                            Enviar dados do evento posteriormente
-                        </span>
+                    <label className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 cursor-pointer">
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${sendEventInfoLater ? 'bg-amber-500 border-amber-500' : 'bg-transparent border-zinc-600'}`}>{sendEventInfoLater && <Check size={14} className="text-black" strokeWidth={3} />}</div>
+                        <input type="checkbox" className="hidden" checked={sendEventInfoLater} onChange={(e) => setSendEventInfoLater(e.target.checked)} />
+                        <span className={`text-sm ${sendEventInfoLater ? 'text-white font-medium' : 'text-zinc-400'}`}>Enviar dados do evento posteriormente</span>
                     </label>
                     {!sendEventInfoLater && (
                         <div className="space-y-3 animate-fade-in">
-                            <div className="relative">
-                            <input
-                                required
-                                type="text"
-                                value={receiverName}
-                                onChange={(e) => setReceiverName(e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                placeholder="Quem vai receber o pedido?"
-                            />
-                            <UserCheck size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                            </div>
+                            <div className="relative"><input required type="text" value={receiverName} onChange={(e) => setReceiverName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white" placeholder="Quem vai receber?" /><UserCheck size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
                             <div className="grid grid-cols-3 gap-3">
-                                <div className="relative col-span-2">
-                                <input
-                                    required
-                                    value={eventAddress}
-                                    onChange={(e) => setEventAddress(e.target.value)}
-                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                    placeholder="Endereço do Evento"
-                                />
-                                <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                                </div>
-                                <div className="relative">
-                                <input
-                                    required
-                                    value={eventCity}
-                                    onChange={(e) => setEventCity(e.target.value)}
-                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-2 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600 text-center"
-                                    placeholder="Cidade"
-                                />
-                                </div>
+                                <input required value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white col-span-2" placeholder="Endereço" />
+                                <input required value={eventCity} onChange={(e) => setEventCity(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white text-center" placeholder="Cidade" />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="relative">
-                                    <input 
-                                        required
-                                        type="text"
-                                        value={eventDate}
-                                        onChange={(e) => setEventDate(e.target.value)}
-                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                        placeholder="Data (ex: 20/10)"
-                                    />
-                                    <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                                </div>
-                                <div className="relative">
-                                    <input 
-                                        type="text"
-                                        value={eventTime}
-                                        onChange={(e) => setEventTime(e.target.value)}
-                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white focus:border-amber-500 focus:outline-none placeholder:text-zinc-600"
-                                        placeholder="Hora (ex: 19h)"
-                                    />
-                                    <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                                </div>
+                                <input required value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white" placeholder="Data (ex: 20/10)" />
+                                <input value={eventTime} onChange={(e) => setEventTime(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white" placeholder="Hora (ex: 19h)" />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
-                                <div className="flex items-center gap-2 mb-2 text-zinc-400">
-                                    <Zap size={16} className="text-amber-500"/>
-                                    <span className="text-[10px] font-bold uppercase">Voltagem</span>
+                                  <span className="text-[10px] font-bold uppercase text-zinc-500 mb-2 block">Voltagem</span>
+                                  <div className="flex gap-2">
+                                    <button type="button" onClick={() => setVoltage('110v')} className={`flex-1 py-1 text-xs rounded ${voltage === '110v' ? 'bg-amber-500 text-black' : 'bg-zinc-800'}`}>110v</button>
+                                    <button type="button" onClick={() => setVoltage('220v')} className={`flex-1 py-1 text-xs rounded ${voltage === '220v' ? 'bg-amber-500 text-black' : 'bg-zinc-800'}`}>220v</button>
+                                  </div>
                                 </div>
-                                <div className="flex gap-2">
-                                    <button type="button" onClick={() => setVoltage('110v')} className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '110v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}>110v</button>
-                                    <button type="button" onClick={() => setVoltage('220v')} className={`flex-1 py-1 text-xs rounded transition-colors ${voltage === '220v' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-800 text-zinc-400'}`}>220v</button>
-                                </div>
-                                </div>
-                                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col justify-center items-center">
-                                <span className="text-[10px] text-zinc-500 uppercase font-bold">Volume Total</span>
-                                <span className="text-xl font-bold text-white">{totalLiters} <span className="text-sm font-normal text-zinc-400">Litros</span></span>
+                                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-center">
+                                  <span className="text-[10px] uppercase font-bold text-zinc-500">Volume Total</span>
+                                  <span className="text-xl font-bold text-white block">{totalLiters}L</span>
                                 </div>
                             </div>
                         </div>
@@ -728,83 +373,46 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                   </div>
             )}
 
-            {/* --- PAGAMENTO --- */}
             <div className="space-y-2 pt-1">
                <div className="flex items-center gap-2 pb-1 border-b border-zinc-800 mb-2">
-                 <CreditCard size={16} className="text-amber-500" />
-                 <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Forma de Pagamento</h3>
+                 <CreditCard size={16} className="text-amber-500" /><h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Pagamento</h3>
                </div>
                <div className="grid grid-cols-3 gap-2">
-                  <button type="button" onClick={() => setPaymentMethod('PIX')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'PIX' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}>
-                    <QrCode size={20} /><span className="text-[10px] font-bold">PIX</span>
-                  </button>
-                  <button type="button" onClick={() => setPaymentMethod('Cartão')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'Cartão' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}>
-                    <CreditCard size={20} /><span className="text-[10px] font-bold">Cartão</span>
-                  </button>
-                  <button type="button" onClick={() => setPaymentMethod('Dinheiro')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'Dinheiro' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}>
-                    <Banknote size={20} /><span className="text-[10px] font-bold">Dinheiro</span>
-                  </button>
+                  <button type="button" onClick={() => setPaymentMethod('PIX')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1 ${paymentMethod === 'PIX' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}><QrCode size={20} /><span className="text-[10px] font-bold">PIX</span></button>
+                  <button type="button" onClick={() => setPaymentMethod('Cartão')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1 ${paymentMethod === 'Cartão' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}><CreditCard size={20} /><span className="text-[10px] font-bold">Cartão</span></button>
+                  <button type="button" onClick={() => setPaymentMethod('Dinheiro')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1 ${paymentMethod === 'Dinheiro' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}><Banknote size={20} /><span className="text-[10px] font-bold">Dinheiro</span></button>
                </div>
             </div>
 
-            {/* FREIGHT/PICKUP NOTICE (Updated Growler Rules) */}
             <div className="mt-4 mb-2 p-3 bg-zinc-900/80 rounded-xl border border-amber-500/20 flex items-start gap-3">
-                 <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-500 mt-0.5">
-                     {deliveryMethod === 'delivery' ? <Truck size={16} /> : <Store size={16} />}
-                 </div>
+                 <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-500 mt-0.5">{deliveryMethod === 'delivery' ? <Truck size={16} /> : <Store size={16} />}</div>
                  <div>
                      <p className="text-xs text-zinc-300 leading-relaxed">
-                         <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">
-                            {deliveryMethod === 'delivery' ? 'Política de Entrega' : 'Retirada na Loja'}
-                         </strong>
-                         {deliveryMethod === 'delivery' 
-                            ? (isGrowlerOnly 
-                                ? 'Taxa fixa de entrega para growlers: R$ 15,00.' 
-                                : 'O valor do frete será informado na confirmação do pedido via WhatsApp.')
-                            : `Retirada em ${locationName} disponível das 14:00 às 18:00.`}
+                         <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">{deliveryMethod === 'delivery' ? 'Política de Entrega' : 'Retirada na Loja'}</strong>
+                         {deliveryMethod === 'delivery' ? (isGrowlerOnly ? 'Taxa fixa de entrega para growlers: R$ 15,00.' : 'Frete a calcular na confirmação.') : `Retirada em ${locationName} disponível das 14:00 às 18:00.`}
                      </p>
                  </div>
             </div>
 
             <Button type="submit" fullWidth className="mt-2 py-4" icon={<ArrowRight size={20} />} disabled={isSubmitDisabled()}>
-              {isReturningCustomer ? 'Enviar Pedido Rápido' : 'Enviar Ficha Cadastral'}
+              {isReturningCustomer ? 'Enviar Pedido' : 'Enviar Cadastro'}
             </Button>
             <div className="h-6"></div>
           </form>
         )}
 
-        {/* STEP 2: Success Screen */}
         {step === 2 && (
           <div className="p-6 pt-0 flex flex-col items-center justify-center text-center h-full animate-fade-in pb-8">
-             <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4 ring-1 ring-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
-                <CheckCircle2 size={32} />
-             </div>
-             
+             <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4 ring-1 ring-green-500/50 shadow-lg"><CheckCircle2 size={32} /></div>
              <h2 className="text-2xl font-serif text-white mb-1">Pedido Enviado!</h2>
              <p className="text-zinc-400 font-medium mb-6">Obrigado pela preferência!</p>
-             
-             {!isReturningCustomer && (
-                 <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 mb-6 text-left w-full">
-                    <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
-                    <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
-                        {!isGrowlerOnly && (
-                            <li>Envie as <strong>FOTOS</strong> do Comprovante de Residência e CNH/RG na conversa do WhatsApp que abriu.</li>
-                        )}
-                        {deliveryMethod === 'delivery' ? (
-                            <li>Aguarde nossa confirmação {isGrowlerOnly ? '(Taxa R$ 15,00)' : 'e cálculo da taxa de entrega'}.</li>
-                        ) : (
-                            <li>Aguarde a confirmação para retirada (Horário: 14h-18h).</li>
-                        )}
-                    </ul>
-                 </div>
-             )}
-             
-             {isReturningCustomer && (
-                 <p className="text-zinc-400 text-sm mb-6 leading-relaxed px-4">
-                    Aguarde, iremos responder no WhatsApp confirmando seu pedido.
-                 </p>
-             )}
-
+             <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 mb-6 text-left w-full">
+                <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
+                <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
+                    {!isReturningCustomer && !isGrowlerOnly && <li>Envie as fotos dos documentos no WhatsApp.</li>}
+                    {deliveryMethod === 'delivery' ? <li>Aguarde nossa confirmação de entrega {isGrowlerOnly ? '(Taxa R$ 15)' : ''}.</li> : <li>Retirada disponível (14h às 18h).</li>}
+                </ul>
+             </div>
              <Button fullWidth onClick={handleClose} variant="secondary">Fechar</Button>
           </div>
         )}
