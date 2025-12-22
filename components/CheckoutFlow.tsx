@@ -127,9 +127,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     
     let freightNote = "";
     if (deliveryMethod === 'delivery') {
-        freightNote = isGrowlerOnly 
-            ? `\n\n🚚 *FRETE:* R$ 15,00 (Taxa fixa growler)` 
-            : `\n\n⚠️ *FRETE:* A calcular na confirmação.`;
+        freightNote = `\n\n🚚 *FRETE:* R$ 15,00 (Taxa fixa para dentro da cidade)\n⚠️ *OUTRAS REGIÕES:* Consultar valor na confirmação.`;
+        if (hasKeg) {
+            freightNote += `\n🕒 *HORÁRIO DE ENTREGA:* 14h às 18h.`;
+        }
     } else {
         freightNote = `\n\n📍 *MODO:* Cliente irá retirar na loja (14h às 18h).\n*LOCAL:* ${getUnitAddress()}`;
     }
@@ -387,10 +388,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             <div className="mt-4 mb-2 p-3 bg-zinc-900/80 rounded-xl border border-amber-500/20 flex items-start gap-3">
                  <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-500 mt-0.5">{deliveryMethod === 'delivery' ? <Truck size={16} /> : <Store size={16} />}</div>
                  <div>
-                     <p className="text-xs text-zinc-300 leading-relaxed">
-                         <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">{deliveryMethod === 'delivery' ? 'Política de Entrega' : 'Retirada na Loja'}</strong>
-                         {deliveryMethod === 'delivery' ? (isGrowlerOnly ? 'Taxa fixa de entrega para growlers: R$ 15,00.' : 'Frete a calcular na confirmação.') : `Retirada em ${locationName} disponível das 14:00 às 18:00.`}
-                     </p>
+                     <div className="text-xs text-zinc-300 leading-relaxed">
+                         <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">{deliveryMethod === 'delivery' ? 'Entrega e Logística' : 'Retirada na Loja'}</strong>
+                         {deliveryMethod === 'delivery' ? (
+                            <>
+                                Taxa fixa de <span className="text-white font-bold">R$ 15,00</span> para entregas dentro da cidade. Demais localidades a consultar.
+                                {hasKeg && <span className="block mt-1 text-zinc-400 italic">Entregas de barris realizadas das 14h às 18h.</span>}
+                            </>
+                         ) : `Retirada em ${locationName} disponível das 14:00 às 18:00.`}
+                     </div>
                  </div>
             </div>
 
@@ -410,7 +416,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                 <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
                     {!isReturningCustomer && !isGrowlerOnly && <li>Envie as fotos dos documentos no WhatsApp.</li>}
-                    {deliveryMethod === 'delivery' ? <li>Aguarde nossa confirmação de entrega {isGrowlerOnly ? '(Taxa R$ 15)' : ''}.</li> : <li>Retirada disponível (14h às 18h).</li>}
+                    {deliveryMethod === 'delivery' ? <li>Aguarde nossa confirmação (Taxa fixa R$ 15 na cidade). {hasKeg ? 'Entregas das 14h às 18h.' : ''}</li> : <li>Retirada disponível (14h às 18h).</li>}
                 </ul>
              </div>
              <Button fullWidth onClick={handleClose} variant="secondary">Fechar</Button>
