@@ -127,10 +127,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     
     let freightNote = "";
     if (deliveryMethod === 'delivery') {
-        freightNote = `\n\n🚚 *FRETE:* R$ 15,00 (Taxa fixa para dentro da cidade)\n⚠️ *OUTRAS REGIÕES:* Consultar valor na confirmação.`;
-        if (hasKeg) {
-            freightNote += `\n🕒 *HORÁRIO DE ENTREGA:* 14h às 18h.`;
-        }
+        freightNote = `\n\n🚚 *FRETE:* R$ 15,00 (Taxa fixa para dentro da cidade)\n⚠️ *OUTRAS REGIÕES:* Consultar valor na confirmação.\n🕒 *HORÁRIO DE ENTREGA:* 14h às 18h.`;
     } else {
         freightNote = `\n\n📍 *MODO:* Cliente irá retirar na loja (14h às 18h).\n*LOCAL:* ${getUnitAddress()}`;
     }
@@ -393,7 +390,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                          {deliveryMethod === 'delivery' ? (
                             <>
                                 Taxa fixa de <span className="text-white font-bold">R$ 15,00</span> para entregas dentro da cidade. Demais localidades a consultar.
-                                {hasKeg && <span className="block mt-1 text-zinc-400 italic">Entregas de barris realizadas das 14h às 18h.</span>}
+                                <span className="block mt-1 text-zinc-400 italic">Entregas realizadas das 14h às 18h.</span>
                             </>
                          ) : `Retirada em ${locationName} disponível das 14:00 às 18:00.`}
                      </div>
@@ -416,7 +413,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                 <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
                     {!isReturningCustomer && !isGrowlerOnly && <li>Envie as fotos dos documentos no WhatsApp.</li>}
-                    {deliveryMethod === 'delivery' ? <li>Aguarde nossa confirmação (Taxa fixa R$ 15 na cidade). {hasKeg ? 'Entregas das 14h às 18h.' : ''}</li> : <li>Retirada disponível (14h às 18h).</li>}
+                    {deliveryMethod === 'delivery' ? <li>Aguarde nossa confirmação (Taxa fixa R$ 15 na cidade). Entregas das 14h às 18h.</li> : <li>Retirada disponível (14h às 18h).</li>}
                 </ul>
              </div>
              <Button fullWidth onClick={handleClose} variant="secondary">Fechar</Button>
