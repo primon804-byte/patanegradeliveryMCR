@@ -24,6 +24,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const [isReturningCustomer, setIsReturningCustomer] = useState(false);
   
   const locationName = userLocation || 'Marechal Cândido Rondon'; 
+  const isFoz = locationName === 'Foz do Iguaçu';
   
   const hasKeg = cart.some(item => 
     item.category === ProductCategory.KEG30 || 
@@ -35,6 +36,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery');
   const [sendEventInfoLater, setSendEventInfoLater] = useState(false);
   const [sendToDifferentAddress, setSendToDifferentAddress] = useState(false);
+
+  // Freight logic
+  const FREIGHT_VALUE = 15;
+  const isDelivery = deliveryMethod === 'delivery';
+  const totalWithFreight = total + (isDelivery ? FREIGHT_VALUE : 0);
 
   // --- Personal Data ---
   const [name, setName] = useState('');
@@ -107,30 +113,37 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         if (!hasKeg && deliveryMethod === 'delivery' && sendToDifferentAddress && (!diffAddress || !diffNeighborhood || !diffCity)) return;
     }
 
-    const phoneNumber = locationName === 'Foz do Iguaçu' ? WHATSAPP_NUMBERS.FOZ : WHATSAPP_NUMBERS.MARECHAL;
+    const phoneNumber = isFoz ? WHATSAPP_NUMBERS.FOZ : WHATSAPP_NUMBERS.MARECHAL;
     let fullMessage = "";
 
     const formatItemList = (items: CartItem[]) => {
         return items.map(item => {
             const upsellMark = item.isUpsell ? " ***" : "";
-            let itemString = `• ${item.quantity}x ${item.name}${upsellMark}`;
-            if (item.rentTonel) itemString += " (+ Tonel)";
-            if (item.mugsQuantity) itemString += ` (+ ${item.mugsQuantity} Canecas)`;
-            if (item.moreCups) itemString += ` (+ Orçamento Copos)`;
+            const unitPrice = item.price + (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0);
+            const subtotal = unitPrice * item.quantity;
+            
+            let itemString = `• ${item.quantity}x ${item.name}${upsellMark}\n  (R$ ${unitPrice.toFixed(2)} cada) - Subtotal: R$ ${subtotal.toFixed(2)}`;
+            if (item.rentTonel) itemString += "\n  [+ Inclui Tonel]";
+            if (item.mugsQuantity) itemString += `\n  [+ Inclui ${item.mugsQuantity} Canecas]`;
+            if (item.moreCups) itemString += `\n  [+ Solicita Orçamento Copos Extras]`;
             return itemString;
         }).join('\n');
     };
 
-    let itemsBlock = `\n--- PEDIDO ---\n` + formatItemList(cart);
+    let itemsBlock = `\n--- PRODUTOS ---\n` + formatItemList(cart);
     const paymentBlock = `\n\n💰 *PAGAMENTO:* ${paymentMethod}`;
-    const totalMsg = `\n💵 *VALOR:* R$ ${total.toFixed(2)}`;
+    const produtosSubtotalMsg = `\n💵 *SUBTOTAL PRODUTOS:* R$ ${total.toFixed(2)}`;
     
     let freightNote = "";
-    if (deliveryMethod === 'delivery') {
-        freightNote = `\n\n🚚 *FRETE:* R$ 15,00 (Taxa fixa para dentro da cidade)\n⚠️ *OUTRAS REGIÕES:* Consultar valor na confirmação.\n🕒 *HORÁRIO DE ENTREGA:* 14h às 18h.`;
+    if (isDelivery) {
+        freightNote = `\n🚚 *FRETE:* R$ ${FREIGHT_VALUE.toFixed(2)} (${isFoz ? 'A partir de' : 'Taxa fixa'} na cidade)`;
+        if (!isFoz) freightNote += `\n⚠️ *OUTRAS REGIÕES:* Consultar valor adicional.`;
+        freightNote += `\n🕒 *HORÁRIO DE ENTREGA:* 14h às 18h.`;
     } else {
-        freightNote = `\n\n📍 *MODO:* Cliente irá retirar na loja (14h às 18h).\n*LOCAL:* ${getUnitAddress()}`;
+        freightNote = `\n📍 *MODO:* Retirada na loja (14h às 18h).\n🏠 *LOCAL:* ${getUnitAddress()}`;
     }
+
+    const totalFinalMsg = `\n\n✅ *TOTAL DO PEDIDO:* R$ ${totalWithFreight.toFixed(2)}${isDelivery ? ' (Produtos + Frete)' : ''}`;
 
     const buildEventBlock = () => {
         if (sendEventInfoLater) return `\n--- DADOS DO EVENTO ---\n⚠️ *DADOS DO EVENTO:* A combinar / Enviar a seguir\n*TOTAL LITROS:* ${totalLiters}L\n`;
@@ -138,16 +151,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     };
 
     if (isReturningCustomer) {
-        const header = `*PEDIDO - JÁ SOU CLIENTE*\n------------------\n`;
+        const header = `*PEDIDO PATANEGRA - CLIENTE CADASTRADO*\n------------------\n`;
         const userBlock = `👤 *CLIENTE:* ${name}\n📱 *TEL:* ${mobilePhone}\n`;
         if (hasKeg) {
-             fullMessage = header + userBlock + buildEventBlock() + itemsBlock + paymentBlock + totalMsg + freightNote;
+             fullMessage = header + userBlock + buildEventBlock() + itemsBlock + produtosSubtotalMsg + freightNote + paymentBlock + totalFinalMsg;
         } else {
-             if (deliveryMethod === 'delivery') {
+             if (isDelivery) {
                 const deliveryBlock = `\n📍 *ENTREGAR EM:* ${address}\n🏘️ *BAIRRO:* ${neighborhood}\n🏙️ *CIDADE:* ${city}`;
-                fullMessage = header + userBlock + deliveryBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+                fullMessage = header + userBlock + deliveryBlock + itemsBlock + produtosSubtotalMsg + freightNote + paymentBlock + totalFinalMsg;
              } else {
-                fullMessage = header + userBlock + `\n📍 *RETIRADA NA LOJA*` + itemsBlock + paymentBlock + totalMsg + freightNote;
+                fullMessage = header + userBlock + `\n📍 *RETIRADA NA LOJA*` + itemsBlock + produtosSubtotalMsg + freightNote + paymentBlock + totalFinalMsg;
              }
         }
     } else {
@@ -158,13 +171,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
         if (hasKeg) {
              extraBlock = buildEventBlock();
         } else {
-             if (deliveryMethod === 'delivery') {
+             if (isDelivery) {
                 extraBlock = sendToDifferentAddress ? `\n📍 *ENTREGA EM OUTRO ENDEREÇO:*\n*ENDEREÇO:* ${diffAddress}\n*BAIRRO:* ${diffNeighborhood}\n*CIDADE:* ${diffCity}\n` : `\n📍 *ENTREGA:* No endereço residencial informado acima.\n`;
              } else {
                 extraBlock = `\n📍 *PEDIDO PARA RETIRADA NA LOJA*\n`;
              }
         }
-        fullMessage = header + personalBlock + docsBlock + extraBlock + itemsBlock + paymentBlock + totalMsg + freightNote;
+        fullMessage = header + personalBlock + docsBlock + extraBlock + itemsBlock + produtosSubtotalMsg + freightNote + paymentBlock + totalFinalMsg;
     }
 
     window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(fullMessage)}`, '_blank');
@@ -195,15 +208,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
       if (!isReturningCustomer) {
           if (!cpf || !birthDate || !address || !neighborhood || !city) return true;
           if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
-          if (!hasKeg && deliveryMethod === 'delivery' && sendToDifferentAddress && (!diffAddress || !diffNeighborhood || !diffCity)) return true;
+          if (!hasKeg && isDelivery && sendToDifferentAddress && (!diffAddress || !diffNeighborhood || !diffCity)) return true;
       } else {
           if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return true;
-          if (!hasKeg && deliveryMethod === 'delivery' && (!address || !neighborhood || !city)) return true;
+          if (!hasKeg && isDelivery && (!address || !neighborhood || !city)) return true;
       }
       return false;
   }
 
-  const showMainAddressFields = !isReturningCustomer || (!hasKeg && isReturningCustomer && deliveryMethod === 'delivery');
+  const showMainAddressFields = !isReturningCustomer || (!hasKeg && isReturningCustomer && isDelivery);
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -287,7 +300,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                         <div className="relative"><input required value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white placeholder:text-zinc-600" placeholder="Bairro" /><MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
                         <div className="relative"><input required value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 pl-10 text-white placeholder:text-zinc-600" placeholder="Cidade" /><Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /></div>
                     </div>
-                    {!isReturningCustomer && !hasKeg && deliveryMethod === 'delivery' && (
+                    {!isReturningCustomer && !hasKeg && isDelivery && (
                         <div className="mt-2 space-y-3">
                             <label className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 cursor-pointer">
                                 <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${sendToDifferentAddress ? 'bg-amber-500 border-amber-500' : 'bg-transparent border-zinc-600'}`}>
@@ -383,13 +396,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
             </div>
 
             <div className="mt-4 mb-2 p-3 bg-zinc-900/80 rounded-xl border border-amber-500/20 flex items-start gap-3">
-                 <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-500 mt-0.5">{deliveryMethod === 'delivery' ? <Truck size={16} /> : <Store size={16} />}</div>
+                 <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-500 mt-0.5">{isDelivery ? <Truck size={16} /> : <Store size={16} />}</div>
                  <div>
                      <div className="text-xs text-zinc-300 leading-relaxed">
-                         <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">{deliveryMethod === 'delivery' ? 'Entrega e Logística' : 'Retirada na Loja'}</strong>
-                         {deliveryMethod === 'delivery' ? (
+                         <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">{isDelivery ? 'Entrega e Logística' : 'Retirada na Loja'}</strong>
+                         {isDelivery ? (
                             <>
-                                Taxa fixa de <span className="text-white font-bold">R$ 15,00</span> para entregas dentro da cidade. Demais localidades a consultar.
+                                {isFoz 
+                                    ? 'Taxa de entrega a partir de R$ 15,00. Consultar valor exato na confirmação.' 
+                                    : 'Taxa fixa de R$ 15,00 para entregas dentro da cidade. Demais localidades a consultar.'
+                                }
                                 <span className="block mt-1 text-zinc-400 italic">Entregas realizadas das 14h às 18h.</span>
                             </>
                          ) : `Retirada em ${locationName} disponível das 14:00 às 18:00.`}
@@ -397,7 +413,25 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                  </div>
             </div>
 
-            <Button type="submit" fullWidth className="mt-2 py-4" icon={<ArrowRight size={20} />} disabled={isSubmitDisabled()}>
+            <div className="mt-2 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+                <div className="flex justify-between items-center mb-1">
+                    <span className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Produtos</span>
+                    <span className="text-zinc-200 font-bold">R$ {total.toFixed(2)}</span>
+                </div>
+                {isDelivery && (
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Frete Estimado</span>
+                        <span className="text-emerald-500 font-bold">R$ {FREIGHT_VALUE.toFixed(2)}</span>
+                    </div>
+                )}
+                <div className="h-px bg-zinc-800 my-2"></div>
+                <div className="flex justify-between items-center">
+                    <span className="text-white text-sm font-bold uppercase tracking-widest">Valor Final</span>
+                    <span className="text-amber-500 text-xl font-serif font-bold">R$ {totalWithFreight.toFixed(2)}</span>
+                </div>
+            </div>
+
+            <Button type="submit" fullWidth className="py-4 text-lg font-bold" icon={<ArrowRight size={20} />} disabled={isSubmitDisabled()}>
               {isReturningCustomer ? 'Enviar Pedido' : 'Enviar Cadastro'}
             </Button>
             <div className="h-6"></div>
@@ -413,7 +447,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                 <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
                     {!isReturningCustomer && !isGrowlerOnly && <li>Envie as fotos dos documentos no WhatsApp.</li>}
-                    {deliveryMethod === 'delivery' ? <li>Aguarde nossa confirmação (Taxa fixa R$ 15 na cidade). Entregas das 14h às 18h.</li> : <li>Retirada disponível (14h às 18h).</li>}
+                    {isDelivery ? <li>Aguarde nossa confirmação (Taxa R$ 15,00 aplicada). Entregas das 14h às 18h.</li> : <li>Retirada disponível (14h às 18h).</li>}
                 </ul>
              </div>
              <Button fullWidth onClick={handleClose} variant="secondary">Fechar</Button>
