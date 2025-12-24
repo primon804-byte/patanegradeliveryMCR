@@ -199,12 +199,12 @@ export const PRODUCTS: Product[] = [
     pairing: 'Hambúrguer, Carne assada, Comida mexicana, Massas',
   },
 
-  // R$ 28,00 (Sours)
+  // R$ 30,00 (Sours)
   {
     id: 'growler-sour-amarelas-1l',
     name: 'Sour Frutas Amarelas 1L',
     description: 'Combinando a refrescância do estilo com a singularidade do aroma e do sabor de maracujá, apresenta coloração amarela, espuma de boa formação e média persistência.',
-    price: 28,
+    price: 30,
     image: 'https://www.starkdistribuidora.com.br/storage/products/UkTZ1J7RDeHAa0hf.jpg',
     category: ProductCategory.GROWLER,
     type: BeerType.SOUR,
@@ -217,7 +217,7 @@ export const PRODUCTS: Product[] = [
     id: 'growler-sour-vermelhas-1l',
     name: 'Sour Frutas Vermelhas 1L',
     description: 'Uma cerveja que chama atenção só de olhar! De coloração rosa, recebe generosas doses de morango, framboesa e amora. Corpo leve, seco e acidez balanceada.',
-    price: 28,
+    price: 30,
     image: 'https://www.starkdistribuidora.com.br/storage/products/4q9srCWSapkmrDOh.jpg',
     category: ProductCategory.GROWLER,
     type: BeerType.SOUR,
@@ -234,7 +234,7 @@ export const PRODUCTS: Product[] = [
     id: 'keg-pilsen-30',
     name: 'Barril Pilsen 30L',
     description: 'A típica Pilsen dos brasileiros. Cerveja clara, leve, refrescante e de baixo amargor.',
-    price: 387,
+    price: 400,
     image: 'https://i.ibb.co/szz3tB3/patanegra-1765760642049.png',
     category: ProductCategory.KEG30,
     type: BeerType.PILSEN,
