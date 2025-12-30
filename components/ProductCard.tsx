@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Product } from '../types';
-import { Plus, Flame } from 'lucide-react';
+import { Plus, Flame, AlertCircle } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -19,7 +19,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClic
       className={`relative group overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800/60 ${featured ? 'col-span-2' : 'col-span-1'} cursor-pointer transition-all duration-300 hover:border-zinc-700 active:scale-[0.98] will-animate`}
     >
       {/* BADGES */}
-      {product.isChampion ? (
+      {product.checkAvailability ? (
+        <div className="absolute top-3 left-3 z-10 bg-red-600 text-white text-[9px] font-black px-2 py-1 rounded shadow-lg flex items-center gap-1 animate-fade-in uppercase tracking-tighter">
+          <AlertCircle size={10} strokeWidth={3} />
+          VERIFICAR DISPONIBILIDADE
+        </div>
+      ) : product.isChampion ? (
         <div className="absolute top-3 left-3 z-10 bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded-md shadow-lg flex items-center gap-1 animate-fade-in">
           <div className="flex -space-x-1">
             <Flame size={10} strokeWidth={3} />
@@ -53,7 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClic
         
         <div className="flex items-center justify-between mt-auto">
           <span className="text-amber-500 font-bold text-lg">
-            R$ {product.price.toFixed(2)}
+            {product.checkAvailability ? 'Consultar' : `R$ ${product.price.toFixed(2)}`}
           </span>
           
           <button 

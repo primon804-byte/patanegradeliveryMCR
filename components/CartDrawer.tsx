@@ -27,6 +27,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const hasConsultItem = cart.some(item => item.checkAvailability);
+
   return (
     <div className="fixed inset-0 z-[100] flex justify-end">
       {/* Backdrop */}
@@ -93,7 +95,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                              </button>
                          )}
                       </div>
-                      <span className="text-amber-500 font-semibold text-sm">R$ {totalItemPrice.toFixed(2)} un.</span>
+                      <span className="text-amber-500 font-semibold text-sm">
+                        {item.checkAvailability ? 'Consultar' : `R$ ${totalItemPrice.toFixed(2)} un.`}
+                      </span>
                       
                       {/* Extras Display */}
                       {(item.rentTonel || item.mugsQuantity || item.moreCups) && (
@@ -136,7 +140,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           <div className="p-5 border-t border-zinc-900 bg-zinc-950 pb-safe">
             <div className="flex justify-between items-end mb-4">
               <span className="text-zinc-400 text-sm">Total do Pedido</span>
-              <span className="text-2xl font-bold text-amber-500 font-serif">R$ {total.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-amber-500 font-serif">
+                R$ {total.toFixed(2)}{hasConsultItem ? ' + a consultar' : ''}
+              </span>
             </div>
 
             <Button 

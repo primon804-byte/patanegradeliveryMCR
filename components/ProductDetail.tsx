@@ -296,7 +296,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
              <div className="text-zinc-400 text-sm">
                Preço Unitário <span className="text-[10px] block text-zinc-600">(Produto + Adicionais)</span>
              </div>
-             <div className="text-2xl font-serif text-white">R$ {finalUnitTestPrice.toFixed(2)}</div>
+             <div className="text-2xl font-serif text-white">
+                {product.checkAvailability ? 'Consultar' : `R$ ${finalUnitTestPrice.toFixed(2)}`}
+             </div>
           </div>
           <Button 
             fullWidth 

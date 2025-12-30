@@ -30,6 +30,7 @@ export interface Product {
   volumeLiters?: number; // e.g., 30, 50
   isPopular?: boolean;
   isChampion?: boolean; // New flag for Sales Champion
+  checkAvailability?: boolean; // New flag for availability check
   abv?: number; // Alcohol by volume
   ibu?: number; // Bitterness
   pairing?: string; // Food pairing suggestions

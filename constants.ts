@@ -320,12 +320,13 @@ export const PRODUCTS: Product[] = [
     id: 'keg-lager-50',
     name: 'Barril Premium Lager 50L',
     description: 'Cerveja dourada com notas maltadas, corpo médio, amargor moderado e espuma cremosa.',
-    price: 700,
+    price: 740, // Marechal (Base)
     image: 'https://i.ibb.co/4w56W9gb/patanegra-1765760786878.png',
     category: ProductCategory.KEG50,
     type: BeerType.LAGER,
     volumeLiters: 50,
-    isPopular: true, // Mais Pedido
+    isPopular: true,
+    checkAvailability: true, // Tag vermelha obrigatória
     abv: 4.5,
     ibu: 12,
     pairing: 'Churrasco completo, frango a passarinho e pizza margherita.',
