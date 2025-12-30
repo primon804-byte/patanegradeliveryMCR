@@ -116,7 +116,7 @@ const HomeView: React.FC<{
           <div className="text-center mb-10">
             <h2 className="text-2xl font-serif text-white mb-3 tracking-tight">Cervejaria Patanegra</h2>
             <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto mb-4">
-              A excelência do chope artesanal premiado, entregue com frescor absoluto diretamente para o seu evento ou residência.
+              A excelência do chope especial premiado, entregue com frescor absoluto diretamente para o seu evento ou residência.
             </p>
             <div className="flex items-center justify-center gap-4 text-amber-500/50">
                <div className="flex items-center gap-1.5"><Beer size={14} /><span className="text-[10px] font-bold uppercase tracking-widest">Puro Malte</span></div>
@@ -136,7 +136,7 @@ const HomeView: React.FC<{
               <div>
                 <h3 className="text-sm font-bold text-zinc-100 mb-1">Tradição Premiada</h3>
                 <p className="text-[11px] text-zinc-500 leading-relaxed">
-                  Eleita entre as melhores cervejarias artesanais, nossa produção segue rigorosos padrões de qualidade e pureza.
+                  Eleita entre as melhores cervejarias especiais, nossa produção segue rigorosos padrões de qualidade e pureza.
                 </p>
               </div>
             </div>
@@ -189,7 +189,7 @@ const HomeView: React.FC<{
 
           <div className="mt-12 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-500 text-[10px] font-medium tracking-widest uppercase">
-               <Heart size={12} className="text-red-500" /> Paixão por Chope Artesanal
+               <Heart size={12} className="text-red-500" /> Paixão por Chope Especial
             </div>
           </div>
         </div>
