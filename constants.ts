@@ -234,7 +234,7 @@ export const PRODUCTS: Product[] = [
     id: 'keg-pilsen-30',
     name: 'Barril Pilsen 30L',
     description: 'A típica Pilsen dos brasileiros. Cerveja clara, leve, refrescante e de baixo amargor.',
-    price: 400,
+    price: 387, // Atualizado para Marechal Cândido Rondon
     image: 'https://i.ibb.co/szz3tB3/patanegra-1765760642049.png',
     category: ProductCategory.KEG30,
     type: BeerType.PILSEN,
