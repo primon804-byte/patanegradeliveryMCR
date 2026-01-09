@@ -36,6 +36,7 @@ const FOZ_PRICES: Record<string, number> = {
   'growler-apa-1l': 26,
   'growler-red-ale-1l': 26,
   'growler-vienna-lager-1l': 26,
+  'growler-malzbier-1l': 26,
   'keg-pilsen-50': 750,
   'keg-pilsen-30': 450,
   'keg-lager-50': 850,

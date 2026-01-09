@@ -106,6 +106,19 @@ export const PRODUCTS: Product[] = [
 
   // R$ 22,00 (Vários Estilos)
   {
+    id: 'growler-malzbier-1l',
+    name: 'Malzbier 1L',
+    description: 'Cerveja escura, levemente adocicada, com notas marcantes de malte torrado, caramelo e um toque de chocolate. Corpo leve, baixo amargor e alta drinkability.',
+    price: 22,
+    image: 'https://i.ibb.co/gF4tHmBK/Design-sem-nome-52.png',
+    category: ProductCategory.GROWLER,
+    type: BeerType.DUNKEL,
+    volumeLiters: 1,
+    abv: 4.7,
+    ibu: 8,
+    pairing: 'Sobremesas de chocolate, doces caramelizados, tortas, queijos suaves e pratos defumados.',
+  },
+  {
     id: 'growler-weiss-1l',
     name: 'Hefe Weiss 1L',
     description: 'A clássica cerveja de trigo com espuma espessa, notas de cravo e banana, super encorpada e turva.',
@@ -234,7 +247,7 @@ export const PRODUCTS: Product[] = [
     id: 'keg-pilsen-30',
     name: 'Barril Pilsen 30L',
     description: 'A típica Pilsen dos brasileiros. Cerveja clara, leve, refrescante e de baixo amargor.',
-    price: 387, // Atualizado para Marechal Cândido Rondon
+    price: 387, 
     image: 'https://i.ibb.co/szz3tB3/patanegra-1765760642049.png',
     category: ProductCategory.KEG30,
     type: BeerType.PILSEN,

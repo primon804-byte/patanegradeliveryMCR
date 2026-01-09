@@ -25,6 +25,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   
   const locationName = userLocation || 'Marechal Cândido Rondon'; 
   const isFoz = locationName === 'Foz do Iguaçu';
+  const isMarechal = locationName === 'Marechal Cândido Rondon';
+
+  // Horários dinâmicos baseados na unidade
+  const operatingHours = isMarechal ? '14h às 19h' : '14h às 18h';
+  const operatingHoursDisplay = isMarechal ? '14:00 às 19:00' : '14:00 às 18:00';
   
   const hasKeg = cart.some(item => 
     item.category === ProductCategory.KEG30 || 
@@ -94,7 +99,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   }, 0);
 
   const getUnitAddress = () => {
-    if (locationName === 'Marechal Cândido Rondon') {
+    if (isMarechal) {
       return "Rua Elói Lohmann, 162 - Parque Industrial, Mal. Cândido Rondon - PR, 85963-104";
     }
     return "Endereço a confirmar com o atendente";
@@ -110,7 +115,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     } else {
         if (!cpf || !birthDate || !address || !neighborhood || !city) return;
         if (hasKeg && !sendEventInfoLater && (!eventAddress || !eventDate || !receiverName || !eventCity)) return;
-        if (!hasKeg && deliveryMethod === 'delivery' && sendToDifferentAddress && (!diffAddress || !diffNeighborhood || !diffCity)) return;
+        if (!hasKeg && isDelivery && sendToDifferentAddress && (!diffAddress || !diffNeighborhood || !diffCity)) return;
     }
 
     const phoneNumber = isFoz ? WHATSAPP_NUMBERS.FOZ : WHATSAPP_NUMBERS.MARECHAL;
@@ -138,9 +143,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     if (isDelivery) {
         freightNote = `\n🚚 *FRETE:* R$ ${FREIGHT_VALUE.toFixed(2)} (${isFoz ? 'A partir de' : 'Taxa fixa'} na cidade)`;
         if (!isFoz) freightNote += `\n⚠️ *OUTRAS REGIÕES:* Consultar valor adicional.`;
-        freightNote += `\n🕒 *HORÁRIO DE ENTREGA:* 14h às 18h.`;
+        freightNote += `\n🕒 *HORÁRIO DE ENTREGA:* ${operatingHours}.`;
     } else {
-        freightNote = `\n📍 *MODO:* Retirada na loja (14h às 18h).\n🏠 *LOCAL:* ${getUnitAddress()}`;
+        freightNote = `\n📍 *MODO:* Retirada na loja (${operatingHours}).\n🏠 *LOCAL:* ${getUnitAddress()}`;
     }
 
     const totalFinalMsg = `\n\n✅ *TOTAL DO PEDIDO:* R$ ${totalWithFreight.toFixed(2)}${isDelivery ? ' (Produtos + Frete)' : ''}`;
@@ -276,7 +281,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                       </div>
                       <div>
                           <h4 className="text-white text-sm font-bold">Retirada em {locationName}</h4>
-                          <p className="text-xs text-zinc-400 mt-1">Disponível das <strong className="text-amber-500">14:00 às 18:00</strong>.</p>
+                          <p className="text-xs text-zinc-400 mt-1">Disponível das <strong className="text-amber-500">{operatingHoursDisplay}</strong>.</p>
                       </div>
                     </div>
                     <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800">
@@ -406,9 +411,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                                     ? 'Taxa de entrega a partir de R$ 15,00. Consultar valor exato na confirmação.' 
                                     : 'Taxa fixa de R$ 15,00 para entregas dentro da cidade. Demais localidades a consultar.'
                                 }
-                                <span className="block mt-1 text-zinc-400 italic">Entregas realizadas das 14h às 18h.</span>
+                                <span className="block mt-1 text-zinc-400 italic">Entregas realizadas das {operatingHours}.</span>
                             </>
-                         ) : `Retirada em ${locationName} disponível das 14:00 às 18:00.`}
+                         ) : `Retirada em ${locationName} disponível das ${operatingHoursDisplay}.`}
                      </div>
                  </div>
             </div>
@@ -447,7 +452,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                 <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
                     {!isReturningCustomer && !isGrowlerOnly && <li>Envie as fotos dos documentos no WhatsApp.</li>}
-                    {isDelivery ? <li>Aguarde nossa confirmação (Taxa R$ 15,00 aplicada). Entregas das 14h às 18h.</li> : <li>Retirada disponível (14h às 18h).</li>}
+                    {isDelivery ? <li>Aguarde nossa confirmação (Taxa R$ 15,00 aplicada). Entregas das {operatingHours}.</li> : <li>Retirada disponível ({operatingHours}).</li>}
                 </ul>
              </div>
              <Button fullWidth onClick={handleClose} variant="secondary">Fechar</Button>
