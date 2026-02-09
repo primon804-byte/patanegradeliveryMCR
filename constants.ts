@@ -6,13 +6,13 @@ import { Product, ProductCategory, BeerType } from './types';
 // ==============================================================================
 export const WHATSAPP_NUMBERS = {
   // Filial - Marechal Cândido Rondon
-  MARECHAL: "5545988175171", 
+  MARECHAL: "5545988175171",
   // Matriz - Foz do Iguaçu
-  FOZ: "5545999901000" 
+  FOZ: "5545999901000"
 };
 
 // Mantido para compatibilidade se necessário
-export const WHATSAPP_NUMBER = "5545988175171"; 
+export const WHATSAPP_NUMBER = "5545988175171";
 
 // ==============================================================================
 // CONFIGURAÇÃO DO FLYER / DESTAQUE
@@ -26,7 +26,7 @@ export const PRODUCTS: Product[] = [
   // GROWLERS 
   // ORDEM: Campeão -> Mais Pedidos -> Menor Preço -> Maior Preço
   // ============================================================================
-  
+
   // 1. CAMPEÃO DE VENDAS
   {
     id: 'growler-pilsen-cristal-1l',
@@ -37,7 +37,7 @@ export const PRODUCTS: Product[] = [
     category: ProductCategory.GROWLER,
     type: BeerType.PILSEN,
     volumeLiters: 1,
-    isChampion: true, 
+    isChampion: true,
     abv: 4.5,
     ibu: 7,
     pairing: 'Hambúrguer, Massas, Aperitivos, Queijos',
@@ -88,13 +88,13 @@ export const PRODUCTS: Product[] = [
   },
 
   // 3. ORDENADOS POR PREÇO (Crescente)
-  
+
   // R$ 17,00
   {
     id: 'growler-premium-lager-1l',
     name: 'Premium Lager 1L',
     description: 'Cerveja dourada com notas maltadas, corpo médio, amargor moderado e espuma cremosa.',
-    price: 17,
+    price: 18,
     image: 'https://www.starkdistribuidora.com.br/storage/products/u9xHRJtgWyiKh3r2.jpg',
     category: ProductCategory.GROWLER,
     type: BeerType.LAGER,
@@ -109,7 +109,7 @@ export const PRODUCTS: Product[] = [
     id: 'growler-malzbier-1l',
     name: 'Malzbier 1L',
     description: 'Cerveja escura, levemente adocicada, com notas marcantes de malte torrado, caramelo e um toque de chocolate. Corpo leve, baixo amargor e alta drinkability.',
-    price: 22,
+    price: 24,
     image: 'https://i.ibb.co/gF4tHmBK/Design-sem-nome-52.png',
     category: ProductCategory.GROWLER,
     type: BeerType.DUNKEL,
@@ -247,7 +247,7 @@ export const PRODUCTS: Product[] = [
     id: 'keg-pilsen-30',
     name: 'Barril Pilsen 30L',
     description: 'A típica Pilsen dos brasileiros. Cerveja clara, leve, refrescante e de baixo amargor.',
-    price: 387, 
+    price: 387,
     image: 'https://i.ibb.co/szz3tB3/patanegra-1765760642049.png',
     category: ProductCategory.KEG30,
     type: BeerType.PILSEN,
