@@ -1,0 +1,81 @@
+
+import React from 'react';
+import { AlertTriangle, RefreshCw, Trash2, TrendingUp } from 'lucide-react';
+import { Button } from './Button';
+
+interface CheckoutConflictModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSwitch: () => void;
+  onClear: () => void;
+  onUpdatePrices: () => void;
+  cartLocation: string;
+  userLocation: string;
+}
+
+export const CheckoutConflictModal: React.FC<CheckoutConflictModalProps> = ({
+  isOpen, onClose, onSwitch, onClear, onUpdatePrices, cartLocation, userLocation
+}) => {
+   if (!isOpen) return null;
+
+   return (
+    <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
+       {/* Backdrop */}
+       <div 
+         className="absolute inset-0 bg-black/90 backdrop-blur-sm animate-fade-in" 
+         onClick={onClose} 
+       />
+       
+       {/* Content */}
+       <div className="relative w-full max-w-sm bg-zinc-950 rounded-3xl border border-zinc-800 shadow-2xl overflow-hidden animate-slide-up p-6">
+           <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500 mb-4 border border-amber-500/20">
+                  <AlertTriangle size={32} />
+              </div>
+              
+              <h2 className="text-xl font-serif text-white font-bold mb-2">Diferença de Tabela</h2>
+              
+              <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
+                  Seu carrinho foi montado com preços de <strong className="text-white">{cartLocation}</strong>, mas você está em <strong className="text-white">{userLocation}</strong>.
+              </p>
+
+              <div className="w-full space-y-3">
+                  {/* Option 1: Update Prices (Recommended) */}
+                  <Button 
+                    fullWidth 
+                    onClick={onUpdatePrices}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 border border-emerald-500/50"
+                  >
+                      <div className="flex items-center justify-center gap-2">
+                          <TrendingUp size={18} />
+                          <span>Atualizar valores para {userLocation}</span>
+                      </div>
+                  </Button>
+
+                  {/* Option 2: Switch Location */}
+                  <button 
+                      onClick={onSwitch}
+                      className="w-full py-3 rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors flex items-center justify-center gap-2 font-medium"
+                  >
+                      <RefreshCw size={18} />
+                      <span>Voltar para {cartLocation}</span>
+                  </button>
+                  
+                  {/* Option 3: Clear */}
+                   <button 
+                      onClick={onClear}
+                      className="w-full py-3 rounded-xl border border-red-900/30 bg-red-500/5 text-red-500 hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2 font-medium"
+                  >
+                      <Trash2 size={18} />
+                      <span>Limpar Carrinho</span>
+                  </button>
+                  
+                  <button onClick={onClose} className="w-full py-2 text-sm text-zinc-500 hover:text-white transition-colors">
+                      Cancelar
+                  </button>
+              </div>
+           </div>
+       </div>
+    </div>
+   );
+};
