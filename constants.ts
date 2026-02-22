@@ -123,7 +123,7 @@ export const PRODUCTS: Product[] = [
     name: 'Hefe Weiss 1L',
     description: 'A clássica cerveja de trigo com espuma espessa, notas de cravo e banana, super encorpada e turva.',
     price: 22,
-    image: 'https://www.starkdistribuidora.com.br/storage/products/Xqx1A0xpvoqXZVPa.jpg',
+    image: 'https://i.ibb.co/MxmTMwBp/creative-masterpiece-85.jpg',
     category: ProductCategory.GROWLER,
     type: BeerType.WEISS,
     volumeLiters: 1,
