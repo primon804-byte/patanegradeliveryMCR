@@ -302,7 +302,7 @@ export const PRODUCTS: Product[] = [
     id: 'keg-session-ipa-30',
     name: 'Barril Session IPA 30L',
     description: 'Cerveja leve, dourada, extremamente refrescante, com amargor moderado e aroma cítrico intenso.',
-    price: 480,
+    price: 507,
     image: 'https://i.ibb.co/gZLtmYQq/patanegra-1765760756583.png',
     category: ProductCategory.KEG30,
     type: BeerType.IPA,
