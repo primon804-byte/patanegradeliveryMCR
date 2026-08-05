@@ -3,7 +3,6 @@ import React from 'react';
 import { X, Trash2, ShoppingBag, ArrowRight, Edit2 } from 'lucide-react';
 import { CartItem, ProductCategory } from '../types';
 import { Button } from './Button';
-import { OptimizedImage } from './OptimizedImage';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -77,11 +76,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
               return (
                 <div key={item.id} className="flex gap-3 bg-zinc-900/50 p-3 rounded-xl border border-zinc-900">
-                  <OptimizedImage
-                    src={item.image}
-                    alt={item.name}
-                    containerClassName="w-20 h-20 rounded-lg flex-shrink-0"
-                    className="w-full h-full rounded-lg object-cover"
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    className="w-20 h-20 rounded-lg object-cover bg-zinc-800"
                   />
                   <div className="flex-1 flex flex-col justify-between">
                     <div>

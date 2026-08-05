@@ -2,7 +2,6 @@
 import React from 'react';
 import { Calculator, ArrowRight, Award } from 'lucide-react';
 import { Button } from './Button';
-import { OptimizedImage } from './OptimizedImage';
 
 interface HeroSliderProps {
   onOrderClick: () => void;
@@ -17,12 +16,13 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
     <div className="relative h-[70vh] w-full overflow-hidden">
         {/* Static Background Image */}
         <div className="absolute inset-0">
-          <OptimizedImage
+          <img 
             src={STATIC_IMAGE}
             alt="Patanegra Destaque"
-            containerClassName="w-full h-full"
             className="w-full h-full object-cover"
-            eager
+            loading="eager"
+            // @ts-ignore
+            fetchPriority="high"
           />
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-zinc-950" />

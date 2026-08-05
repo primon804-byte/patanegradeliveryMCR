@@ -1,8 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
 import { Plus, Flame, AlertCircle } from 'lucide-react';
-import { OptimizedImage } from './OptimizedImage';
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +11,8 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClick, featured = false }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   return (
     <div 
       onClick={() => onClick(product)}
@@ -38,13 +39,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClic
         </div>
       ) : null}
       
-      <OptimizedImage
-        src={product.image}
-        alt={product.name}
-        containerClassName={`relative ${featured ? 'h-48' : 'h-40'} w-full`}
-        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-      />
-      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-t from-zinc-900 via-transparent to-transparent pointer-events-none" style={{ top: featured ? '0' : '0', height: featured ? '12rem' : '10rem' }} />
+      <div className={`relative ${featured ? 'h-48' : 'h-40'} w-full overflow-hidden bg-zinc-800`}>
+        <img 
+          src={product.image} 
+          alt={product.name} 
+          onLoad={() => setImageLoaded(true)}
+          className={`w-full h-full object-cover transition-all duration-700 ${imageLoaded ? 'opacity-80 blur-0 scale-100' : 'opacity-0 blur-lg scale-110'} group-hover:opacity-100 group-hover:scale-105`}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
+      </div>
 
       <div className="p-4">
         <div className="flex justify-between items-start mb-1">
