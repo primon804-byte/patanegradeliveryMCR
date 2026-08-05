@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Sparkles, Check, Lock, Gift, HelpCircle } from 'lucide-react';
 import { Button } from './Button';
 import { Product, BeerType } from '../types';
+import { OptimizedImage } from './OptimizedImage';
 
 interface GrowlerUpsellModalProps {
   isOpen: boolean;
@@ -165,9 +166,10 @@ export const GrowlerUpsellModal: React.FC<GrowlerUpsellModalProps> = ({
                     >
                         {/* Image */}
                         <div className="w-20 h-20 flex-shrink-0 relative overflow-hidden">
-                            <img 
-                                src={product.image} 
-                                alt={product.name} 
+                            <OptimizedImage
+                                src={product.image}
+                                alt={product.name}
+                                containerClassName="w-full h-full"
                                 className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-105' : 'group-hover:scale-105'} opacity-90`}
                             />
                             {/* Gradient Overlay */}

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ShoppingBag, Truck, ShieldCheck, Trash2, ShoppingCart, CalendarDays, Award, MapPin, ChevronDown, Edit2, ArrowRight, Star, AlertCircle, RefreshCw, UserPlus, CheckCircle2, Zap, Beer, Heart } from 'lucide-react';
 import { PRODUCTS, HERO_IMAGES } from './constants';
 import { Product, CartItem, ViewState, ProductCategory, BeerType } from './types';
@@ -19,6 +19,22 @@ import { CartConflictModal } from './components/CartConflictModal';
 import { CheckoutConflictModal } from './components/CheckoutConflictModal';
 import { UpsellModal } from './components/UpsellModal';
 import { GrowlerUpsellModal } from './components/GrowlerUpsellModal';
+import { OptimizedImage } from './components/OptimizedImage';
+import { ToastProvider, useToast } from './components/AddToCartToast';
+
+// --- Prefetch de Imagens por Categoria ---
+const prefetchedCategories = new Set<string>();
+const prefetchImages = (products: Product[], category: ProductCategory) => {
+  const key = category.toString();
+  if (prefetchedCategories.has(key)) return;
+  prefetchedCategories.add(key);
+  products
+    .filter(p => p.category === category)
+    .forEach(p => {
+      const img = new Image();
+      img.src = p.image;
+    });
+};
 
 // --- Preços específicos para Foz do Iguaçu (Matriz) ---
 const FOZ_PRICES: Record<string, number> = {
@@ -51,8 +67,13 @@ const FOZ_CHECK_AVAILABILITY: string[] = [
   'keg-lager-30', // Barril Puro Malte 30L
 ];
 
-// --- Componente de Loading Animado ---
-const LoadingScreen = () => (
+// --- Componente de Loading Animado (com preload inteligente) ---
+const CRITICAL_IMAGES = [
+  'https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand',
+  'https://i.ibb.co/jZWpr3kK/IMG-9249-1.jpg',
+];
+
+const LoadingScreen: React.FC<{ progress: number }> = ({ progress }) => (
   <div className="fixed inset-0 z-[200] bg-zinc-950 flex flex-col items-center justify-center animate-fade-in">
     <div className="relative w-28 h-28 mb-8 flex items-center justify-center">
        <div className="absolute inset-0 bg-amber-500/10 rounded-full animate-pulse-soft scale-125" />
@@ -64,7 +85,14 @@ const LoadingScreen = () => (
           />
        </div>
     </div>
-    <div className="text-amber-500/60 font-serif text-[10px] tracking-[0.4em] uppercase">Patanegra</div>
+    <div className="text-amber-500/60 font-serif text-[10px] tracking-[0.4em] uppercase mb-4">Patanegra</div>
+    {/* Progress bar */}
+    <div className="w-32 h-0.5 bg-zinc-800 rounded-full overflow-hidden">
+      <div 
+        className="h-full bg-amber-500/60 rounded-full transition-all duration-300 ease-out"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
   </div>
 );
 
@@ -284,9 +312,12 @@ const CartView: React.FC<{
             const isKeg = item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50;
             return (
               <div key={item.id} className="flex gap-4 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50 backdrop-blur-sm animate-slide-up">
-                <div className="w-20 h-20 rounded-xl overflow-hidden bg-zinc-800 flex-shrink-0">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                </div>
+                <OptimizedImage
+                  src={item.image}
+                  alt={item.name}
+                  containerClassName="w-20 h-20 rounded-xl flex-shrink-0"
+                  className="w-full h-full rounded-xl object-cover"
+                />
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start">
@@ -375,7 +406,47 @@ const App: React.FC = () => {
     return PRODUCTS; 
   }, [userLocation]);
 
-  useEffect(() => { const timer = setTimeout(() => setLoading(false), 1500); return () => clearTimeout(timer); }, []);
+  // --- Loading inteligente: preload das imagens críticas ---
+  const [loadProgress, setLoadProgress] = useState(0);
+  useEffect(() => {
+    let loaded = 0;
+    const total = CRITICAL_IMAGES.length;
+    const minDisplayTime = 600; // mínimo 600ms para não "piscar"
+    const startTime = Date.now();
+
+    CRITICAL_IMAGES.forEach(src => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        loaded++;
+        setLoadProgress(Math.round((loaded / total) * 100));
+        if (loaded >= total) {
+          const elapsed = Date.now() - startTime;
+          const remaining = Math.max(0, minDisplayTime - elapsed);
+          setTimeout(() => setLoading(false), remaining);
+        }
+      };
+      img.src = src;
+    });
+
+    // Fallback: se algo travar, libera após 3s
+    const fallback = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(fallback);
+  }, []);
+
+  // --- Prefetch dos Growlers (categoria padrão) ao carregar ---
+  useEffect(() => {
+    if (!loading) {
+      prefetchImages(PRODUCTS, ProductCategory.GROWLER);
+    }
+  }, [loading]);
+
+  // --- Prefetch ao trocar de categoria ---
+  useEffect(() => {
+    prefetchImages(adjustedProducts, activeCategory);
+  }, [activeCategory, adjustedProducts]);
+
+  // --- Toast ---
+  const { showToast } = useToast();
 
   // --- Algoritmo de Recomendação Inteligente ---
   const getGrowlerRecommendations = (currentCart: CartItem[], allProducts: Product[]): Product[] => {
@@ -419,6 +490,8 @@ const App: React.FC = () => {
       }
       return [...prev, { ...product, quantity: 1, ...options, isUpsell: options?.isUpsell || false }];
     });
+    // Toast de confirmação
+    showToast(product.name);
   };
 
   const handleResolveConflict = () => {
@@ -508,7 +581,7 @@ const App: React.FC = () => {
   const cartTotal = cart.reduce((acc, item) => acc + ((item.price + (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0)) * item.quantity), 0);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  if (loading) return <LoadingScreen />;
+  if (loading) return <LoadingScreen progress={loadProgress} />;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-amber-500 selection:text-black overflow-hidden">
@@ -541,8 +614,14 @@ const App: React.FC = () => {
           if (v === 'contact') {
             setIsContactOpen(true); 
           } else if (v === 'menu') {
-            // Intercepta SEMPRE para mostrar o banner premium e garantir a cidade
-            setIsInfoModalOpen(true); 
+            // Mostra InfoModal apenas na primeira visita da sessão
+            const hasSeenInfo = sessionStorage.getItem('patanegra_info_seen');
+            if (!hasSeenInfo || !userLocation) {
+              setIsInfoModalOpen(true);
+              sessionStorage.setItem('patanegra_info_seen', 'true');
+            } else {
+              setView('menu');
+            }
           } else {
             setView(v); 
           }

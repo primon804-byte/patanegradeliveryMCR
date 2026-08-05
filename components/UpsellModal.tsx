@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Box, Check, ArrowRight, Beer, CheckCircle2, GlassWater, AlertCircle } from 'lucide-react';
 import { Button } from './Button';
+import { OptimizedImage } from './OptimizedImage';
 
 interface UpsellModalProps {
   isOpen: boolean;
@@ -69,10 +70,12 @@ export const UpsellModal: React.FC<UpsellModalProps> = ({
 
         {/* Visual Header */}
         <div className="relative h-36 bg-zinc-900 overflow-hidden flex-shrink-0">
-            <img 
-                src="https://i.ibb.co/d4wj1KW2/POST-DELIVERY.png" 
-                alt="Instalação Patanegra" 
+            <OptimizedImage
+                src="https://i.ibb.co/d4wj1KW2/POST-DELIVERY.png"
+                alt="Instalação Patanegra"
+                containerClassName="w-full h-full"
                 className="w-full h-full object-cover opacity-80"
+                eager
             />
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
             

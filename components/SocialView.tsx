@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Camera } from 'lucide-react';
+import { OptimizedImage } from './OptimizedImage';
 
 const STORIES = [
   { id: 1, name: 'Patanegra', image: 'https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand', active: true },
@@ -96,7 +97,12 @@ export const SocialView: React.FC = () => {
 
                {/* Post Image */}
                <div className="aspect-square bg-zinc-900 w-full overflow-hidden">
-                  <img src={post.image} className="w-full h-full object-cover" loading="lazy" />
+                  <OptimizedImage
+                    src={post.image}
+                    alt={post.caption}
+                    containerClassName="w-full h-full"
+                    className="w-full h-full object-cover"
+                  />
                </div>
 
                {/* Post Actions */}

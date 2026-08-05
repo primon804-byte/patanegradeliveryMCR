@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product, ProductCategory, CartItem } from '../types';
 import { Button } from './Button';
+import { OptimizedImage } from './OptimizedImage';
 import { X, Droplets, Hop, Utensils, ShoppingBag, Beer, Check, Box, FileSignature, PlusCircle, Star, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface ProductDetailProps {
@@ -76,10 +77,12 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
 
         {/* Image Header */}
         <div className="relative h-64 sm:h-72 flex-shrink-0">
-          <img 
-            src={product.image} 
-            alt={product.name} 
+          <OptimizedImage
+            src={product.image}
+            alt={product.name}
+            containerClassName="w-full h-full"
             className="w-full h-full object-cover"
+            eager
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
           
