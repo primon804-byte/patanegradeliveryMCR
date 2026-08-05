@@ -46,6 +46,11 @@ const FOZ_PRICES: Record<string, number> = {
   'keg-vinho-tinto-30': 500,
 };
 
+// --- Produtos com disponibilidade a consultar em Foz do Iguaçu ---
+const FOZ_CHECK_AVAILABILITY: string[] = [
+  'keg-lager-30', // Barril Puro Malte 30L
+];
+
 // --- Componente de Loading Animado ---
 const LoadingScreen = () => (
   <div className="fixed inset-0 z-[200] bg-zinc-950 flex flex-col items-center justify-center animate-fade-in">
@@ -361,7 +366,11 @@ const App: React.FC = () => {
 
   const adjustedProducts = useMemo(() => {
     if (userLocation === 'Foz do Iguaçu') {
-      return PRODUCTS.map(p => FOZ_PRICES[p.id] ? { ...p, price: FOZ_PRICES[p.id] } : p);
+      return PRODUCTS.map(p => ({
+        ...p,
+        ...(FOZ_PRICES[p.id] ? { price: FOZ_PRICES[p.id] } : {}),
+        ...(FOZ_CHECK_AVAILABILITY.includes(p.id) ? { checkAvailability: true } : {}),
+      }));
     }
     return PRODUCTS; 
   }, [userLocation]);
