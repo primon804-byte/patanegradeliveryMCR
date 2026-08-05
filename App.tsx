@@ -59,7 +59,7 @@ const LoadingScreen = () => (
        <div className="relative z-10 w-full h-full bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800 shadow-2xl">
           <img 
             src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" 
-            alt="Loading"
+            alt=""
             className="w-16 h-16 object-contain animate-float" 
           />
        </div>
@@ -111,7 +111,7 @@ const HomeView: React.FC<{
   <div className="pb-32 relative bg-zinc-950">
       <div className="absolute top-0 left-0 right-0 z-40 flex justify-center pt-8 pointer-events-none">
          <div className="h-32 w-auto max-w-[80%] flex items-center justify-center">
-            <img src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" alt="Patanegra" className="h-full w-full object-contain filter drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" />
+            <img src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" alt="" className="h-full w-full object-contain filter drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" />
          </div>
       </div>
       <HeroSlider onOrderClick={onOrderClick} onCalcClick={() => setView('calculator')} />

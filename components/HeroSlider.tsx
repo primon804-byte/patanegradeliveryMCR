@@ -18,7 +18,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
         <div className="absolute inset-0">
           <img 
             src={STATIC_IMAGE}
-            alt="Patanegra Destaque"
+            alt=""
             className="w-full h-full object-cover"
             loading="eager"
             // @ts-ignore
@@ -43,7 +43,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
               
               <img 
                 src={MEDAL_IMAGE} 
-                alt="Prêmio" 
+                alt="" 
                 className="relative w-28 h-28 object-contain drop-shadow-[0_0_25px_rgba(245,158,11,0.5)] filter brightness-110 animate-float"
               />
             </div>
