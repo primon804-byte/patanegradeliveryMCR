@@ -60,6 +60,8 @@ const LoadingScreen = () => (
           <img 
             src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" 
             alt=""
+            width={64}
+            height={64}
             className="w-16 h-16 object-contain animate-float" 
           />
        </div>
@@ -111,7 +113,7 @@ const HomeView: React.FC<{
   <div className="pb-32 relative bg-zinc-950">
       <div className="absolute top-0 left-0 right-0 z-40 flex justify-center pt-8 pointer-events-none">
          <div className="h-32 w-auto max-w-[80%] flex items-center justify-center">
-            <img src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" alt="" className="h-full w-full object-contain filter drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" />
+            <img src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" alt="" width={200} height={128} className="h-full w-full object-contain filter drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" />
          </div>
       </div>
       <HeroSlider onOrderClick={onOrderClick} onCalcClick={() => setView('calculator')} />
@@ -285,7 +287,7 @@ const CartView: React.FC<{
             return (
               <div key={item.id} className="flex gap-4 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50 backdrop-blur-sm animate-slide-up">
                 <div className="w-20 h-20 rounded-xl overflow-hidden bg-zinc-800 flex-shrink-0">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  <img src={item.image} alt={item.name} loading="lazy" width={80} height={80} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
@@ -375,7 +377,7 @@ const App: React.FC = () => {
     return PRODUCTS; 
   }, [userLocation]);
 
-  useEffect(() => { const timer = setTimeout(() => setLoading(false), 1500); return () => clearTimeout(timer); }, []);
+  useEffect(() => { const timer = setTimeout(() => setLoading(false), 300); return () => clearTimeout(timer); }, []);
 
   // --- Algoritmo de Recomendação Inteligente ---
   const getGrowlerRecommendations = (currentCart: CartItem[], allProducts: Product[]): Product[] => {

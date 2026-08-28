@@ -168,6 +168,9 @@ export const GrowlerUpsellModal: React.FC<GrowlerUpsellModalProps> = ({
                             <img 
                                 src={product.image} 
                                 alt={product.name} 
+                                loading="lazy"
+                                width={80}
+                                height={80}
                                 className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-105' : 'group-hover:scale-105'} opacity-90`}
                             />
                             {/* Gradient Overlay */}

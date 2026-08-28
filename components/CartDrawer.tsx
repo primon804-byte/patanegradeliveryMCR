@@ -79,6 +79,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <img 
                     src={item.image} 
                     alt={item.name} 
+                    loading="lazy"
+                    width={80}
+                    height={80}
                     className="w-20 h-20 rounded-lg object-cover bg-zinc-800"
                   />
                   <div className="flex-1 flex flex-col justify-between">

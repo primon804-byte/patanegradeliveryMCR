@@ -21,6 +21,8 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
             alt=""
             className="w-full h-full object-cover"
             loading="eager"
+            width={800}
+            height={600}
             // @ts-ignore
             fetchPriority="high"
           />
@@ -44,7 +46,10 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClic
               <img 
                 src={MEDAL_IMAGE} 
                 alt="" 
-                className="relative w-28 h-28 object-contain drop-shadow-[0_0_25px_rgba(245,158,11,0.5)] filter brightness-110 animate-float"
+                loading="lazy"
+                width={112}
+                height={112}
+                className="relative w-28 h-28 object-contain drop-shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-float will-change-transform"
               />
             </div>
           </button>

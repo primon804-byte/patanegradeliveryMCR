@@ -79,6 +79,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
           <img 
             src={product.image} 
             alt={product.name} 
+            loading="lazy"
+            width={400}
+            height={300}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />

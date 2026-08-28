@@ -43,8 +43,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onClic
         <img 
           src={product.image} 
           alt={product.name} 
+          loading="lazy"
+          width={400}
+          height={300}
           onLoad={() => setImageLoaded(true)}
-          className={`w-full h-full object-cover transition-all duration-700 ${imageLoaded ? 'opacity-80 blur-0 scale-100' : 'opacity-0 blur-lg scale-110'} group-hover:opacity-100 group-hover:scale-105`}
+          className={`w-full h-full object-cover transition-all duration-500 ${imageLoaded ? 'opacity-80 blur-0 scale-100' : 'opacity-0 blur-sm scale-105'} group-hover:opacity-100 group-hover:scale-105`}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
       </div>
