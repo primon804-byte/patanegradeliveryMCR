@@ -69,7 +69,7 @@ export const UpsellModal: React.FC<UpsellModalProps> = ({
         {/* Visual Header */}
         <div className="relative h-36 bg-zinc-900 overflow-hidden flex-shrink-0">
             <img 
-                src="https://i.ibb.co/d4wj1KW2/POST-DELIVERY.png" 
+                src="/images/branding/post-delivery.webp" 
                 alt="" 
                 className="w-full h-full object-cover opacity-80"
             />

@@ -34,7 +34,7 @@ export const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose, onContinu
         {/* Image Area */}
         <div className="relative w-full aspect-[4/5] bg-zinc-900">
            <img 
-             src="https://i.ibb.co/d4wj1KW2/POST-DELIVERY.png" 
+             src="/images/branding/post-delivery.webp" 
              alt="" 
              className="w-full h-full object-cover"
            />

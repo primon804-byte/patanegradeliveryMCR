@@ -8,8 +8,8 @@ interface HeroSliderProps {
   onCalcClick: () => void;
 }
 
-const STATIC_IMAGE = 'https://i.ibb.co/jZWpr3kK/IMG-9249-1.jpg';
-const MEDAL_IMAGE = 'https://i.ibb.co/N2QW02V5/Asset-10-300x-1.png';
+const STATIC_IMAGE = '/images/hero/hero-banner.webp';
+const MEDAL_IMAGE = '/images/branding/medalha-premiada.webp';
 
 export const HeroSlider: React.FC<HeroSliderProps> = ({ onOrderClick, onCalcClick }) => {
   return (

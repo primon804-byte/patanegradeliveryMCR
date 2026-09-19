@@ -3,7 +3,7 @@ import React from 'react';
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Camera } from 'lucide-react';
 
 const STORIES = [
-  { id: 1, name: 'Patanegra', image: 'https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand', active: true },
+  { id: 1, name: 'Patanegra', image: '/images/branding/logo.webp', active: true },
   { id: 2, name: 'Bastidores', image: 'https://images.unsplash.com/photo-1571705042748-55fdee1cf87b?auto=format&fit=crop&q=80&w=150', active: true },
   { id: 3, name: 'Eventos', image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80&w=150', active: true },
   { id: 4, name: 'Harmoniza', image: 'https://images.unsplash.com/photo-1566733971257-826502945d58?auto=format&fit=crop&q=80&w=150', active: false },
@@ -47,7 +47,7 @@ export const SocialView: React.FC = () => {
       <div className="flex items-center justify-between px-4 py-4 border-b border-zinc-900 sticky top-0 bg-zinc-950/95 backdrop-blur-md z-30">
         <div className="flex items-center gap-2">
            <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 p-1">
-              <img src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" className="w-full h-full object-contain" />
+              <img src="/images/branding/logo.webp" className="w-full h-full object-contain" />
            </div>
            <h1 className="font-serif text-xl font-bold text-white tracking-tight">Patanegra Feed</h1>
         </div>
@@ -84,7 +84,7 @@ export const SocialView: React.FC = () => {
                <div className="flex items-center justify-between px-3 py-3">
                   <div className="flex items-center gap-3">
                      <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden">
-                        <img src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" className="w-full h-full object-contain scale-125" />
+                        <img src="/images/branding/logo.webp" className="w-full h-full object-contain scale-125" />
                      </div>
                      <div className="flex flex-col">
                         <span className="text-sm font-bold text-white">{post.user}</span>

@@ -58,7 +58,7 @@ const LoadingScreen = () => (
        <div className="absolute inset-0 bg-amber-500/10 rounded-full animate-pulse-soft scale-125" />
        <div className="relative z-10 w-full h-full bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800 shadow-2xl">
           <img 
-            src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" 
+            src="/images/branding/logo.webp" 
             alt=""
             width={64}
             height={64}
@@ -113,7 +113,7 @@ const HomeView: React.FC<{
   <div className="pb-32 relative bg-zinc-950">
       <div className="absolute top-0 left-0 right-0 z-40 flex justify-center pt-8 pointer-events-none">
          <div className="h-32 w-auto max-w-[80%] flex items-center justify-center">
-            <img src="https://i.imgur.com/hm4KO4J_d.webp?maxwidth=760&fidelity=grand" alt="" width={200} height={128} className="h-full w-full object-contain filter drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" />
+            <img src="/images/branding/logo.webp" alt="" width={200} height={128} className="h-full w-full object-contain filter drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" />
          </div>
       </div>
       <HeroSlider onOrderClick={onOrderClick} onCalcClick={() => setView('calculator')} />
