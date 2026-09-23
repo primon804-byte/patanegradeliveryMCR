@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product, ProductCategory, CartItem } from '../types';
 import { Button } from './Button';
-import { X, Droplets, Hop, Utensils, ShoppingBag, Beer, Check, Box, FileSignature, PlusCircle, Star, RefreshCw, AlertCircle } from 'lucide-react';
+import { X, Droplets, Hop, Utensils, ShoppingBag, Beer, Check, Box, Table, FileSignature, PlusCircle, Star, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface ProductDetailProps {
   product: Product;
@@ -14,6 +14,7 @@ interface ProductDetailProps {
 
 export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, onClose, onAdd, editingItem }) => {
   const [rentTonel, setRentTonel] = useState(false);
+  const [rentTable, setRentTable] = useState(false);
   const [mugsSelection, setMugsSelection] = useState<string>("");
   const [wantMoreCups, setWantMoreCups] = useState(false);
 
@@ -23,6 +24,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
       if (editingItem) {
         // Edit Mode: Pre-fill data
         setRentTonel(!!editingItem.rentTonel);
+        setRentTable(!!editingItem.rentTable);
         setWantMoreCups(!!editingItem.moreCups);
         
         if (editingItem.mugsQuantity && editingItem.mugsPrice) {
@@ -33,6 +35,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
       } else {
         // Add Mode: Reset
         setRentTonel(false);
+        setRentTable(false);
         setMugsSelection("");
         setWantMoreCups(false);
       }
@@ -52,7 +55,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
   };
 
   const currentMugsConfig = getMugsConfig();
-  const extrasTotal = (rentTonel ? 30 : 0) + currentMugsConfig.price;
+  const extrasTotal = (rentTonel ? 30 : 0) + (rentTable ? 30 : 0) + currentMugsConfig.price;
   const finalUnitTestPrice = product.price + extrasTotal;
 
   return (
@@ -203,6 +206,61 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
                 {/* Glow Effect when selected */}
                 {rentTonel && <div className="absolute inset-0 bg-amber-500/5 pointer-events-none animate-pulse" />}
               </button>
+
+              {/* Mesa Tradicional Patanegra Toggle */}
+              <button 
+                onClick={() => setRentTable(!rentTable)}
+                className={`w-full relative overflow-hidden rounded-xl border-2 transition-all duration-300 mb-6 group
+                   ${rentTable 
+                     ? 'border-amber-500 bg-zinc-900 shadow-[0_0_30px_rgba(245,158,11,0.15)] scale-[1.02]' 
+                     : 'border-zinc-800 bg-zinc-900/50 hover:border-amber-500/50 hover:bg-zinc-900'
+                   }
+                `}
+              >
+                {/* Badge Status */}
+                <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-xl font-bold text-[10px] tracking-wider transition-colors z-10
+                    ${rentTable ? 'bg-amber-500 text-black' : 'bg-zinc-800 text-zinc-500 border-l border-b border-zinc-700'}
+                `}>
+                    {rentTable ? 'ADICIONADO' : 'RECOMENDADO'}
+                </div>
+
+                <div className="p-4 flex items-start gap-4 text-left relative z-0">
+                    {/* Icon Box */}
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-lg
+                        ${rentTable 
+                            ? 'bg-amber-500 text-black rotate-3 scale-110' 
+                            : 'bg-zinc-800 text-zinc-500 group-hover:text-amber-500'
+                        }
+                    `}>
+                        <Table size={28} strokeWidth={2.5} />
+                    </div>
+
+                    <div className="flex-1">
+                        <h4 className={`font-bold text-lg mb-1 ${rentTable ? 'text-amber-500' : 'text-white'}`}>
+                            Mesa Tradicional Patanegra
+                        </h4>
+                        <p className="text-xs text-zinc-400 leading-relaxed mb-3 pr-8">
+                           Mesa tradicional para colocar e apoiar a chopeira com estabilidade e praticidade.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                             <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold transition-colors
+                                ${rentTable ? 'bg-amber-500/20 text-amber-500' : 'bg-zinc-800 text-zinc-400'}
+                            `}>
+                                {rentTable ? <Check size={12} /> : <PlusCircle size={12} />}
+                                {rentTable ? 'Incluído no pedido' : 'Adicionar por R$ 30,00'}
+                            </div>
+                            {/* Availability Warning */}
+                            <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-zinc-800 text-amber-500/80">
+                                <AlertCircle size={10} />
+                                Verificar disponibilidade
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Glow Effect when selected */}
+                {rentTable && <div className="absolute inset-0 bg-amber-500/5 pointer-events-none animate-pulse" />}
+              </button>
               
               <div className="space-y-4">
                 <h3 className="text-zinc-500 font-bold uppercase text-[10px] tracking-wider pl-1">Outros Adicionais</h3>
@@ -309,6 +367,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, isOpen, o
             onClick={() => {
               onAdd(product, {
                 rentTonel,
+                rentTable,
                 mugsQuantity: currentMugsConfig.quantity,
                 mugsPrice: currentMugsConfig.price,
                 moreCups: wantMoreCups

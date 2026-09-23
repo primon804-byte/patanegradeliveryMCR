@@ -40,6 +40,7 @@ export interface CartItem extends Product {
   quantity: number;
   // Extra options for Event Kegs
   rentTonel?: boolean; // R$ 30.00
+  rentTable?: boolean; // R$ 30.00 (Mesa tradicional Patanegra)
   mugsQuantity?: 24 | 36 | 48 | null;
   mugsPrice?: number; // 30, 40, 50
   moreCups?: boolean; // Flag to request quota for extra cups

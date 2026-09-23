@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, Box, Check, ArrowRight, Beer, CheckCircle2, GlassWater, AlertCircle } from 'lucide-react';
+import { X, Box, Table, Check, ArrowRight, Beer, CheckCircle2, GlassWater, AlertCircle } from 'lucide-react';
 import { Button } from './Button';
 
 interface UpsellModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (addTonel: boolean, addCups: boolean, addMugs: { quantity: 24 | 36 | 48, price: number } | null) => void;
+  onConfirm: (addTonel: boolean, addTable: boolean, addCups: boolean, addMugs: { quantity: 24 | 36 | 48, price: number } | null) => void;
   onDecline: () => void;
   offerTonel: boolean;
+  offerTable: boolean;
   offerCups: boolean;
   offerMugs: boolean;
 }
@@ -18,10 +19,12 @@ export const UpsellModal: React.FC<UpsellModalProps> = ({
   onConfirm, 
   onDecline,
   offerTonel,
+  offerTable,
   offerCups,
   offerMugs
 }) => {
   const [selectedTonel, setSelectedTonel] = useState(false);
+  const [selectedTable, setSelectedTable] = useState(false);
   const [selectedCups, setSelectedCups] = useState(false); // Disposable Quote
   const [selectedMugs, setSelectedMugs] = useState(false); // Glass Mugs
   const [mugsConfig, setMugsConfig] = useState<{ quantity: 24 | 36 | 48, price: number }>({ quantity: 24, price: 30 });
@@ -31,6 +34,7 @@ export const UpsellModal: React.FC<UpsellModalProps> = ({
     if (isOpen) {
       // Recommendations: Enabled by default if offered (Aggressive Upsell)
       setSelectedTonel(offerTonel);
+      setSelectedTable(offerTable);
       setSelectedMugs(offerMugs);
       // Disposable cups quote is less "premium", maybe keep it off by default or on? Let's keep consistent: ON.
       setSelectedCups(offerCups);
@@ -38,11 +42,11 @@ export const UpsellModal: React.FC<UpsellModalProps> = ({
       // Reset mugs to lowest tier
       setMugsConfig({ quantity: 24, price: 30 });
     }
-  }, [isOpen, offerTonel, offerCups, offerMugs]);
+  }, [isOpen, offerTonel, offerTable, offerCups, offerMugs]);
 
   if (!isOpen) return null;
 
-  const totalExtra = (selectedTonel ? 30 : 0) + (selectedMugs ? mugsConfig.price : 0);
+  const totalExtra = (selectedTonel ? 30 : 0) + (selectedTable ? 30 : 0) + (selectedMugs ? mugsConfig.price : 0);
 
   const handleMugQuantityChange = (qty: 24 | 36 | 48, price: number) => {
       setMugsConfig({ quantity: qty, price });
@@ -123,6 +127,40 @@ export const UpsellModal: React.FC<UpsellModalProps> = ({
                             ${selectedTonel ? 'bg-amber-500 border-amber-500' : 'border-zinc-600'}
                         `}>
                             {selectedTonel && <Check size={12} className="text-black" strokeWidth={3} />}
+                        </div>
+                    </button>
+                )}
+
+                {/* OPTION: MESA TRADICIONAL */}
+                {offerTable && (
+                    <button 
+                        onClick={() => setSelectedTable(!selectedTable)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 group
+                            ${selectedTable 
+                                ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.1)]' 
+                                : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                            }
+                        `}
+                    >
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors flex-shrink-0
+                            ${selectedTable ? 'bg-amber-500 text-black' : 'bg-zinc-800 text-zinc-500'}
+                        `}>
+                            <Table size={20} strokeWidth={2.5} />
+                        </div>
+                        <div className="flex-1 text-left">
+                            <div className="flex justify-between items-center">
+                                <span className={`font-bold text-sm ${selectedTable ? 'text-white' : 'text-zinc-400'}`}>Mesa Tradicional Patanegra</span>
+                                <span className="text-xs font-semibold text-amber-500">+ R$ 30,00</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-500 leading-tight mt-0.5">Suporte para colocar a chopeira.</p>
+                            <div className="flex items-center gap-1 mt-1 text-[9px] font-bold text-amber-500/80">
+                                <AlertCircle size={10} /> Verificar disponibilidade
+                            </div>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all flex-shrink-0
+                            ${selectedTable ? 'bg-amber-500 border-amber-500' : 'border-zinc-600'}
+                        `}>
+                            {selectedTable && <Check size={12} className="text-black" strokeWidth={3} />}
                         </div>
                     </button>
                 )}
@@ -236,9 +274,9 @@ export const UpsellModal: React.FC<UpsellModalProps> = ({
             <div className="mt-auto space-y-3">
                 <Button 
                     fullWidth 
-                    onClick={() => onConfirm(selectedTonel, selectedCups, selectedMugs ? mugsConfig : null)}
+                    onClick={() => onConfirm(selectedTonel, selectedTable, selectedCups, selectedMugs ? mugsConfig : null)}
                     className="py-4 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
-                    disabled={!selectedTonel && !selectedCups && !selectedMugs}
+                    disabled={!selectedTonel && !selectedTable && !selectedCups && !selectedMugs}
                 >
                     <div className="flex items-center justify-between w-full">
                         <span className="flex items-center gap-2 font-bold">

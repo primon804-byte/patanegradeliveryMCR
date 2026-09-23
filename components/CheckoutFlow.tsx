@@ -122,11 +122,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     const formatItemList = (items: CartItem[]) => {
         return items.map(item => {
             const upsellMark = item.isUpsell ? " ***" : "";
-            const unitPrice = item.price + (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0);
+            const unitPrice = item.price + (item.rentTonel ? 30 : 0) + (item.rentTable ? 30 : 0) + (item.mugsPrice || 0);
             const subtotal = unitPrice * item.quantity;
             
             let itemString = `• ${item.quantity}x ${item.name}${upsellMark}\n  (R$ ${unitPrice.toFixed(2)} cada) - Subtotal: R$ ${subtotal.toFixed(2)}`;
             if (item.rentTonel) itemString += "\n  [+ Inclui Tonel]";
+            if (item.rentTable) itemString += "\n  [+ Inclui Mesa Tradicional]";
             if (item.mugsQuantity) itemString += `\n  [+ Inclui ${item.mugsQuantity} Canecas]`;
             if (item.moreCups) itemString += `\n  [+ Solicita Orçamento Copos Extras]`;
             return itemString;

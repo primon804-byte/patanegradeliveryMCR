@@ -281,7 +281,7 @@ const CartView: React.FC<{
           </div>
         ) : (
           cart.map((item) => {
-            const extras = (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0);
+            const extras = (item.rentTonel ? 30 : 0) + (item.rentTable ? 30 : 0) + (item.mugsPrice || 0);
             const totalItemPrice = (item.price + extras);
             const isKeg = item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50;
             return (
@@ -303,9 +303,10 @@ const CartView: React.FC<{
                       </span>
                       {item.isUpsell && <span className="text-[8px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded font-black uppercase">Sugestão</span>}
                     </div>
-                    {(item.rentTonel || item.mugsQuantity || item.moreCups) && (
+                    {(item.rentTonel || item.rentTable || item.mugsQuantity || item.moreCups) && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {item.rentTonel && <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700">Tonel Inc.</span>}
+                        {item.rentTable && <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700">Mesa Inc.</span>}
                         {item.mugsQuantity && <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700">{item.mugsQuantity} Canecas</span>}
                         {item.moreCups && <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700">+ Copos</span>}
                       </div>
@@ -357,7 +358,7 @@ const App: React.FC = () => {
   const [isGrowlerUpsellOpen, setIsGrowlerUpsellOpen] = useState(false);
   const [isAvailabilityModalOpen, setIsAvailabilityModalOpen] = useState(false);
   const [recommendedGrowlers, setRecommendedGrowlers] = useState<Product[]>([]);
-  const [upsellOptions, setUpsellOptions] = useState({ offerTonel: false, offerCups: false, offerMugs: false });
+  const [upsellOptions, setUpsellOptions] = useState({ offerTonel: false, offerTable: false, offerCups: false, offerMugs: false });
   const [userLocation, setUserLocation] = useState<string | null>(null);
   const [cartLocation, setCartLocation] = useState<string | null>(null);
   const [pendingProduct, setPendingProduct] = useState<{product: Product, options?: Partial<CartItem>} | null>(null);
@@ -462,10 +463,11 @@ const App: React.FC = () => {
     const hasKeg = cart.some(item => item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50);
     if (hasKeg) {
         const hasTonel = cart.some(item => item.rentTonel === true);
+        const hasTable = cart.some(item => item.rentTable === true);
         const hasMugs = cart.some(item => item.mugsQuantity);
         const hasQuoteCups = cart.some(item => item.moreCups);
-        if (!hasTonel || !hasMugs || !hasQuoteCups) {
-           setUpsellOptions({ offerTonel: !hasTonel, offerMugs: !hasMugs, offerCups: !hasQuoteCups });
+        if (!hasTonel || !hasTable || !hasMugs || !hasQuoteCups) {
+           setUpsellOptions({ offerTonel: !hasTonel, offerTable: !hasTable, offerMugs: !hasMugs, offerCups: !hasQuoteCups });
            setIsCartOpen(false); setIsUpsellModalOpen(true);
            return;
         }
@@ -489,10 +491,11 @@ const App: React.FC = () => {
       const hasKeg = cart.some(item => item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50);
       if (hasKeg) {
           const hasTonel = cart.some(item => item.rentTonel === true);
+          const hasTable = cart.some(item => item.rentTable === true);
           const hasMugs = cart.some(item => item.mugsQuantity);
           const hasQuoteCups = cart.some(item => item.moreCups);
-          if (!hasTonel || !hasMugs || !hasQuoteCups) {
-             setUpsellOptions({ offerTonel: !hasTonel, offerMugs: !hasMugs, offerCups: !hasQuoteCups });
+          if (!hasTonel || !hasTable || !hasMugs || !hasQuoteCups) {
+             setUpsellOptions({ offerTonel: !hasTonel, offerTable: !hasTable, offerMugs: !hasMugs, offerCups: !hasQuoteCups });
              setIsCartOpen(false); setIsUpsellModalOpen(true);
              return;
           }
@@ -507,7 +510,7 @@ const App: React.FC = () => {
       setIsCartOpen(false); setIsCheckoutOpen(true);
   };
 
-  const cartTotal = cart.reduce((acc, item) => acc + ((item.price + (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0)) * item.quantity), 0);
+  const cartTotal = cart.reduce((acc, item) => acc + ((item.price + (item.rentTonel ? 30 : 0) + (item.rentTable ? 30 : 0) + (item.mugsPrice || 0)) * item.quantity), 0);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   if (loading) return <LoadingScreen />;
@@ -528,7 +531,7 @@ const App: React.FC = () => {
         <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
         <InfoModal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} onContinue={() => { setIsInfoModalOpen(false); if (!userLocation) setIsLocationModalOpen(true); else setView('menu'); }} />
         <LocationModal isOpen={isLocationModalOpen} onClose={() => setIsLocationModalOpen(false)} onSelect={(loc) => { setUserLocation(loc); setIsLocationModalOpen(false); setView('menu'); }} />
-        <UpsellModal isOpen={isUpsellModalOpen} onClose={() => setIsCheckoutOpen(true)} onConfirm={(t, c, m) => { setCart(prev => prev.map(item => (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) ? {...item, rentTonel: t, moreCups: c, mugsQuantity: m?.quantity, mugsPrice: m?.price} : item)); setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }} onDecline={() => { setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }} offerTonel={upsellOptions.offerTonel} offerCups={upsellOptions.offerCups} offerMugs={upsellOptions.offerMugs} />
+        <UpsellModal isOpen={isUpsellModalOpen} onClose={() => setIsCheckoutOpen(true)} onConfirm={(t, tbl, c, m) => { setCart(prev => prev.map(item => (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) ? {...item, rentTonel: t, rentTable: tbl, moreCups: c, mugsQuantity: m?.quantity, mugsPrice: m?.price} : item)); setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }} onDecline={() => { setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }} offerTonel={upsellOptions.offerTonel} offerTable={upsellOptions.offerTable} offerCups={upsellOptions.offerCups} offerMugs={upsellOptions.offerMugs} />
         <GrowlerUpsellModal isOpen={isGrowlerUpsellOpen} onClose={() => setIsCheckoutOpen(true)} onConfirm={(prods) => { prods.forEach(p => addToCart(p, { isUpsell: true })); setIsGrowlerUpsellOpen(false); setIsCheckoutOpen(true); }} onDecline={() => { setIsGrowlerUpsellOpen(false); setIsCheckoutOpen(true); }} recommendations={recommendedGrowlers} />
         <AvailabilityModal isOpen={isAvailabilityModalOpen} onClose={() => setIsAvailabilityModalOpen(false)} onContinue={proceedToCheckoutAfterAvailability} />
         <CartConflictModal isOpen={!!pendingProduct} onClose={() => setPendingProduct(null)} onConfirm={handleResolveConflict} currentLocation={cartLocation || ''} newLocation={userLocation || ''} />

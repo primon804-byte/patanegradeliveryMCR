@@ -69,7 +69,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           ) : (
             cart.map((item) => {
               // Calculate item specific total for display (Base + Extras) * Qty
-              const extras = (item.rentTonel ? 30 : 0) + (item.mugsPrice || 0);
+              const extras = (item.rentTonel ? 30 : 0) + (item.rentTable ? 30 : 0) + (item.mugsPrice || 0);
               const totalItemPrice = (item.price + extras);
               
               const isKeg = item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50;
@@ -103,9 +103,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       </span>
                       
                       {/* Extras Display */}
-                      {(item.rentTonel || item.mugsQuantity || item.moreCups) && (
+                      {(item.rentTonel || item.rentTable || item.mugsQuantity || item.moreCups) && (
                          <div className="mt-2 text-[10px] text-zinc-400 space-y-0.5">
                             {item.rentTonel && <div className="flex items-center gap-1"><span className="w-1 h-1 bg-amber-500 rounded-full"></span> Tonel (+R$30)</div>}
+                            {item.rentTable && <div className="flex items-center gap-1"><span className="w-1 h-1 bg-amber-500 rounded-full"></span> Mesa Tradicional (+R$30)</div>}
                             {item.mugsQuantity && <div className="flex items-center gap-1"><span className="w-1 h-1 bg-amber-500 rounded-full"></span> {item.mugsQuantity} Canecas (+R${item.mugsPrice})</div>}
                             {item.moreCups && <div className="flex items-center gap-1"><span className="w-1 h-1 bg-amber-500 rounded-full"></span> Cotar Copos Extras</div>}
                          </div>
