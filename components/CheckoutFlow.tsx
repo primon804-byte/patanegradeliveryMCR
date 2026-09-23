@@ -43,9 +43,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
   const [sendToDifferentAddress, setSendToDifferentAddress] = useState(false);
 
   // Freight logic
-  const FREIGHT_VALUE = 15;
   const isDelivery = deliveryMethod === 'delivery';
-  const totalWithFreight = total + (isDelivery ? FREIGHT_VALUE : 0);
 
   // --- Personal Data ---
   const [name, setName] = useState('');
@@ -141,14 +139,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     
     let freightNote = "";
     if (isDelivery) {
-        freightNote = `\n🚚 *FRETE:* R$ ${FREIGHT_VALUE.toFixed(2)} (${isFoz ? 'A partir de' : 'Taxa fixa'} na cidade)`;
-        if (!isFoz) freightNote += `\n⚠️ *OUTRAS REGIÕES:* Consultar valor adicional.`;
+        freightNote = `\n🚚 *FRETE:* A consultar na confirmação do pedido`;
         freightNote += `\n🕒 *HORÁRIO DE ENTREGA:* ${operatingHours}.`;
     } else {
         freightNote = `\n📍 *MODO:* Retirada na loja (${operatingHours}).\n🏠 *LOCAL:* ${getUnitAddress()}`;
     }
 
-    const totalFinalMsg = `\n\n✅ *TOTAL DO PEDIDO:* R$ ${totalWithFreight.toFixed(2)}${isDelivery ? ' (Produtos + Frete)' : ''}`;
+    const totalFinalMsg = `\n\n✅ *TOTAL DO PEDIDO:* R$ ${total.toFixed(2)}${isDelivery ? ' (+ Frete a consultar)' : ''}`;
 
     const buildEventBlock = () => {
         if (sendEventInfoLater) return `\n--- DADOS DO EVENTO ---\n⚠️ *DADOS DO EVENTO:* A combinar / Enviar a seguir\n*TOTAL LITROS:* ${totalLiters}L\n`;
@@ -407,10 +404,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                          <strong className="text-amber-500 block text-[10px] uppercase tracking-wider mb-0.5">{isDelivery ? 'Entrega e Logística' : 'Retirada na Loja'}</strong>
                          {isDelivery ? (
                             <>
-                                {isFoz 
-                                    ? 'Taxa de entrega a partir de R$ 15,00. Consultar valor exato na confirmação.' 
-                                    : 'Taxa fixa de R$ 15,00 para entregas dentro da cidade. Demais localidades a consultar.'
-                                }
+                                Taxa de entrega a consultar na confirmação do pedido.
                                 <span className="block mt-1 text-zinc-400 italic">Entregas realizadas das {operatingHours}.</span>
                             </>
                          ) : `Retirada em ${locationName} disponível das ${operatingHoursDisplay}.`}
@@ -425,14 +419,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 </div>
                 {isDelivery && (
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Frete Estimado</span>
-                        <span className="text-emerald-500 font-bold">R$ {FREIGHT_VALUE.toFixed(2)}</span>
+                        <span className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Frete</span>
+                        <span className="text-amber-500 font-semibold text-xs">A consultar</span>
                     </div>
                 )}
                 <div className="h-px bg-zinc-800 my-2"></div>
                 <div className="flex justify-between items-center">
-                    <span className="text-white text-sm font-bold uppercase tracking-widest">Valor Final</span>
-                    <span className="text-amber-500 text-xl font-serif font-bold">R$ {totalWithFreight.toFixed(2)}</span>
+                    <span className="text-white text-sm font-bold uppercase tracking-widest">Total dos Produtos</span>
+                    <div className="text-right">
+                        <span className="text-amber-500 text-xl font-serif font-bold">R$ {total.toFixed(2)}</span>
+                        {isDelivery && <span className="block text-[10px] text-zinc-400 font-normal">+ frete a consultar</span>}
+                    </div>
                 </div>
             </div>
 
@@ -452,7 +449,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                 <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
                     {!isReturningCustomer && !isGrowlerOnly && <li>Envie as fotos dos documentos no WhatsApp.</li>}
-                    {isDelivery ? <li>Aguarde nossa confirmação (Taxa R$ 15,00 aplicada). Entregas das {operatingHours}.</li> : <li>Retirada disponível ({operatingHours}).</li>}
+                    {isDelivery ? <li>Aguarde nossa confirmação com o valor do frete. Entregas das {operatingHours}.</li> : <li>Retirada disponível ({operatingHours}).</li>}
                 </ul>
              </div>
              <Button fullWidth onClick={handleClose} variant="secondary">Fechar</Button>
