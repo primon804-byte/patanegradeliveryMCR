@@ -140,7 +140,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     let freightNote = "";
     if (isDelivery) {
         freightNote = `\n🚚 *FRETE:* A consultar na confirmação do pedido`;
-        freightNote += `\n🕒 *HORÁRIO DE ENTREGA:* ${operatingHours}.`;
+        freightNote += `\n🕒 *HORÁRIO DE ENVIO:* A confirmar pelo WhatsApp`;
     } else {
         freightNote = `\n📍 *MODO:* Retirada na loja (${operatingHours}).\n🏠 *LOCAL:* ${getUnitAddress()}`;
     }
@@ -405,7 +405,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                          {isDelivery ? (
                             <>
                                 Taxa de entrega a consultar na confirmação do pedido.
-                                <span className="block mt-1 text-zinc-400 italic">Entregas realizadas das {operatingHours}.</span>
+                                <span className="block mt-1 text-zinc-400 italic">Horário de envio a confirmar pelo WhatsApp.</span>
                             </>
                          ) : `Retirada em ${locationName} disponível das ${operatingHoursDisplay}.`}
                      </div>
@@ -449,7 +449,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
                 <h4 className="text-amber-500 font-bold text-xs uppercase mb-2">Próximos Passos:</h4>
                 <ul className="text-sm text-zinc-300 space-y-2 list-disc pl-4">
                     {!isReturningCustomer && !isGrowlerOnly && <li>Envie as fotos dos documentos no WhatsApp.</li>}
-                    {isDelivery ? <li>Aguarde nossa confirmação com o valor do frete. Entregas das {operatingHours}.</li> : <li>Retirada disponível ({operatingHours}).</li>}
+                    {isDelivery ? <li>Aguarde nossa confirmação com o frete e horário de envio.</li> : <li>Retirada disponível ({operatingHours}).</li>}
                 </ul>
              </div>
              <Button fullWidth onClick={handleClose} variant="secondary">Fechar</Button>
