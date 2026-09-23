@@ -531,7 +531,27 @@ const App: React.FC = () => {
         <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
         <InfoModal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} onContinue={() => { setIsInfoModalOpen(false); if (!userLocation) setIsLocationModalOpen(true); else setView('menu'); }} />
         <LocationModal isOpen={isLocationModalOpen} onClose={() => setIsLocationModalOpen(false)} onSelect={(loc) => { setUserLocation(loc); setIsLocationModalOpen(false); setView('menu'); }} />
-        <UpsellModal isOpen={isUpsellModalOpen} onClose={() => setIsCheckoutOpen(true)} onConfirm={(t, tbl, c, m) => { setCart(prev => prev.map(item => (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) ? {...item, rentTonel: t, rentTable: tbl, moreCups: c, mugsQuantity: m?.quantity, mugsPrice: m?.price} : item)); setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }} onDecline={() => { setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }} offerTonel={upsellOptions.offerTonel} offerTable={upsellOptions.offerTable} offerCups={upsellOptions.offerCups} offerMugs={upsellOptions.offerMugs} />
+        <UpsellModal 
+          isOpen={isUpsellModalOpen} 
+          onClose={() => setIsCheckoutOpen(true)} 
+          onConfirm={(t, tbl, c, m) => { 
+            setCart(prev => prev.map(item => (item.category === ProductCategory.KEG30 || item.category === ProductCategory.KEG50) ? {
+              ...item, 
+              rentTonel: upsellOptions.offerTonel ? t : (item.rentTonel || t), 
+              rentTable: upsellOptions.offerTable ? tbl : (item.rentTable || tbl), 
+              moreCups: upsellOptions.offerCups ? c : (item.moreCups || c), 
+              mugsQuantity: upsellOptions.offerMugs ? m?.quantity : (item.mugsQuantity || m?.quantity), 
+              mugsPrice: upsellOptions.offerMugs ? m?.price : (item.mugsPrice || m?.price)
+            } : item)); 
+            setIsUpsellModalOpen(false); 
+            setIsCheckoutOpen(true); 
+          }} 
+          onDecline={() => { setIsUpsellModalOpen(false); setIsCheckoutOpen(true); }} 
+          offerTonel={upsellOptions.offerTonel} 
+          offerTable={upsellOptions.offerTable} 
+          offerCups={upsellOptions.offerCups} 
+          offerMugs={upsellOptions.offerMugs} 
+        />
         <GrowlerUpsellModal isOpen={isGrowlerUpsellOpen} onClose={() => setIsCheckoutOpen(true)} onConfirm={(prods) => { prods.forEach(p => addToCart(p, { isUpsell: true })); setIsGrowlerUpsellOpen(false); setIsCheckoutOpen(true); }} onDecline={() => { setIsGrowlerUpsellOpen(false); setIsCheckoutOpen(true); }} recommendations={recommendedGrowlers} />
         <AvailabilityModal isOpen={isAvailabilityModalOpen} onClose={() => setIsAvailabilityModalOpen(false)} onContinue={proceedToCheckoutAfterAvailability} />
         <CartConflictModal isOpen={!!pendingProduct} onClose={() => setPendingProduct(null)} onConfirm={handleResolveConflict} currentLocation={cartLocation || ''} newLocation={userLocation || ''} />

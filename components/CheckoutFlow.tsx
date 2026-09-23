@@ -122,16 +122,26 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ isOpen, onClose, car
     const formatItemList = (items: CartItem[]) => {
         return items.map(item => {
             const upsellMark = item.isUpsell ? " ***" : "";
-            const unitPrice = item.price + (item.rentTonel ? 30 : 0) + (item.rentTable ? 30 : 0) + (item.mugsPrice || 0);
+            const extrasPerUnit = (item.rentTonel ? 30 : 0) + (item.rentTable ? 30 : 0) + (item.mugsPrice || 0);
+            const unitPrice = item.price + extrasPerUnit;
             const subtotal = unitPrice * item.quantity;
             
-            let itemString = `• ${item.quantity}x ${item.name}${upsellMark}\n  (R$ ${unitPrice.toFixed(2)} cada) - Subtotal: R$ ${subtotal.toFixed(2)}`;
-            if (item.rentTonel) itemString += "\n  [+ Inclui Tonel]";
-            if (item.rentTable) itemString += "\n  [+ Inclui Mesa Tradicional]";
-            if (item.mugsQuantity) itemString += `\n  [+ Inclui ${item.mugsQuantity} Canecas]`;
-            if (item.moreCups) itemString += `\n  [+ Solicita Orçamento Copos Extras]`;
+            let itemString = `• ${item.quantity}x *${item.name}*${upsellMark}`;
+            
+            const hasExtras = item.rentTonel || item.rentTable || item.mugsQuantity || item.moreCups;
+            if (hasExtras) {
+                itemString += `\n  - Valor base do barril: R$ ${item.price.toFixed(2)}`;
+                if (item.rentTonel) itemString += `\n  - Adicional Tonel Patanegra: + R$ 30,00`;
+                if (item.rentTable) itemString += `\n  - Adicional Mesa Tradicional Patanegra: + R$ 30,00`;
+                if (item.mugsQuantity) itemString += `\n  - Adicional Kit ${item.mugsQuantity} Canecas: + R$ ${(item.mugsPrice || 0).toFixed(2)}`;
+                if (item.moreCups) itemString += `\n  - Copos descartáveis extras: Solicita orçamento`;
+                itemString += `\n  - Valor unitário total: R$ ${unitPrice.toFixed(2)}`;
+            } else {
+                itemString += `\n  - Valor unitário: R$ ${item.price.toFixed(2)}`;
+            }
+            itemString += `\n  *Subtotal:* R$ ${subtotal.toFixed(2)}`;
             return itemString;
-        }).join('\n');
+        }).join('\n\n');
     };
 
     let itemsBlock = `\n--- PRODUTOS ---\n` + formatItemList(cart);
